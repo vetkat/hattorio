@@ -43,17 +43,26 @@ def _xf_ints(xf, den):
     return out
 
 
-def _outline_radius(mt) -> float:
-    """Circumradius of a metatile's own outline about its own origin.
+def _hat_circumradius() -> float:
+    return max(math.hypot(*p.to_float()) for p in HAT_OUTLINE)
 
-    Computed, never guessed: construct_metatiles GROWS the outlines each level,
-    so this is per level. A too-small value silently drops hats.
+
+def _prune_radius(mt) -> float:
+    """Bounding radius for a metatile's whole SUBTREE of hats.
+
+    Two corrections over the bare outline radius, both of which would otherwise
+    drop hats silently:
+
+    * Hats straddle metatile boundaries -- they are not contained by the
+      outline -- so allow a full hat diameter of overhang.
+    * construct_metatiles GROWS the outlines each level, so this is per level
+      and must never be treated as a constant.
     """
     worst = 0.0
     for p in mt.outline:
         x, y = p.to_float()
         worst = max(worst, math.hypot(x, y))
-    return worst
+    return worst + 2.0 * _hat_circumradius()
 
 
 def emit_rules(path):
@@ -75,7 +84,7 @@ def emit_rules(path):
         out.append("    },\n")
     out.append("  },\n  radius = {\n")
     for i, shapes in enumerate(lv):
-        rad = ", ".join("%s = %.9g" % (n, _outline_radius(shapes[n]) * 1.05)
+        rad = ", ".join("%s = %.9g" % (n, _prune_radius(shapes[n]) * 1.05)
                         for n in ("H", "T", "P", "F"))
         out.append("    [%d] = { %s },\n" % (i, rad))
     out.append("  },\n}\n")
