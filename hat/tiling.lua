@@ -35,6 +35,26 @@ function Ti.max_depth()
   return RULES.max_level
 end
 
+-- Deepest descent whose arithmetic is exact in Lua 5.2 doubles.
+--
+-- The per-level rules carry numerators up to 1.4e14 at level 6, so composing
+-- two of them produces a RAW product near 1e28 -- long past 2^53 -- even
+-- though the reduced result is only ~1e9. Reducing afterwards is too late, and
+-- cross-reducing first does not help: the operands share no common factor
+-- (measured gcd 1), because the cancellation is additive, inside the sums,
+-- rather than multiplicative.
+--
+-- Measured raw-product peaks along random descents:
+--     depth 4   3.9e13   OK
+--     depth 5   5.7e16   overflow
+--     depth 6   2.3e20   overflow
+--
+-- Going deeper needs either wider integers (a 106-bit pair covers depth 6) or
+-- the self-similar rule set above a junction level. See the spec.
+function Ti.safe_depth()
+  return 4
+end
+
 --- Smallest depth whose root covers a disc of the given radius, or nil.
 function Ti:depth_for_radius(r)
   for d = 0, RULES.max_level do

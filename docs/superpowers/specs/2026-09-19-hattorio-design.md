@@ -210,19 +210,59 @@ placements *are* explicit and exact, and contain no phi.
   with relative spread ~phi^(-2L) (4.9e-5 at level 6, 4.8e-10 at
   level 12).
 
-  That leaves three ways to exceed depth 6, for decision:
+  **Correction, found while implementing the Lua descent.** An earlier
+  draft of this section offered "cap at depth 6, ~14,000 tiles" as a
+  shipping option. That is wrong twice over.
 
-  1. **Cap at depth 6.** Exact, shipping today, ~14,000 tiles at the
-     default scale and ~63,000 at the largest.
-  2. **Per-level rules to 6, self-similar above.** Unbounded, but
-     adjacent level-6 blocks misalign by ~0.7 tiles (4.9e-5 of a
-     14,000-tile block), so a roughly 1-tile seam every ~14,000 tiles
-     after rasterisation. Fully deterministic — a fixed deviation from
-     the ideal tiling, not float drift.
-  3. **Two-word integer arithmetic in Lua.** Level 12 needs ~2^89 for
-     numerators and ~2^71 for denominators; a 106-bit pair covers it
-     exactly. Unbounded and exact, but every ring multiply becomes
-     multi-word and intermediate products need careful reduction.
+  First, depth 6 covers **3,498 tiles** at the default scale, not
+  14,000; the earlier figure came from an estimated metatile radius
+  rather than the emitted one.
+
+  Second and decisively, **the per-level rules cannot be composed at
+  depth 6 in Lua doubles at all.** Level-6 numerators reach 1.4e14, so
+  a single composition produces a raw product near 1e28. The reduced
+  result is only ~1e9, but reducing afterwards is too late, and
+  cross-reducing beforehand does not help: measured gcd between the
+  operands is 1, because the cancellation is additive rather than
+  multiplicative. Measured raw-product peaks:
+
+  ```
+  depth 4   3.9e13   OK
+  depth 5   5.7e16   overflow
+  depth 6   2.3e20   overflow
+  ```
+
+  Per-level rules are therefore limited to **depth 4 = 546 tiles**,
+  which is unshippable. `Ti.safe_depth()` encodes this, and a test
+  asserts the overflow still occurs so the ceiling cannot drift
+  silently.
+
+  The self-similar rules, by contrast, compose beautifully — max
+  coefficient 219, reaching only 2,149 at depth 25 — but cannot reach
+  the hats. So any shippable design uses **self-similar rules above a
+  junction level and per-level rules below it**, and the only question
+  is where the junction sits:
+
+  | junction | block radius | rel. error | seam | occurs every |
+  |---|---|---|---|---|
+  | level 2 | 116 t | 1.2e-1 | 14.0 t | 116 t |
+  | level 4 | 546 t | 2.3e-3 | 1.27 t | 546 t |
+  | level 6 | 3,498 t | 4.9e-5 | 0.17 t | 3,498 t |
+
+  Junction 4 needs no new machinery but leaves a ~1.3-tile seam every
+  546 tiles, which is visible. Junction 6 leaves a 0.17-tile seam every
+  3,498 tiles — below one tile, so invisible after rasterisation — but
+  requires **two-word (106-bit) integer arithmetic** in the ring to
+  compose levels 5 and 6. The depth-6 raw peak of 2.3e20 sits far
+  inside 2^106 = 8.1e31.
+
+  Seams of either size are fully deterministic: a fixed, identical
+  deviation on every client, not float drift, so neither threatens
+  multiplayer.
+
+  **Recommendation: two-word arithmetic with the junction at level 6.**
+  Unbounded map, sub-tile error, and the wider integers are confined to
+  `hat/exact.lua`.
 - `verify.py` — pairwise overlap, flood-fill gap detection, reflected
   density convergence, direct diff against hatviz's own SVG output, and
   the 2^53 coefficient assertion.
