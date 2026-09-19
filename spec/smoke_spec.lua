@@ -1,0 +1,5 @@
+describe("harness", function()
+  it("runs", function()
+    assert.are.equal(4, 2 + 2)
+  end)
+end)
