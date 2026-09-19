@@ -175,13 +175,22 @@ placements *are* explicit and exact, and contain no phi.
 - `hatviz_port.py` — reimplements `matchTwo`, `constructPatch`,
   `constructMetatiles` in exact arithmetic over Q(sqrt3, sqrt5).
   Captures per-level outlines and transforms.
-- `exactify.py` — **load-bearing, not optional.** Runs deep, fits the
-  converged outlines to exact Z[phi][sqrt3], and verifies the fixed
-  point. Without it the mod is capped at depth 6. The outlines do
-  converge cleanly (drift 2.4e-10 by level 12) and the limiting H is a
-  hexagon whose edge ratio is exactly phi^4 - 1 = sqrt5*phi^2, so the
-  target is well characterised — but the fit is unwritten research, not
-  a port. Until it lands, ship the depth-6 cap.
+- `exactify.py` — **DONE and verified.** The limiting metatiles were
+  recovered by integer-relation recognition against a level-22
+  normalisation, agreeing independently at level 14 (1e-8) and level 22
+  (1e-14). All 36 coordinates are exact elements of Q(phi)[sqrt3] with
+  denominators dividing 100. Substituting them reproduces them scaled
+  by phi^2 **exactly, as ring elements** — a true fixed point, not an
+  approximation. The resulting self-similar rule set has max
+  coefficient **219**, against 4.8e26 for the per-level rules, and
+  composition stays tiny (2,149 at depth 25, twelve orders inside
+  2^53). The depth cap is removed, not merely raised.
+
+  One question remains open: the level-0 hat placements (`H_init` and
+  friends) are defined against the ORIGINAL H outline, not the limit
+  one, and the two are not similar. Whether they attach correctly to
+  the limit frame is answered by the existing overlap/gap gate, and
+  must be checked before the self-similar rules are emitted.
 - `verify.py` — pairwise overlap, flood-fill gap detection, reflected
   density convergence, direct diff against hatviz's own SVG output, and
   the 2^53 coefficient assertion.
