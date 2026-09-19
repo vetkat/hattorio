@@ -123,14 +123,22 @@ def match_two(p1: Pt, p2: Pt, q1: Pt, q2: Pt) -> Xf:
 
 
 def _p(xh, yh) -> Pt:
-    """Vertex at (xh, yh*sqrt(3)) where xh, yh are halves-of-integers."""
+    """Vertex at (xh, yh*sqrt(3))."""
     return Pt(K(Q5(F(xh)), Q5.ZERO), K(Q5.ZERO, Q5(F(yh))))
 
 
+def hex_pt(x, y) -> Pt:
+    """hatviz's hexPt: the triangular-lattice basis {(1,0), (1/2, sqrt3/2)}.
+
+    hexPt(x, y) = (x + y/2, (sqrt3/2) * y), with x and y integers.
+    """
+    return _p(F(x) + F(y, 2), F(y, 2))
+
+
+# The hat is a 13-gon. Verbatim from hatviz geometry.js.
 HAT_OUTLINE = [
-    _p(F(0), F(0)),          _p(F(-3, 2), F(-1, 2)), _p(F(0), F(-1)),
-    _p(F(3, 2), F(-1, 2)),   _p(F(3), F(-1)),        _p(F(9, 2), F(-1, 2)),
-    _p(F(3), F(0)),          _p(F(3), F(1)),         _p(F(3, 2), F(3, 2)),
-    _p(F(0), F(1)),          _p(F(0), F(2)),         _p(F(-3, 2), F(5, 2)),
-    _p(F(-3), F(2)),         _p(F(-3), F(1)),
+    hex_pt(0, 0), hex_pt(-1, -1), hex_pt(0, -2), hex_pt(2, -2),
+    hex_pt(2, -1), hex_pt(4, -2), hex_pt(5, -1), hex_pt(4, 0),
+    hex_pt(3, 0), hex_pt(2, 2), hex_pt(0, 3), hex_pt(0, 2),
+    hex_pt(-1, 2),
 ]
