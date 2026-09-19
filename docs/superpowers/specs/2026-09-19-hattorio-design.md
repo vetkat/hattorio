@@ -114,23 +114,37 @@ queries.**
 
 ### Depth and coverage
 
-Depth is **derived per surface from the size setting**, not a constant,
-because a level-0 H metatile's radius scales with it. Required depth to
-cover the map's ~1,000,000 tile half-extent:
+**Measured, and more constrained than first estimated.** The per-level
+substitution rules are exact rationals converging on irrational limits,
+so their numerators blow up with level:
 
 ```
-hat size  8  ->  level-0 H radius   17.5 tiles  ->  depth 12
-hat size 20  ->  level-0 H radius   43.6 tiles  ->  depth 11   (default)
-hat size 90  ->  level-0 H radius  196.4 tiles  ->  depth  9
+level 6:  numerators 1.4e14   OK
+level 7:  numerators 1.7e16   exceeds 2^53 = 9.0e15
 ```
 
-Depth is computed once at surface creation and stored alongside scale
-and root offset.
+Lua 5.2 has no integer subtype, so a rule coefficient above 2^53 is not
+exactly representable. **Maximum emittable depth is 6**, which covers:
 
-Integer coefficients grow Fibonacci-fast; bounded around 3e9 at depth
-12, roughly six orders of magnitude inside 2^53. Since 12 is the
-maximum depth across the whole settings range, that bound covers every
-configuration. The pipeline asserts it rather than assuming it.
+```
+hat size 20 (default)  ->  ~14,000 tiles from spawn
+hat size 41            ->  ~28,800 tiles
+hat size 90            ->  ~63,200 tiles
+```
+
+Beyond that radius the mod must fall back to vanilla terrain. For a
+genuinely unbounded map the limiting metatiles must be exactified
+(section 6) — one rule set, small exact coefficients, any depth.
+
+Two separate ceilings, not to be confused:
+
+- **Rule data**, above: binds at level 7. The hard limit today.
+- **Composition during descent**, which is fine: intermediate
+  coefficients grow ~18x per level and peak at 3.6e14 at depth 11,
+  24x inside 2^53. Hats land back on the clean kite lattice, so the
+  ugly rationals cancel. This requires the Lua transform multiply to
+  **reduce by gcd after every composition**; without reduction the
+  denominators multiply and overflow almost immediately.
 
 ### Identity
 
@@ -161,10 +175,13 @@ placements *are* explicit and exact, and contain no phi.
 - `hatviz_port.py` — reimplements `matchTwo`, `constructPatch`,
   `constructMetatiles` in exact arithmetic over Q(sqrt3, sqrt5).
   Captures per-level outlines and transforms.
-- `exactify.py` — runs deep, fits the converged outlines to exact
-  Z[phi][sqrt3], and **verifies** the fixed point. Success gives one
-  level-independent rule set; failure falls back to per-level tables.
-  Neither outcome blocks.
+- `exactify.py` — **load-bearing, not optional.** Runs deep, fits the
+  converged outlines to exact Z[phi][sqrt3], and verifies the fixed
+  point. Without it the mod is capped at depth 6. The outlines do
+  converge cleanly (drift 2.4e-10 by level 12) and the limiting H is a
+  hexagon whose edge ratio is exactly phi^4 - 1 = sqrt5*phi^2, so the
+  target is well characterised — but the fit is unwritten research, not
+  a port. Until it lands, ship the depth-6 cap.
 - `verify.py` — pairwise overlap, flood-fill gap detection, reflected
   density convergence, direct diff against hatviz's own SVG output, and
   the 2^53 coefficient assertion.
@@ -309,6 +326,17 @@ Recorded so they are not re-derived.
 
 - **hatviz does not store substitution rules as matrices.** The earlier
   chat transcript says it does. It does not; see section 6.
+- **The hat is a 13-gon, not a 14-gon.** An earlier claim that the
+  scaffold's 14-vertex `HAT_OUTLINE` "matches Kaplan's exactly" was
+  wrong. hatviz's real outline has 13 vertices in the `hexPt` basis,
+  `hexPt(x,y) = (x + y/2, (sqrt3/2)*y)`. Since `H_init` indexes
+  `hat_outline[5]`, `[7]`, `[9]` and `[11]`, a wrong vertex list
+  silently produces wrong hat placements.
+- **Metatile area does not equal its hats' area.** Hats straddle
+  metatile boundaries, so an area check is not a validity test for
+  H, T or F. Use overlap plus gap detection.
+- **Per-level rule coefficients exceed 2^53 at level 7.** This caps
+  depth at 6 until exactify lands; see section 5.
 - **"14 tile types and enormous transition tables"** assumed colouring
   every hat. Only the band is a custom tile, against vanilla terrain.
 - **Target runtime is not a choice.** Factorio embeds Lua 5.2.1. No
