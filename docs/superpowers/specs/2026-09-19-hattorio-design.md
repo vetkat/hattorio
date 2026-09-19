@@ -186,11 +186,43 @@ placements *are* explicit and exact, and contain no phi.
   composition stays tiny (2,149 at depth 25, twelve orders inside
   2^53). The depth cap is removed, not merely raised.
 
-  One question remains open: the level-0 hat placements (`H_init` and
-  friends) are defined against the ORIGINAL H outline, not the limit
-  one, and the two are not similar. Whether they attach correctly to
-  the limit frame is answered by the existing overlap/gap gate, and
-  must be checked before the self-similar rules are emitted.
+  **That open question is now settled, and the answer is negative.**
+  A self-similar rule set cannot reach the hats exactly. Evidence:
+
+  - Attaching `level0()`'s hats to a self-similar descent gives the
+    right counts (F(2n+3)^2) and congruent hats, but the gate reports
+    overlaps and 0.9% gaps.
+  - Re-anchoring the hats against the limit outlines by their
+    frame-independent combinatorics (which hat vertices coincide with
+    which outline vertices) makes it worse: four distinct hat scales.
+    A rigid hat's chord cannot match a deformed outline edge and stay
+    congruent, and H, P and F all deform differently (H's edge ratio
+    goes 4:1 -> phi^4-1; F's interior angles change outright).
+  - The reason is structural. Substituting a decorated tile maps 4 hats
+    to 25 smaller ones, so the decoration is not scale-invariant. Hats
+    exist only at level 0, anchored to the ORIGINAL shapes. The limit
+    shapes are the attractor of the METATILE substitution alone.
+
+  What the limit shapes are still good for: the per-level rules
+  converge to them precisely. The linear parts are **exactly identical
+  at every level** and the child shape sequences match exactly; only
+  the translations differ, by a factor converging to exactly phi^(2L)
+  with relative spread ~phi^(-2L) (4.9e-5 at level 6, 4.8e-10 at
+  level 12).
+
+  That leaves three ways to exceed depth 6, for decision:
+
+  1. **Cap at depth 6.** Exact, shipping today, ~14,000 tiles at the
+     default scale and ~63,000 at the largest.
+  2. **Per-level rules to 6, self-similar above.** Unbounded, but
+     adjacent level-6 blocks misalign by ~0.7 tiles (4.9e-5 of a
+     14,000-tile block), so a roughly 1-tile seam every ~14,000 tiles
+     after rasterisation. Fully deterministic — a fixed deviation from
+     the ideal tiling, not float drift.
+  3. **Two-word integer arithmetic in Lua.** Level 12 needs ~2^89 for
+     numerators and ~2^71 for denominators; a 106-bit pair covers it
+     exactly. Unbounded and exact, but every ring multiply becomes
+     multi-word and intermediate products need careful reduction.
 - `verify.py` — pairwise overlap, flood-fill gap detection, reflected
   density convergence, direct diff against hatviz's own SVG output, and
   the 2^53 coefficient assertion.
