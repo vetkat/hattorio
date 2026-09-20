@@ -411,7 +411,7 @@ Per planet, startup:
 |---|---|---|
 | `hattorio-hat-size-<planet>` | **41** (normal) | 15, 26, 41, 52 |
 | `hattorio-band-width-<planet>` | **3** (wide) | 1, 2, 3, 4 |
-| `hattorio-band-style` | liquid | liquid, void, rift |
+| `hattorio-band-style` | liquid | liquid, void |
 | `hattorio-band-colour` | violet | violet, cold, oily, ember, ink |
 | `hattorio-richness-override` (map) | 0 = automatic | 0 - 10 |
 | `hattorio-show-outline` (per player) | off | on, off |
@@ -428,8 +428,12 @@ still breaks. Band 3 keeps the bands visually substantial, which band 2
 does not at that cell size.
 
 Band style and band colour are **independent**: the style picks the
-shader laid over the surface, the colour picks what it is tinted, so a
-glowing rift can be violet and a flat void can be ember.
+shader laid over the surface, the colour picks what it is tinted.
+
+A third style using Vulcanus's lava shader was built and then removed
+after playtesting -- it read as a hazard rather than a void and fought
+the calm look of everything else. Removing it also dropped a Space Age
+conditional from the data stage.
 
 Only size and band are per planet. Band style and colour are global, and the other
 two are scoped by what they affect: richness is map-wide because ore is

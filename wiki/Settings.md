@@ -6,7 +6,7 @@ Two settings per planet, both fixed when the world is created.
 |---|---|---|
 | Cell size (centre to vertex, in tiles) | **41** (normal) | 15, 26, 41, 52 |
 | Band width (tiles) | **3** (wide) | 1, 2, 3, 4 |
-| Band appearance | Dark liquid | liquid, void, glowing rift |
+| Band appearance | Dark liquid | liquid, void |
 | Band colour | Deep violet | violet, cold, oily, ember, void black |
 
 Cell size and band width are dropdowns, labelled with how hard each makes the
@@ -46,9 +46,7 @@ Two independent settings: what the bands are made of, and what colour they
 are. Any combination works.
 
 **Style** picks the surface. *Dark liquid* is the default: animated, it moves
-and oozes. *Void* is flat and still, a hole rather than a liquid. *Glowing
-rift* uses the lava shader and needs Space Age; without it the mod falls back
-to dark liquid and says so in the log.
+and oozes. *Void* is flat and still, a hole rather than a liquid.
 
 **Colour** tints it. Every option is near-black on purpose, so the bands read
 as depth rather than paint — what separates them is the highlight the surface

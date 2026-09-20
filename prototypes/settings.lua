@@ -36,16 +36,12 @@ for planet, _ in pairs(planets) do
 end
 
 -- Band appearance. Startup, because it selects which tile prototypes exist.
---
--- "rift" needs Space Age for Vulcanus's lava shader; prototypes/tiles.lua
--- falls back to "liquid" and logs if it is unavailable, rather than refusing
--- to load.
 settings_list[#settings_list + 1] = {
   type = "string-setting",
   name = "hattorio-band-style",
   setting_type = "startup",
   default_value = "liquid",
-  allowed_values = { "liquid", "void", "rift" },
+  allowed_values = { "liquid", "void" },
   order = "c[style]-a[style]",
 }
 

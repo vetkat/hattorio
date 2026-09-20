@@ -41,7 +41,7 @@ Per planet, set at world creation.
 |---|---|---|
 | Cell size (centre to vertex, tiles) | **41** (normal) | 15, 26, 41, 52 |
 | Band width (tiles) | **3** (wide) | 1, 2, 3, 4 |
-| Band appearance | Dark liquid | liquid, void, glowing rift |
+| Band appearance | Dark liquid | liquid, void |
 | Band colour | Deep violet | violet, cold, oily, ember, void black |
 
 Hat size is the dial that matters. It decides how much room you get and how

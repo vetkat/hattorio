@@ -2,28 +2,21 @@ local planets = require("mod.planets")
 local colours = require("mod.colours")
 
 -- Band appearance is two independent startup settings: STYLE picks the shader
--- laid over the surface, COLOUR picks what that shader is tinted. They are
--- orthogonal, so a glowing rift can be violet and a flat void can be ember.
+-- laid over the surface, COLOUR picks what that shader is tinted.
 --
--- All styles clone `deepwater`. Its transitions are authored for liquid
+-- Both styles clone `deepwater`. Its transitions are authored for liquid
 -- meeting land, which is the edge a rift wants, and it carries the only
 -- animated shader in the base game.
+--
+-- A glowing lava-shader style was tried and removed: it read as a hazard
+-- rather than as a void, and fought the calm look the rest of the mod has.
 local STYLE = settings.startup["hattorio-band-style"].value
 local COLOUR = settings.startup["hattorio-band-colour"].value
-
--- The glowing style needs Vulcanus's lava shader, which only Space Age ships.
--- Fall back rather than refuse to load, and say so in the log.
-if STYLE == "rift" and not mods["space-age"] then
-  log("hattorio: band style 'rift' needs Space Age for the lava shader; " ..
-      "falling back to 'liquid'")
-  STYLE = "liquid"
-end
 
 -- Only the effect differs between styles; the colours come from COLOUR.
 local STYLE_EFFECT = {
   liquid = "water",
   void = nil,
-  rift = "lava-2",
 }
 
 local c = colours[COLOUR] or colours.violet

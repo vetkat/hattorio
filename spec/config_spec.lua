@@ -204,3 +204,59 @@ describe("band colours", function()
     end
   end)
 end)
+
+describe("band styles", function()
+  it("offers only styles the tiles module implements", function()
+    local f = assert(io.open("prototypes/settings.lua", "r"))
+    local src = f:read("*a"); f:close()
+    local allowed = src:match('name = "hattorio%-band%-style".-allowed_values = {(.-)}')
+    assert.is_not_nil(allowed, "no band style setting found")
+
+    local g = assert(io.open("prototypes/tiles.lua", "r"))
+    local tiles = g:read("*a"); g:close()
+    local effects = tiles:match("local STYLE_EFFECT = {(.-)}")
+    assert.is_not_nil(effects, "no STYLE_EFFECT table found")
+
+    for quoted in allowed:gmatch('"([%a]+)"') do
+      assert.is_not_nil(effects:find(quoted .. " ="),
+        "settings offer style '" .. quoted .. "' with no effect defined")
+    end
+  end)
+
+  it("no longer offers the glowing rift", function()
+    -- removed after playtesting: it read as a hazard rather than a void
+    local f = assert(io.open("prototypes/settings.lua", "r"))
+    local src = f:read("*a"); f:close()
+    assert.is_nil(src:find("rift", 1, true))
+  end)
+end)
+
+describe("highlight contrast", function()
+  local colours = require("mod.colours")
+
+  local function brightness(c) return (c[1] + c[2] + c[3]) / 3 end
+
+  it("gives every colourway a clearly lighter highlight", function()
+    -- without real contrast between body and highlight the shader has nothing
+    -- to catch and the option looks like every other one
+    for name, c in pairs(colours) do
+      local b, h = brightness(c.body), brightness(c.highlight)
+      assert.is_true(h > b + 8,
+        string.format("%s: highlight %.0f is too close to body %.0f", name, h, b))
+    end
+  end)
+
+  it("keeps the colourways distinguishable from each other", function()
+    local seen = {}
+    for name, c in pairs(colours) do
+      for other, oc in pairs(seen) do
+        local d = math.abs(c.highlight[1] - oc.highlight[1])
+              + math.abs(c.highlight[2] - oc.highlight[2])
+              + math.abs(c.highlight[3] - oc.highlight[3])
+        assert.is_true(d > 30,
+          name .. " and " .. other .. " have near-identical highlights")
+      end
+      seen[name] = c
+    end
+  end)
+end)
