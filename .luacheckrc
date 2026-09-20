@@ -3,20 +3,24 @@ max_line_length = 100
 
 -- Factorio's Lua environment. These are provided by the game, not by Lua.
 local factorio_globals = {
-  "data", "mods", "settings", "defines", "game", "script", "storage",
+  "data", "mods", "settings", "defines", "game", "script",
   "prototypes", "remote", "commands", "rendering", "log", "serpent",
   "table_size", "helpers",
 }
 
+-- storage is the mod's persistent table: Factorio provides it, mods write to
+-- it, so it is not read-only.
+local factorio_writable = { "storage", "table" }
+
 files["prototypes"] = {
   read_globals = factorio_globals,
   -- Factorio adds table.deepcopy
-  globals = { "table" },
+  globals = factorio_writable,
 }
 
 files["mod"] = {
   read_globals = factorio_globals,
-  globals = { "table" },
+  globals = factorio_writable,
 }
 
 files["spec"] = { std = "+busted" }
