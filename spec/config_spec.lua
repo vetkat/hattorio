@@ -71,7 +71,6 @@ describe("config", function()
 end)
 
 describe("cell statistics", function()
-  local Config = require("mod.config")
 
   it("has measurements for every combination the dropdowns offer", function()
     -- a missing entry silently falls back to the fitted estimate, which is
