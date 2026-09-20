@@ -412,6 +412,7 @@ Per planet, startup:
 | `hattorio-hat-size-<planet>` | **41** (normal) | 15, 26, 41, 52 |
 | `hattorio-band-width-<planet>` | **3** (wide) | 1, 2, 3, 4 |
 | `hattorio-band-style` | liquid | liquid, void, rift |
+| `hattorio-band-colour` | violet | violet, cold, oily, ember, ink |
 | `hattorio-richness-override` (map) | 0 = automatic | 0 - 10 |
 | `hattorio-show-outline` (per player) | off | on, off |
 
@@ -426,7 +427,11 @@ cramped in practice. 41 gives a 944-tile cell where blueprints up to
 still breaks. Band 3 keeps the bands visually substantial, which band 2
 does not at that cell size.
 
-Only size and band are per planet. Band style is global, and the other
+Band style and band colour are **independent**: the style picks the
+shader laid over the surface, the colour picks what it is tinted, so a
+glowing rift can be violet and a flat void can be ember.
+
+Only size and band are per planet. Band style and colour are global, and the other
 two are scoped by what they affect: richness is map-wide because ore is
 shared, and the outline is per player because it is pure presentation
 and cannot change what anyone else sees.

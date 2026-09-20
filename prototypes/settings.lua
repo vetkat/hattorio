@@ -46,7 +46,20 @@ settings_list[#settings_list + 1] = {
   setting_type = "startup",
   default_value = "liquid",
   allowed_values = { "liquid", "void", "rift" },
-  order = "c[style]",
+  order = "c[style]-a[style]",
+}
+
+-- Band colour, independent of style: any colourway works with any shader.
+-- Deep violet by default -- it is the only option that reads as deliberate
+-- rather than as dark ground, since every body colour here is near-black and
+-- it is the highlight that distinguishes them.
+settings_list[#settings_list + 1] = {
+  type = "string-setting",
+  name = "hattorio-band-colour",
+  setting_type = "startup",
+  default_value = "violet",
+  allowed_values = { "violet", "cold", "oily", "ember", "ink" },
+  order = "c[style]-b[colour]",
 }
 
 -- Map-scoped, because ore is shared between everyone on it. 0 means "use the

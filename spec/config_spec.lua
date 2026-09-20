@@ -147,3 +147,60 @@ describe("richness calibration", function()
     end
   end)
 end)
+
+describe("band colours", function()
+  local colours = require("mod.colours")
+
+  it("declares the same colourways as prototypes/settings.lua", function()
+    local f = assert(io.open("prototypes/settings.lua", "r"))
+    local src = f:read("*a"); f:close()
+    local allowed = src:match('name = "hattorio%-band%-colour".-allowed_values = {(.-)}')
+    assert.is_not_nil(allowed, "no band colour setting found")
+    for name, _ in pairs(colours) do
+      assert.is_not_nil(allowed:find('"' .. name .. '"', 1, true),
+        "colourway " .. name .. " is not offered in settings")
+    end
+    for quoted in allowed:gmatch('"([%a]+)"') do
+      assert.is_not_nil(colours[quoted], "settings offer unknown colourway " .. quoted)
+    end
+  end)
+
+  it("defaults to deep violet", function()
+    local f = assert(io.open("prototypes/settings.lua", "r"))
+    local src = f:read("*a"); f:close()
+    local block = src:match('name = "hattorio%-band%-colour".-order')
+    assert.is_not_nil(block:find('default_value = "violet"', 1, true))
+  end)
+
+  it("gives every colourway a body, a highlight and a mirror tint", function()
+    for name, c in pairs(colours) do
+      for _, key in ipairs({ "body", "highlight", "mirror" }) do
+        assert.is_table(c[key], name .. " is missing " .. key)
+        assert.are.equal(3, #c[key], name .. "." .. key .. " is not RGB")
+        for i = 1, 3 do
+          assert.is_true(c[key][i] >= 0 and c[key][i] <= 255,
+            name .. "." .. key .. " component out of range")
+        end
+      end
+    end
+  end)
+
+  it("has a locale label for every colourway", function()
+    local f = assert(io.open("locale/en/hattorio.cfg", "r"))
+    local src = f:read("*a"); f:close()
+    for name, _ in pairs(colours) do
+      assert.is_not_nil(src:find("hattorio%-band%-colour%-" .. name .. "="),
+        "no label for colourway " .. name)
+    end
+  end)
+
+  it("keeps every body near-black, so bands read as depth", function()
+    for name, c in pairs(colours) do
+      local brightness = (c.body[1] + c.body[2] + c.body[3]) / 3
+      assert.is_true(brightness < 40, name .. " body is too light: " .. brightness)
+      -- the highlight must actually be lighter, or the option is invisible
+      local hl = (c.highlight[1] + c.highlight[2] + c.highlight[3]) / 3
+      assert.is_true(hl >= brightness, name .. " highlight is not lighter than its body")
+    end
+  end)
+end)

@@ -1,30 +1,35 @@
 local planets = require("mod.planets")
+local colours = require("mod.colours")
 
--- Band appearance is a startup setting, so the tiles differ by what the
--- player chose. All three styles clone `deepwater`: its transitions are
--- authored for liquid meeting land, which is the edge a rift wants, and it
--- carries the only animated shader in the base game.
+-- Band appearance is two independent startup settings: STYLE picks the shader
+-- laid over the surface, COLOUR picks what that shader is tinted. They are
+-- orthogonal, so a glowing rift can be violet and a flat void can be ember.
+--
+-- All styles clone `deepwater`. Its transitions are authored for liquid
+-- meeting land, which is the edge a rift wants, and it carries the only
+-- animated shader in the base game.
 local STYLE = settings.startup["hattorio-band-style"].value
+local COLOUR = settings.startup["hattorio-band-colour"].value
 
 -- The glowing style needs Vulcanus's lava shader, which only Space Age ships.
--- Fall back rather than fail to load, and say so in the log.
+-- Fall back rather than refuse to load, and say so in the log.
 if STYLE == "rift" and not mods["space-age"] then
   log("hattorio: band style 'rift' needs Space Age for the lava shader; " ..
       "falling back to 'liquid'")
   STYLE = "liquid"
 end
 
--- Body and highlight colours per style. The body is deliberately near-black
--- in every case; the highlight is what distinguishes them.
-local STYLE_COLOURS = {
-  liquid = { body = { 23, 27, 34 },  highlight = { 46, 58, 69 },  effect = "water" },
-  void   = { body = { 8, 9, 12 },    highlight = { 8, 9, 12 },    effect = nil },
-  rift   = { body = { 26, 12, 8 },   highlight = { 167, 59, 27 }, effect = "lava-2" },
+-- Only the effect differs between styles; the colours come from COLOUR.
+local STYLE_EFFECT = {
+  liquid = "water",
+  void = nil,
+  rift = "lava-2",
 }
 
-local style = STYLE_COLOURS[STYLE] or STYLE_COLOURS.liquid
+local c = colours[COLOUR] or colours.violet
+local effect = STYLE_EFFECT[STYLE]
 
-local function band_tile(name, map_color)
+local function band_tile(name, highlight, map_color)
   local src = data.raw.tile["deepwater"]
   if not src then
     error("hattorio: base tile 'deepwater' does not exist")
@@ -39,9 +44,9 @@ local function band_tile(name, map_color)
   -- vehicles pass over it -- a rift you can step across.
   t.collision_mask = { layers = { hattorio_band = true } }
 
-  t.effect = style.effect
-  t.effect_color = style.body
-  t.effect_color_secondary = style.highlight
+  t.effect = effect
+  t.effect_color = c.body
+  t.effect_color_secondary = highlight
 
   -- Not water: must not feed an offshore pump, must not merge with lakes,
   -- must not be minable or appear in blueprints, and must never autoplace.
@@ -58,9 +63,9 @@ local function band_tile(name, map_color)
 end
 
 local tiles = {}
-for planet, cfg in pairs(planets) do
-  tiles[#tiles + 1] = band_tile("hattorio-band-" .. planet, cfg.map_color)
-  tiles[#tiles + 1] = band_tile("hattorio-band-" .. planet .. "-mirror", cfg.mirror_color)
+for planet, _ in pairs(planets) do
+  tiles[#tiles + 1] = band_tile("hattorio-band-" .. planet, c.highlight, c.body)
+  tiles[#tiles + 1] = band_tile("hattorio-band-" .. planet .. "-mirror", c.mirror, c.mirror)
 end
 
 data:extend(tiles)
