@@ -9,10 +9,14 @@ on:
     tags: ["v*"]
   workflow_dispatch:
     inputs:
-      publish:
-        description: "Also upload to the Factorio mod portal"
-        type: boolean
-        default: false
+      mode:
+        description: "What to do"
+        type: choice
+        default: dry-run
+        options:
+          - dry-run             # build and test only, never touches the portal
+          - check-credentials   # validate the API key, publish nothing
+          - publish             # build, test, and upload to the portal
 
 permissions:
   contents: write
@@ -74,12 +78,12 @@ jobs:
           generate_release_notes: true
 
   publish:
-    name: upload to the mod portal
+    name: mod portal
     needs: build
     runs-on: ubuntu-latest
     # Only on a tag, or an explicit dispatch asking for it. A portal release
     # cannot be withdrawn, so this must never fire by accident.
-    if: github.ref_type == 'tag' || inputs.publish
+    if: github.ref_type == 'tag' || inputs.mode == 'publish' || inputs.mode == 'check-credentials'
     # Configure this environment with a required reviewer if you want a human
     # gate before anything reaches the portal.
     environment: mod-portal
@@ -97,4 +101,8 @@ jobs:
             echo "::error::FACTORIO_API_KEY is not set; add it as a repository secret"
             exit 1
           fi
-          sh tools/publish_mod.sh build/*.zip
+          if [ "${{ inputs.mode }}" = "check-credentials" ]; then
+            sh tools/publish_mod.sh --check
+          else
+            sh tools/publish_mod.sh build/*.zip
+          fi
