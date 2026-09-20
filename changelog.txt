@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.1
+Date: 2026-09-20
+  Changes:
+    - Corrected the mod description. Hattorio divides each planet into cells;
+      it does not replace Factorio's square grid, which is part of the engine.
+    - Corrected the cell size setting description, which quoted buildable tile
+      counts measured at an earlier default band width.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.0
 Date: 2026-09-20
   Major Features:
