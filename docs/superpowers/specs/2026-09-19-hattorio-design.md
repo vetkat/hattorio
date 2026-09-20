@@ -43,16 +43,18 @@ things are.
 Two effects compound.
 
 **Cells are too small.** A standard city block is 100x100 and even a
-modest mall is ~30x30. Worst-case largest axis-aligned square that fits
-in one cell, measured across all 12 orientations:
+modest mall is ~30x30. Worst case across all 12 orientations, measured
+against the correct 13-gon hat:
 
-| hat size | band | cell interior | largest square |
-|---|---|---|---|
-| 12 | 1 | 111 tiles | 5x5 |
-| 16 | 1 | 224 | 9x9 |
-| 20 | 2 | 310 | 10x10 |
-| 26 | 3 | 501 | 13x13 |
-| 41 | 3 | 1,415 | 19x19 |
+| hat size | band | cell area | worst rectangle | drillable |
+|---|---|---|---|---|
+| 20 | 1 | 221 t | 9x9 | 51.1% |
+| 20 | 2 | 188 t | 5x15 | 39.8% |
+| 26 | 2 | 346 t | 7x19 | 52.2% |
+| 41 | 2 | 939 t | 19x19 | 68.2% |
+| 41 | 3 | 858 t | 19x18 | 61.0% |
+| 52 | 2 | 1,581 t | 14x42 | 74.9% |
+| 64 | 3 | 2,315 t | 29x30 | 74.6% |
 
 **Orientations are unreachable.** Hats occur at 30/60 degree
 orientations. Factorio rotates blueprints in 90 degree steps, so a
@@ -361,8 +363,15 @@ Per planet, startup:
 
 | Setting | Default | Range |
 |---|---|---|
-| `hattorio-hat-size-<planet>` | 20 (centre-to-vertex, tiles) | 8-90 |
+| `hattorio-hat-size-<planet>` | **needs re-deciding**, see below | 15-90 |
 | `hattorio-band-width-<planet>` | 2 | 1-6 |
+
+The default of 20 was chosen against the wrong hat area and is now
+known to give a cell of only 188 buildable tiles with a worst-case
+5x15 rectangle -- considerably harsher than intended. Hextorio parity
+is **size 52**, not the 41 this document previously stated. Candidates:
+26 (346 t, 7x19), 41 (939 t, 19x19), 52 (1,581 t, Hextorio-equal).
+Pick by playtest.
 
 Runtime-global: outline visibility, outline width, outline alpha.
 
@@ -408,6 +417,17 @@ Recorded so they are not re-derived.
   `hexPt(x,y) = (x + y/2, (sqrt3/2)*y)`. Since `H_init` indexes
   `hat_outline[5]`, `[7]`, `[9]` and `[11]`, a wrong vertex list
   silently produces wrong hat placements.
+- **Every gameplay number in this document was first computed against
+  the wrong hat.** The 14-gon in the original scaffold has area 22.08
+  where the real 13-gon has 13.86 -- an overstatement of 1.59x. That
+  invalidated the cell-size table, the largest-rectangle figures, the
+  ore drillability numbers and the Hextorio-equal-area scale (52, not
+  41). All are recomputed above. Caught by rendering the tiling and
+  noticing measured band coverage was twice the predicted value.
+- **Band coverage is not perimeter x width / 2.** Corner rounding and
+  tile-centre rasterisation push it well above that estimate: 28.0%
+  measured at size 41 / band 2 against 14.8% predicted. Measure it by
+  rasterising, never by formula.
 - **Metatile area does not equal its hats' area.** Hats straddle
   metatile boundaries, so an area check is not a validity test for
   H, T or F. Use overlap plus gap detection.
