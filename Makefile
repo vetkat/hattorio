@@ -11,7 +11,7 @@ else
   RUN_BUSTED := $(BUSTED)
 endif
 
-.PHONY: all test pytest lint data check preview
+.PHONY: all test pytest lint data check preview wiki
 
 all: check
 
@@ -49,6 +49,8 @@ wiki:
 	  { echo "Wiki repo does not exist yet. Create any page at"; \
 	    echo "  https://github.com/vetkat/hattorio/wiki"; \
 	    echo "then re-run 'make wiki'."; exit 1; }
+	@# sync, not copy: pages removed from wiki/ should disappear from the wiki
+	rm -f .wiki-tmp/*.md
 	cp wiki/*.md .wiki-tmp/
 	rm -f .wiki-tmp/README.md
 	cd .wiki-tmp && git add -A && \
