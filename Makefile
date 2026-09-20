@@ -38,7 +38,7 @@ preview:
 	done
 
 lint:
-	luacheck hat spec
+	luacheck hat mod prototypes spec
 
 check: pytest test lint
 

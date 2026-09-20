@@ -44,4 +44,4 @@ jobs:
       - run: luarocks install busted
       - run: luarocks install luacheck
       - run: busted
-      - run: luacheck hat spec
+      - run: luacheck hat mod prototypes spec
