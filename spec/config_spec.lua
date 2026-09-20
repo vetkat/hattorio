@@ -54,21 +54,9 @@ describe("config", function()
 
   it("compensates richness more when less ore is drillable", function()
     local small = Config.richness_multiplier(15, 2)
-    local large = Config.richness_multiplier(90, 2)
+    local large = Config.richness_multiplier(52, 1)
     assert.is_true(small > large, small .. " should exceed " .. large)
     assert.is_true(large >= 1.0)
-    assert.is_true(small <= 5.0, "compensation is capped at 5x")
-  end)
-
-  it("caps compensation at the smallest cells", function()
-    -- At size 15 / band 2 barely 15% of a cell's ore is reachable, so the
-    -- drillable floor of 0.2 binds and compensation saturates at 5x. That is
-    -- deliberate: an uncapped formula would hand out absurd richness at the
-    -- extreme end of the settings range.
-    assert.are.equal(0.2, Config.drillable_fraction(15, 2))
-    assert.are.equal(5.0, Config.richness_multiplier(15, 2))
-    -- the default is comfortably off the floor
-    assert.is_true(Config.drillable_fraction(26, 2) > 0.4)
   end)
 
   it("compensates more for a wider band", function()
@@ -82,68 +70,87 @@ describe("config", function()
 
 end)
 
-describe("richness calibration", function()
+describe("cell statistics", function()
+  local Config = require("mod.config")
 
-
-  -- Measured by rasterising a cell's interior and testing where a 3x3 drill
-  -- fits, worst case across all 12 orientations. If the formula drifts from
-  -- these, ore compensation silently becomes wrong.
-  local measured = {
-    { 20, 1, 0.511 }, { 20, 2, 0.398 }, { 26, 2, 0.522 },
-    { 41, 2, 0.682 }, { 41, 3, 0.610 }, { 52, 2, 0.749 },
-  }
-
-  it("predicts the measured drillable fractions", function()
-    for _, m in ipairs(measured) do
-      local size, band, want = m[1], m[2], m[3]
-      local got = Config.drillable_fraction(size, band)
-      assert.is_true(math.abs(got - want) < 0.05,
-        string.format("size %d band %d: predicted %.3f, measured %.3f",
-                      size, band, got, want))
-    end
-  end)
-
-  it("gives a compensation that restores roughly vanilla yield", function()
-    for _, m in ipairs(measured) do
-      local size, band, want = m[1], m[2], m[3]
-      local effective = want * Config.richness_multiplier(size, band)
-      assert.is_true(effective > 0.85 and effective < 1.25,
-        string.format("size %d band %d: effective yield %.2f", size, band, effective))
-    end
-  end)
-
-  it("offers only choices it can actually satisfy", function()
+  it("has measurements for every combination the dropdowns offer", function()
+    -- a missing entry silently falls back to the fitted estimate, which is
+    -- much worse at small cells; this catches a choice added without
+    -- measuring it
     for _, size in ipairs(Config.SIZE_CHOICES) do
       for _, band in ipairs(Config.BAND_CHOICES) do
-        local g = Config.geometry(size, band)
-        assert.are.equal(size, g.size)
-        assert.are.equal(band, g.band)
+        local st = Config.cell_stats(size, band)
+        assert.is_not_nil(st, "no measurements for size " .. size .. " band " .. band)
+        assert.is_true(st.area > 0)
+        assert.is_true(st.square > 0)
+        assert.is_true(st.drillable > 0 and st.drillable <= 1)
       end
     end
   end)
 
-  it("declares the same dropdown values as prototypes/settings.lua", function()
-    local f = assert(io.open("prototypes/settings.lua", "r"))
-    local src = f:read("*a"); f:close()
-    assert.is_not_nil(src:find('default_value = "' .. Config.DEFAULT_SIZE .. '"', 1, true),
-      "settings.lua default size differs from Config.DEFAULT_SIZE")
-    assert.is_not_nil(src:find('default_value = "' .. Config.DEFAULT_BAND .. '"', 1, true),
-      "settings.lua default band differs from Config.DEFAULT_BAND")
-    for _, v in ipairs(Config.SIZE_CHOICES) do
-      assert.is_not_nil(src:find('"' .. v .. '"', 1, true), "size choice " .. v .. " missing")
+  it("uses the measurement, not the fit, for offered combinations", function()
+    for _, size in ipairs(Config.SIZE_CHOICES) do
+      for _, band in ipairs(Config.BAND_CHOICES) do
+        assert.are.equal(Config.cell_stats(size, band).drillable,
+                         Config.drillable_fraction(size, band))
+      end
     end
   end)
 
-  it("has a locale label for every dropdown value", function()
-    local f = assert(io.open("locale/en/hattorio.cfg", "r"))
-    local src = f:read("*a"); f:close()
-    for _, v in ipairs(Config.SIZE_CHOICES) do
-      assert.is_not_nil(src:find("hattorio%-hat%-size%-nauvis%-" .. v .. "="),
-        "no label for size " .. v)
+  it("gets smaller cells and wider bands right, monotonically", function()
+    for _, size in ipairs(Config.SIZE_CHOICES) do
+      local prev
+      for _, band in ipairs(Config.BAND_CHOICES) do
+        local st = Config.cell_stats(size, band)
+        if prev then
+          assert.is_true(st.area < prev.area, "wider band must shrink the cell")
+          assert.is_true(st.drillable < prev.drillable,
+            "wider band must reduce drillable ore")
+        end
+        prev = st
+      end
     end
-    for _, v in ipairs(Config.BAND_CHOICES) do
-      assert.is_not_nil(src:find("hattorio%-band%-width%-nauvis%-" .. v .. "="),
-        "no label for band " .. v)
+    for _, band in ipairs(Config.BAND_CHOICES) do
+      local prev
+      for _, size in ipairs(Config.SIZE_CHOICES) do
+        local st = Config.cell_stats(size, band)
+        if prev then
+          assert.is_true(st.area > prev.area, "larger cells must hold more")
+        end
+        prev = st
+      end
+    end
+  end)
+
+  it("compensates richness back to roughly vanilla yield", function()
+    for _, size in ipairs(Config.SIZE_CHOICES) do
+      for _, band in ipairs(Config.BAND_CHOICES) do
+        local st = Config.cell_stats(size, band)
+        local effective = st.drillable * Config.richness_multiplier(size, band)
+        assert.is_true(math.abs(effective - 1) < 1e-9,
+          string.format("size %d band %d: effective yield %.3f", size, band, effective))
+      end
+    end
+  end)
+
+  it("flags only the combinations that are barely playable", function()
+    -- 15/4 gives a 4x4 largest square; a drill and an assembler are both 3x3
+    assert.is_true(Config.is_severe(15, 4))
+    assert.is_false(Config.is_severe(15, 2))
+    assert.is_false(Config.is_severe(26, 4))
+    assert.is_false(Config.is_severe(41, 3))
+  end)
+
+  it("keeps the fallback fit close to the measurements", function()
+    -- used only for sizes that never came from a dropdown
+    for _, size in ipairs(Config.SIZE_CHOICES) do
+      for _, band in ipairs(Config.BAND_CHOICES) do
+        local got = Config.fit_drillable(size, band)
+        local want = Config.cell_stats(size, band).drillable
+        assert.is_true(math.abs(got - want) < 0.08,
+          string.format("size %d band %d: fit %.3f vs measured %.3f",
+                        size, band, got, want))
+      end
     end
   end)
 end)

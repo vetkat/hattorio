@@ -55,6 +55,27 @@ function Surface.init(surface)
     "ore richness x%.2f (%s)",
     planet, g.size, g.band, g.depth, mult, source))
 
+  -- Some combinations the dropdowns allow leave almost nothing buildable.
+  -- At cell size 15 with a band of 4 a cell holds 46 tiles and its largest
+  -- universal square is 4x4 -- a mining drill and an assembling machine are
+  -- both 3x3, so there is no room to connect anything. Say so once rather
+  -- than let it be discovered an hour in.
+  if Config.is_severe(g.size, g.band) then
+    local stats = Config.cell_stats(g.size, g.band)
+    log(string.format(
+      "hattorio: WARNING %s uses cell size %d with band %d -- only %d " ..
+      "buildable tiles per cell and a largest square of %dx%d. This is " ..
+      "close to unplayable.", planet, g.size, g.band, stats.area,
+      stats.square, stats.square))
+    if game then
+      game.print(string.format(
+        "[Hattorio] Cell size %d with band %d leaves about %d buildable " ..
+        "tiles per cell, and the largest blueprint that fits every cell is " ..
+        "%dx%d. A mining drill is 3x3. Consider a larger cell size.",
+        g.size, g.band, stats.area, stats.square, stats.square))
+    end
+  end
+
   return g
 end
 

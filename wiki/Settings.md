@@ -78,6 +78,23 @@ ones keep the geometry their terrain was built with, so nothing ever seams.
 ## Ore
 
 Bands cut through ore patches, and a mining drill needs a clear 3×3, so some
-ore ends up unreachable — from about 40% reachable at size 26 up to 68% at
-size 41. Resource richness is raised to compensate, scaled to your size
-setting.
+ore ends up out of reach. Richness is raised to compensate, using measured
+values rather than a guess — the fraction reachable ranges from 80% at the
+largest cells down to 5% at the smallest with the widest band.
+
+`/hattorio-info` reports the cell size, band width and the richness multiplier
+actually in force on your surface, and whether it was derived automatically or
+taken from the override setting.
+
+## Combinations to avoid
+
+Cell size and band width are independent dropdowns, so a few combinations are
+possible but not sensible:
+
+| | cell | largest blueprint | reachable ore | |
+|---|---|---|---|---|
+| 15 / 3 | 63 tiles | 5×5 | 11% | ore very scarce |
+| 15 / 4 | 46 tiles | 4×4 | 5% | close to unplayable |
+
+A mining drill and an assembling machine are both 3×3, so a 4×4 cell leaves no
+room to connect anything. The mod warns you on load if you pick one of these.
