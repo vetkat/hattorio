@@ -1,0 +1,7 @@
+---------------------------------------------------------------------------------------------------
+Version: 0.1.0
+Date: 2026-09-20
+  Major Features:
+    - Planets are divided into cells of the aperiodic hat monotile tiling.
+    - Cells are separated by narrow unbuildable bands. Undergrounds tunnel
+      beneath them; rails cross them; bots and power ignore them.

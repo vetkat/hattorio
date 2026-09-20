@@ -36,9 +36,12 @@ integers with `φ² = φ+1` and `√3² = 3` closing multiplication.
 
 That works beautifully offline. In Lua it collapses.
 
-Lua 5.2 has no integer type; every number is a double, exact only to 2⁵³. The
-substitution's per-level rules are exact rationals *converging on irrational
-limits*, so their numerators explode:
+Lua 5.2 has no integer subtype — its single number type is a double in any
+standard build — so integers are exact only up to 2⁵³. (Lua 5.3 added a
+genuine 64-bit integer, which is exactly why this project's tests pin 5.2:
+running them on 5.4 would mask the all-doubles behaviour the core depends on).
+The substitution's per-level rules are exact rationals *converging on
+irrational limits*, so their numerators explode:
 
 ```
 level 6:  numerators 1.4e14   fine

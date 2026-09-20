@@ -17,6 +17,18 @@ jobs:
       - run: pip install pytest
       - name: verify the tiling and regenerate data
         run: python -m pytest tools/tests -q
+      - name: validate the mod manifest and changelog
+        run: |
+          python3 -c "
+          import json
+          d = json.load(open('info.json'))
+          assert d['factorio_version'] == '2.0', d['factorio_version']
+          for k in ('name','version','title','author','description','dependencies'):
+              assert k in d, k
+          sep = open('changelog.txt').readline().rstrip('\n')
+          assert len(sep) == 99 and set(sep) == {'-'}, 'changelog separator must be 99 dashes'
+          print('manifest ok:', d['name'], d['version'])
+          "
 
   core:
     name: tiling core (Lua 5.2)
