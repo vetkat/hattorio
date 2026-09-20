@@ -5,7 +5,6 @@
 -- the tiling is derived from that geometry and rebuilt on load.
 
 local Ti = require("hat.tiling")
-local Config = require("mod.config")
 local Surface = require("mod.surface")
 local Bands = require("mod.bands")
 local Outline = require("mod.outline")
@@ -72,13 +71,7 @@ end
 local function compensate_resources(surface, area)
   local g = Surface.get(surface)
   if not g then return end
-  -- A map setting of 0 means "compensate automatically"; anything else
-  -- replaces the derived value outright.
-  local override = settings.global["hattorio-richness-override"]
-  local mult = override and override.value or 0
-  if mult <= 0 then
-    mult = Config.richness_multiplier(g.size, g.band)
-  end
+  local mult = Surface.richness(g)
   if mult == 1.0 then return end
 
   local found = surface.find_entities_filtered({
@@ -127,7 +120,34 @@ script.on_load(function()
   Outline.reset()
 end)
 
-script.on_configuration_changed(function()
+--- Warn when the mod is added to a world that already has terrain.
+--
+-- Bands are painted as chunks generate, so chunks that already existed keep
+-- their vanilla terrain forever. The result is a hard, permanent line between
+-- the old area and everything explored afterwards. Nothing can fix that
+-- retroactively without regenerating the map, so the least we can do is say
+-- so rather than let it be discovered later.
+local function warn_if_added_mid_save(data)
+  local change = data and data.mod_changes and data.mod_changes["hattorio"]
+  if not (change and change.old_version == nil) then return end
+
+  for _, surface in pairs(game.surfaces) do
+    if Surface.is_tiled(surface) then
+      -- is_chunk_generated on the origin is a cheap proxy for "this world has
+      -- been played": a brand new surface has nothing generated yet.
+      if surface.is_chunk_generated({ 0, 0 }) then
+        game.print("[Hattorio] Added to a world that already has terrain. " ..
+          "Existing chunks keep their vanilla ground and will never grow " ..
+          "cells, so there will be a permanent boundary where you have " ..
+          "already explored. For the intended experience, start a new world.")
+        return
+      end
+    end
+  end
+end
+
+script.on_configuration_changed(function(data)
   tilings = {}
   Outline.reset()
+  warn_if_added_mid_save(data)
 end)

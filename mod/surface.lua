@@ -48,7 +48,30 @@ function Surface.init(surface)
   g.mirror_tile = "hattorio-band-" .. planet .. "-mirror"
 
   storage.surfaces[surface.index] = g
+
+  local mult, source = Surface.richness(g)
+  log(string.format(
+    "hattorio: %s initialised -- cell size %d, band %d, depth %d, " ..
+    "ore richness x%.2f (%s)",
+    planet, g.size, g.band, g.depth, mult, source))
+
   return g
+end
+
+--- The ore richness multiplier in force for a surface, and where it came from.
+--
+-- Shared by terrain generation and the /hattorio-info command so the number a
+-- player is shown is the number actually applied, not a second derivation of
+-- it that could drift.
+--
+-- @return multiplier, source  where source is "override" or "automatic"
+function Surface.richness(g)
+  local setting = settings.global["hattorio-richness-override"]
+  local override = setting and setting.value or 0
+  if override > 0 then
+    return override, "override"
+  end
+  return Config.richness_multiplier(g.size, g.band), "automatic"
 end
 
 function Surface.get(surface)
