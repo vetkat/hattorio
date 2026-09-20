@@ -1,21 +1,20 @@
 -- Which surfaces get tiled, and what the band looks like there.
 --
--- base_tile is a vanilla tile whose graphics and transitions are cloned; only
--- the name, colours and collision mask change. Cloning is what makes this
--- affordable: authoring tile transition graphics from scratch is the
--- expensive part, and vanilla has already done it.
+-- All three band styles clone `deepwater`. That is not laziness: its
+-- transitions are authored for "liquid meets land", which is exactly the edge
+-- a rift needs, and it is the only base tile carrying an animated shader.
+-- The styles differ only in the effect and the colours laid over it.
 --
--- NOTE: map_color differs per planet but the in-world graphics do not yet,
--- since they come from base_tile. Real per-planet art is a later job.
+--   liquid  the water shader, recoloured dark -- it moves and oozes
+--   void    no effect at all -- a flat, still hole in the world
+--   rift    Vulcanus's lava shader -- glows, REQUIRES Space Age
+--
+-- effect_color is the body of the surface; effect_color_secondary is the
+-- highlight the shader catches at the edges.
 return {
-  nauvis   = { base_tile = "stone-path", map_color = { 43, 47, 54 },
-               mirror_color = { 20, 121, 201 } },
-  vulcanus = { base_tile = "stone-path", map_color = { 38, 26, 24 },
-               mirror_color = { 176, 64, 32 } },
-  fulgora  = { base_tile = "stone-path", map_color = { 46, 38, 56 },
-               mirror_color = { 150, 96, 200 } },
-  gleba    = { base_tile = "stone-path", map_color = { 34, 46, 32 },
-               mirror_color = { 120, 170, 70 } },
-  aquilo   = { base_tile = "stone-path", map_color = { 48, 56, 62 },
-               mirror_color = { 120, 180, 210 } },
+  nauvis   = { map_color = { 23, 27, 34 },  mirror_color = { 20, 121, 201 } },
+  vulcanus = { map_color = { 29, 16, 11 },  mirror_color = { 176, 64, 32 } },
+  fulgora  = { map_color = { 30, 19, 48 },  mirror_color = { 150, 96, 200 } },
+  gleba    = { map_color = { 14, 26, 19 },  mirror_color = { 120, 170, 70 } },
+  aquilo   = { map_color = { 26, 32, 38 },  mirror_color = { 120, 180, 210 } },
 }

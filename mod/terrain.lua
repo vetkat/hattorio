@@ -8,6 +8,7 @@ local Ti = require("hat.tiling")
 local Config = require("mod.config")
 local Surface = require("mod.surface")
 local Bands = require("mod.bands")
+local Outline = require("mod.outline")
 
 -- Derived state, keyed by surface index. Deliberately NOT in storage: it is
 -- reconstructible from the stored geometry, and a tiling holds closures.
@@ -71,8 +72,14 @@ end
 local function compensate_resources(surface, area)
   local g = Surface.get(surface)
   if not g then return end
-  local mult = Config.richness_multiplier(g.size, g.band)
-  if mult <= 1.0 then return end
+  -- A map setting of 0 means "compensate automatically"; anything else
+  -- replaces the derived value outright.
+  local override = settings.global["hattorio-richness-override"]
+  local mult = override and override.value or 0
+  if mult <= 0 then
+    mult = Config.richness_multiplier(g.size, g.band)
+  end
+  if mult == 1.0 then return end
 
   local found = surface.find_entities_filtered({
     area = { { area.left, area.top }, { area.right, area.bottom } },
@@ -98,6 +105,29 @@ script.on_event(defines.events.on_surface_created, function(event)
   if surface then Surface.init(surface) end
 end)
 
+script.on_nth_tick(30, function()
+  for _, player in pairs(game.connected_players) do
+    Outline.refresh(player)
+  end
+end)
+
+script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
+  if event.setting == "hattorio-show-outline" and event.player_index then
+    Outline.clear(event.player_index)
+  end
+end)
+
+script.on_event(defines.events.on_player_changed_surface, function(event)
+  Outline.clear(event.player_index)
+end)
+
 -- Derived state only; rebuilt lazily on next use.
-script.on_load(function() tilings = {} end)
-script.on_configuration_changed(function() tilings = {} end)
+script.on_load(function()
+  tilings = {}
+  Outline.reset()
+end)
+
+script.on_configuration_changed(function()
+  tilings = {}
+  Outline.reset()
+end)

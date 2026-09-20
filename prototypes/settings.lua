@@ -33,4 +33,41 @@ for planet, _ in pairs(planets) do
   }
 end
 
+-- Band appearance. Startup, because it selects which tile prototypes exist.
+--
+-- "rift" needs Space Age for Vulcanus's lava shader; prototypes/tiles.lua
+-- falls back to "liquid" and logs if it is unavailable, rather than refusing
+-- to load.
+settings_list[#settings_list + 1] = {
+  type = "string-setting",
+  name = "hattorio-band-style",
+  setting_type = "startup",
+  default_value = "liquid",
+  allowed_values = { "liquid", "void", "rift" },
+  order = "c[style]",
+}
+
+-- Map-scoped, because ore is shared between everyone on it. 0 means "use the
+-- automatic compensation derived from cell size and band width"; any other
+-- value replaces it outright.
+settings_list[#settings_list + 1] = {
+  type = "double-setting",
+  name = "hattorio-richness-override",
+  setting_type = "runtime-global",
+  default_value = 0.0,
+  minimum_value = 0.0,
+  maximum_value = 10.0,
+  order = "d[richness]",
+}
+
+-- Per player, because it is pure presentation: one player having the overlay
+-- on cannot affect what anyone else sees or what the terrain is.
+settings_list[#settings_list + 1] = {
+  type = "bool-setting",
+  name = "hattorio-show-outline",
+  setting_type = "runtime-per-user",
+  default_value = false,
+  order = "e[outline]",
+}
+
 data:extend(settings_list)

@@ -15,6 +15,8 @@ local size   = tonumber(arg[1]) or 20
 local band   = tonumber(arg[2]) or 2
 local tiles  = tonumber(arg[3]) or 200
 local out    = arg[4] or "bands.svg"
+local band_c = arg[5] or "#2b2f36"        -- band colour
+local land_c = arg[6] or "#7a8b5a"        -- surrounding land
 
 local unit = Ti.unit_for_hat_size(size)
 local half = band / 2
@@ -38,8 +40,8 @@ local f = assert(io.open(out, "w"))
 f:write(string.format('<svg xmlns="http://www.w3.org/2000/svg" width="%d" '
   .. 'height="%d" viewBox="%d %d %d %d" shape-rendering="crispEdges">\n',
   tiles * 4, tiles * 4, lo, lo, tiles, tiles))
-f:write(string.format('<rect x="%d" y="%d" width="%d" height="%d" fill="#7a8b5a"/>\n',
-  lo, lo, tiles, tiles))
+f:write(string.format('<rect x="%d" y="%d" width="%d" height="%d" fill="%s"/>\n',
+  lo, lo, tiles, tiles, land_c))
 
 local band_tiles = 0
 for ty = lo, hi do
@@ -59,8 +61,8 @@ for ty = lo, hi do
     end
     if on_band then
       band_tiles = band_tiles + 1
-      f:write(string.format('<rect x="%d" y="%d" width="1" height="1" fill="#2b2f36"/>\n',
-        tx, ty))
+      f:write(string.format('<rect x="%d" y="%d" width="1" height="1" fill="%s"/>\n',
+        tx, ty, band_c))
     end
   end
 end
