@@ -1,0 +1,35 @@
+name: check
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  pipeline:
+    name: offline pipeline (Python)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pytest
+      - name: verify the tiling and regenerate data
+        run: python -m pytest tools/tests -q
+
+  core:
+    name: tiling core (Lua 5.2)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Factorio embeds Lua 5.2.1; testing on anything newer would mask the
+      # all-doubles behaviour the core depends on.
+      - uses: leafo/gh-actions-lua@v10
+        with:
+          luaVersion: "5.2"
+      - uses: leafo/gh-actions-luarocks@v4
+      - run: luarocks install busted
+      - run: luarocks install luacheck
+      - run: busted
+      - run: luacheck hat spec

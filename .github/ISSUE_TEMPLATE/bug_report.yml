@@ -1,0 +1,50 @@
+name: Bug report
+description: Something behaves differently from how it should
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. If the problem is visual, a screenshot with the
+        map view open helps a great deal.
+  - type: input
+    id: factorio
+    attributes:
+      label: Factorio version
+      placeholder: "2.0.77"
+    validations:
+      required: true
+  - type: input
+    id: modversion
+    attributes:
+      label: Hattorio version
+    validations:
+      required: true
+  - type: input
+    id: settings
+    attributes:
+      label: Hat size and band width
+      description: From the mod settings, per planet if they differ.
+      placeholder: "26 / 2 (default)"
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+  - type: textarea
+    id: mods
+    attributes:
+      label: Other mods enabled
+      description: Paste the list, or say "none".
+  - type: checkboxes
+    id: multiplayer
+    attributes:
+      label: Multiplayer
+      options:
+        - label: This happened in multiplayer
+        - label: It was a desync (please attach the desync report)

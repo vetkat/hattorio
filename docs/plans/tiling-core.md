@@ -8,7 +8,7 @@
 
 **Tech Stack:** Python 3.11+ (`fractions`, stdlib only), Lua 5.2, busted, luassert, lua-quickcheck, luacheck.
 
-**Spec:** `docs/superpowers/specs/2026-09-19-hattorio-design.md`
+**Spec:** `docs/design/hattorio-design.md`
 
 ## Global Constraints
 

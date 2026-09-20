@@ -1,3 +1,10 @@
+> **Status: partly superseded.** Written before the project had Factorio
+> context. The runtime question is settled (Factorio embeds Lua 5.2.1, not a
+> choice), and most of the floating-point section is moot now that the tiling
+> core composes in doubles rather than exact integers. What survives: busted +
+> luassert, luacheck, the 2^53 ceiling, and `tostring` being lossy `%.14g`.
+> See `hattorio-design.md` sections 5 and 14 for the current position.
+
 # Approach
 
 ## Verification strategy

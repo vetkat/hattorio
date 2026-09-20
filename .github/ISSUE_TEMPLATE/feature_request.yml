@@ -1,0 +1,22 @@
+name: Feature request
+description: Suggest something the mod should do
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like it to do
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: What problem does that solve
+      description: What are you trying to do that is awkward today?
+  - type: markdown
+    attributes:
+      value: |
+        If this is about how the mod *feels* to play — cell size, band width,
+        how punishing it should be — consider
+        [Discussions](../../discussions) instead. Those questions are still
+        genuinely open and a conversation suits them better than a ticket.

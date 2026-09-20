@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Questions and feedback on how it plays
+    url: https://github.com/vetkat/hattorio/discussions
+    about: Balance, cell size, and "is this fun" belong in Discussions.
