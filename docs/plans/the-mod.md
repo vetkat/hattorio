@@ -1069,7 +1069,12 @@ git commit -m "feat(mod): thumbnail and distributable zip"
 
 ---
 
-### Task 10: Multiplayer determinism check
+### Task 10: Multiplayer determinism check  [DEFERRED]
+
+> **Deferred by decision, not forgotten.** This needs a second machine and
+> ideally a second operating system, which is the whole point of the check --
+> the risk being tested is divergence between platforms. It gates *release*,
+> not the code, and the mod is marked single-player-only until it is done.
 
 The spec's determinism argument is from first principles — correctly-rounded
 IEEE operations, no `sin`/`cos`/`pow`, one VM instruction per operation. It

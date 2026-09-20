@@ -7,9 +7,10 @@ discovered in 2023. Cells never repeat, so neither can your blueprints.
 
 ![The hat tiling as Hattorio generates it](docs/preview/tiling.png)
 
-> **Status: in development.** The tiling engine is finished and tested. The
-> mod itself — terrain, build restrictions, settings — is not written yet.
-> There is nothing to install from the mod portal today.
+> **Status: playable, not yet released.** Terrain, build restrictions and
+> settings all work and have been tested in game. Not on the mod portal yet,
+> and **multiplayer is unverified** — the determinism argument is sound but
+> has never been confirmed with two clients. Single player should be solid.
 
 ## What it does to your game
 
