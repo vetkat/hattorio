@@ -16,15 +16,13 @@ local band   = tonumber(arg[2]) or 2
 local tiles  = tonumber(arg[3]) or 200
 local out    = arg[4] or "bands.svg"
 
-local unit = size / G.RADIUS
+local unit = Ti.unit_for_hat_size(size)
 local half = band / 2
 
--- depth just large enough to cover the window
-local t
-for d = 0, Ti.max_depth() do
-  t = Ti.new({ unit = unit, depth = d })
-  if t:coverage() > tiles then break end
-end
+-- coverage() is the root metatile's CIRCUMRADIUS, and the root is a hexagon,
+-- so a square window inscribed in that circle is not fully inside it. Ask for
+-- well over the window's half-diagonal.
+local t = Ti.new({ unit = unit, cover = tiles * 2 })
 
 local lo = -math.floor(tiles / 2)
 local hi = lo + tiles - 1

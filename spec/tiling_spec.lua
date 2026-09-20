@@ -91,3 +91,56 @@ describe("tiling descent", function()
     assert.has_error(function() Ti.new({ depth = Ti.max_depth() + 1 }) end)
   end)
 end)
+
+describe("depth derivation", function()
+  local CIRC = require("data.hat_geometry").circumradius
+
+  it("derives a depth that covers a requested radius", function()
+    for _, size in ipairs({ 15, 20, 26, 41, 52, 90 }) do
+      local unit = size / CIRC
+      local t = Ti.new({ unit = unit, cover = 1.1e6 })
+      assert.is_true(t:coverage() >= 1.1e6,
+        "size " .. size .. " covers only " .. t:coverage())
+    end
+  end)
+
+  it("picks a deeper root for a smaller hat", function()
+    local small = Ti.new({ unit = 15 / CIRC, cover = 1.1e6 })
+    local large = Ti.new({ unit = 90 / CIRC, cover = 1.1e6 })
+    assert.is_true(small.depth > large.depth)
+  end)
+
+  it("errors rather than silently under-covering", function()
+    assert.has_error(function() Ti.new({ unit = 1e-6, cover = 1e12 }) end)
+  end)
+end)
+
+describe("root coverage", function()
+  local G = require("hat.geometry")
+
+  it("fully tiles a box well inside the root, with no gaps", function()
+    local unit = Ti.unit_for_hat_size(26)
+    local t = Ti.new({ unit = unit, cover = 2000 })
+    local b = { left = -300, top = -300, right = 300, bottom = 300 }
+    local polys = {}
+    for i, h in ipairs(t:hats_in_box(b)) do polys[i] = G.polygon(h.xf, unit) end
+    local miss = 0
+    for y = -299, 299, 7 do
+      for x = -299, 299, 7 do
+        local inside = false
+        for i = 1, #polys do
+          if G.point_in_polygon(x + 0.5, y + 0.5, polys[i]) then inside = true break end
+        end
+        if not inside then miss = miss + 1 end
+      end
+    end
+    assert.are.equal(0, miss, miss .. " uncovered points")
+  end)
+
+  it("converts hat size to unit and back", function()
+    for _, size in ipairs({ 15, 26, 41, 90 }) do
+      local u = Ti.unit_for_hat_size(size)
+      assert.is_true(math.abs(Ti.hat_size_for_unit(u) - size) < 1e-9)
+    end
+  end)
+end)

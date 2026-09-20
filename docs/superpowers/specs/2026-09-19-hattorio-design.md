@@ -56,13 +56,47 @@ against the correct 13-gon hat:
 | 52 | 2 | 1,581 t | 14x42 | 74.9% |
 | 64 | 3 | 2,315 t | 29x30 | 74.6% |
 
-**Orientations are unreachable.** Hats occur at 30/60 degree
-orientations. Factorio rotates blueprints in 90 degree steps, so a
-layout fitted to one cell cannot be re-used in a differently oriented
-one. Players must hand-build each cell.
+**Every cell is a different shape.** This, not orientation, is what
+actually breaks blueprints.
 
-Reflected hats (~1 in 8, density 1/(phi^4+1) ~ 0.1273) compound this
-further.
+Hats occur in 12 classes: 6 rotations at multiples of 60 degrees, times
+2 chiralities, all near-uniform in frequency (~14.5% per unreflected
+class, ~2.1% per reflected). Factorio rotates blueprints in 90 degree
+steps, so 0/180, 60/240 and 120/300 each collapse to one class, and
+2.0 can flip, which maps reflected onto unreflected. **Orientation
+alone would therefore need only about 3 layouts** -- an earlier draft
+of this document claimed 12, which overstated the case.
+
+What does the work is sub-tile placement. Hat positions are irrational
+multiples of the tile pitch, so every cell sits at a different offset
+and rasterises differently. Measured over 1,156 hats:
+
+| | size 20 / band 2 | size 41 / band 2 |
+|---|---|---|
+| orientation classes | 12 | 12 |
+| **distinct buildable tile-masks** | **624** | **918** |
+| most common single mask | 1.1% of cells | 0.5% of cells |
+
+No single cell shape covers more than about 1% of the map. A layout
+that fills a cell must be fitted to that cell.
+
+**What still survives**, and it is the honest limit of the mechanism: a
+blueprint with margin transfers fine. Anything up to the worst-case
+inscribed square fits every cell:
+
+| size / band | universally reusable | cell area |
+|---|---|---|
+| 20 / 2 | up to 8x8 | 189 t |
+| 26 / 2 | up to 11x11 | 347 t |
+| 41 / 2 | up to 18x18 | 944 t |
+| 52 / 2 | up to 23x23 | 1,584 t |
+
+A smelter block is ~20x20 and a mall ~30x30, so every size up to 41
+defeats real imported blueprints while leaving room to build.
+
+Average case is not more forgiving than worst case: the spread across
+orientations is ~5% (221/228/233 tiles at 20/1), because it is one
+shape rotated and only the rasterisation differs.
 
 ## 4. Gameplay rules
 
@@ -363,15 +397,46 @@ Per planet, startup:
 
 | Setting | Default | Range |
 |---|---|---|
-| `hattorio-hat-size-<planet>` | **needs re-deciding**, see below | 15-90 |
-| `hattorio-band-width-<planet>` | 2 | 1-6 |
+| `hattorio-hat-size-<planet>` | **26** (centre-to-vertex, tiles) | 15-90 |
+| `hattorio-band-width-<planet>` | **2** | 1-6 |
 
-The default of 20 was chosen against the wrong hat area and is now
-known to give a cell of only 188 buildable tiles with a worst-case
-5x15 rectangle -- considerably harsher than intended. Hextorio parity
-is **size 52**, not the 41 this document previously stated. Candidates:
-26 (346 t, 7x19), 41 (939 t, 19x19), 52 (1,581 t, Hextorio-equal).
-Pick by playtest.
+Both are genuine player settings, per planet, exactly as Hextorio does
+it. 26/2 gives a 347-tile cell where blueprints up to 11x11 -- about
+one assembler cluster -- stay reusable while everything larger must be
+hand-fitted. Hextorio parity would be size 52; 41 is a middle option.
+
+**Why startup rather than runtime.** The geometry determines terrain,
+so changing it under an existing save would leave every generated
+chunk stale and seam visibly. Startup settings are fixed at load.
+
+**How a change is made safe.** Scale, band, depth and root offset are
+stored per surface at creation (section 12). A player who changes the
+setting later affects only NEW surfaces; existing ones keep the
+geometry their terrain was built with. That removes the stale-chunk
+problem by construction rather than by regeneration, and is the idea
+worth taking from Hextorio's `continuous_geometry` flag.
+
+**Depth is derived, not set.** Coverage scales linearly with hat size,
+so a smaller hat needs a deeper root. `Ti.depth_covering(unit, cover)`
+picks the shallowest depth that reaches the map edge; it is computed
+once at surface creation and stored. Rules are emitted to level 15,
+which leaves margin across the whole settings range.
+
+**`coverage()` is a circumradius, and the root is a hexagon.** A square
+region inscribed in that circle is NOT fully tiled -- its corners fall
+outside the root. A 2e6 x 2e6 map has a half-diagonal of 1.41e6, so
+`cover` must be asked for generously, never as the half-width. This
+was caught by a preview render showing an untiled corner; a test now
+asserts zero uncovered points in a box well inside the root.
+
+**Hats carry a 0.5 scale factor.** `H_init` and friends place hats at
+half scale, so a descent at `unit` tiles per kite unit yields hats of
+circumradius `0.5 * unit * 4.5826`. The factor is emitted as
+`hat_scale`, and the pipeline asserts every level-0 placement shares
+it, so a placement that broke congruence would fail the build. Callers
+should state a hat size and use `Ti.unit_for_hat_size()`; doing the
+conversion by hand produced cells at half the intended size once
+already.
 
 Runtime-global: outline visibility, outline width, outline alpha.
 

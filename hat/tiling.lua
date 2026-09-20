@@ -19,10 +19,43 @@ local RULES = require("data.hat_rules")
 local Ti = {}
 Ti.__index = Ti
 
+--- Tiles per kite unit that yields hats of the given circumradius.
+-- The level-0 placements carry a 0.5 factor (H_init et al), so a descent run
+-- at `unit` produces hats of circumradius hat_scale * unit * G.RADIUS. Callers
+-- should state the hat size they want and let this do the conversion.
+function Ti.unit_for_hat_size(size)
+  return size / (RULES.hat_scale * G.RADIUS)
+end
+
+--- Circumradius, in world units, of the hats a descent at `unit` produces.
+function Ti.hat_size_for_unit(unit)
+  return RULES.hat_scale * unit * G.RADIUS
+end
+
+--- Shallowest depth whose root covers `cover` world units at this unit scale.
+-- Coverage scales linearly with hat size, so a smaller hat needs a deeper
+-- root: at the minimum size setting that is depth 13, at the maximum, 11.
+-- Returns nil if the emitted data cannot reach that far.
+function Ti.depth_covering(unit, cover)
+  for d = 0, RULES.max_level do
+    if RULES.radius[d].H * unit >= cover then return d end
+  end
+  return nil
+end
+
+--- opts = { unit = , depth = } or { unit = , cover = }
+-- `cover` is the world radius that must be tiled, in the same units as the
+-- box passed to hats_in_box. Derive depth once at surface creation and store
+-- it; never recompute it per chunk.
 function Ti.new(opts)
   local self = setmetatable({}, Ti)
   self.unit = opts.unit or 1
-  self.depth = opts.depth or 3
+  if not opts.depth and opts.cover then
+    self.depth = assert(Ti.depth_covering(self.unit, opts.cover),
+      "no emitted depth covers " .. opts.cover .. " at unit " .. self.unit)
+  else
+    self.depth = opts.depth or 3
+  end
   self.root_shape = opts.root_shape or "H"
   self.root_xf = opts.root_xf or T.IDENTITY
   assert(self.depth >= 0 and self.depth <= RULES.max_level,
@@ -43,7 +76,12 @@ function Ti:depth_for_radius(r)
   return nil
 end
 
---- Radius in world units covered by this tiling's root.
+--- Circumradius in world units of this tiling's root.
+--
+-- CAUTION: this is a circumradius, and the root is a hexagonal metatile, not a
+-- disc. A square region inscribed in this circle is NOT fully tiled -- its
+-- corners fall outside the root. When choosing `cover`, pass comfortably more
+-- than the half-diagonal of the region you need, not its half-width.
 function Ti:coverage()
   return RULES.radius[self.depth][self.root_shape] * self.unit
 end
