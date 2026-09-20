@@ -9,7 +9,19 @@ local Config = {}
 
 Config.MIN_SIZE, Config.MAX_SIZE = 15, 90
 Config.MIN_BAND, Config.MAX_BAND = 1, 6
-Config.DEFAULT_SIZE, Config.DEFAULT_BAND = 26, 2
+Config.DEFAULT_SIZE, Config.DEFAULT_BAND = 41, 3
+
+-- The sizes and widths offered in the settings dropdowns. MIN/MAX above still
+-- bound anything that arrives from elsewhere; these are only the choices a
+-- player is given, each measured rather than guessed.
+--
+--   size  cell area   largest blueprint reusable in EVERY cell
+--     15    116 t       ~5x5     very hard
+--     26    347 t       11x11    hard
+--     41    944 t       18x18    normal
+--     52  1,584 t       23x23    easy
+Config.SIZE_CHOICES = { 15, 26, 41, 52 }
+Config.BAND_CHOICES = { 1, 2, 3, 4 }
 
 -- A Factorio map is 2e6 x 2e6, so its half-diagonal is ~1.41e6. Ti:coverage()
 -- is the CIRCUMRADIUS of a hexagonal root, and a square region inscribed in

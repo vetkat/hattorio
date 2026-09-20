@@ -75,20 +75,11 @@ describe("config", function()
     assert.is_true(Config.richness_multiplier(26, 4) > Config.richness_multiplier(26, 1))
   end)
 
-  it("defaults to 26 and 2", function()
-    assert.are.equal(26, Config.DEFAULT_SIZE)
-    assert.are.equal(2, Config.DEFAULT_BAND)
+  it("defaults to 41 and 3", function()
+    assert.are.equal(41, Config.DEFAULT_SIZE)
+    assert.are.equal(3, Config.DEFAULT_BAND)
   end)
 
-  it("matches the bounds declared in prototypes/settings.lua", function()
-    local f = assert(io.open("prototypes/settings.lua", "r"))
-    local src = f:read("*a"); f:close()
-    assert.is_not_nil(src:find("default_value = " .. Config.DEFAULT_SIZE))
-    assert.is_not_nil(src:find("minimum_value = " .. Config.MIN_SIZE))
-    assert.is_not_nil(src:find("maximum_value = " .. Config.MAX_SIZE))
-    assert.is_not_nil(src:find("default_value = " .. Config.DEFAULT_BAND))
-    assert.is_not_nil(src:find("maximum_value = " .. Config.MAX_BAND))
-  end)
 end)
 
 describe("richness calibration", function()
@@ -118,6 +109,41 @@ describe("richness calibration", function()
       local effective = want * Config.richness_multiplier(size, band)
       assert.is_true(effective > 0.85 and effective < 1.25,
         string.format("size %d band %d: effective yield %.2f", size, band, effective))
+    end
+  end)
+
+  it("offers only choices it can actually satisfy", function()
+    for _, size in ipairs(Config.SIZE_CHOICES) do
+      for _, band in ipairs(Config.BAND_CHOICES) do
+        local g = Config.geometry(size, band)
+        assert.are.equal(size, g.size)
+        assert.are.equal(band, g.band)
+      end
+    end
+  end)
+
+  it("declares the same dropdown values as prototypes/settings.lua", function()
+    local f = assert(io.open("prototypes/settings.lua", "r"))
+    local src = f:read("*a"); f:close()
+    assert.is_not_nil(src:find('default_value = "' .. Config.DEFAULT_SIZE .. '"', 1, true),
+      "settings.lua default size differs from Config.DEFAULT_SIZE")
+    assert.is_not_nil(src:find('default_value = "' .. Config.DEFAULT_BAND .. '"', 1, true),
+      "settings.lua default band differs from Config.DEFAULT_BAND")
+    for _, v in ipairs(Config.SIZE_CHOICES) do
+      assert.is_not_nil(src:find('"' .. v .. '"', 1, true), "size choice " .. v .. " missing")
+    end
+  end)
+
+  it("has a locale label for every dropdown value", function()
+    local f = assert(io.open("locale/en/hattorio.cfg", "r"))
+    local src = f:read("*a"); f:close()
+    for _, v in ipairs(Config.SIZE_CHOICES) do
+      assert.is_not_nil(src:find("hattorio%-hat%-size%-nauvis%-" .. v .. "="),
+        "no label for size " .. v)
+    end
+    for _, v in ipairs(Config.BAND_CHOICES) do
+      assert.is_not_nil(src:find("hattorio%-band%-width%-nauvis%-" .. v .. "="),
+        "no label for band " .. v)
     end
   end)
 end)

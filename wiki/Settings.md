@@ -2,37 +2,49 @@
 
 Two settings per planet, both fixed when the world is created.
 
-| Setting | Default | Range |
+| Setting | Default | Choices |
 |---|---|---|
-| Hat size (centre to vertex, in tiles) | **26** | 15–90 |
-| Band width (tiles) | **2** | 1–6 |
+| Cell size (centre to vertex, in tiles) | **41** (normal) | 15, 26, 41, 52 |
+| Band width (tiles) | **3** (wide) | 1, 2, 3, 4 |
+| Band appearance | Dark liquid | liquid, void, glowing rift |
+
+Cell size and band width are dropdowns, labelled with how hard each makes the
+game. They are set per planet.
 
 ## Hat size is the dial
 
 It decides how much room a cell gives you, and — more importantly — how large
 a blueprint can still be reused everywhere.
 
-| Size | Cell area | Unbuildable | Largest blueprint that fits every cell |
+| Size | Difficulty | Cell area | Largest blueprint that fits every cell |
 |---|---|---|---|
-| 15 | 116 tiles | 37% | about 5×5 |
-| **26** (default) | **347 tiles** | **22%** | **11×11** |
-| 41 | 944 tiles | 15% | 18×18 |
-| 52 | 1,584 tiles | 12% | 23×23 |
+| 15 | very hard | 116 tiles | about 5×5 |
+| 26 | hard | 347 tiles | 11×11 |
+| **41** (default) | **normal** | **944 tiles** | **18×18** |
+| 52 | easy | 1,584 tiles | 23×23 |
 
 For scale: a smelter block is around 20×20 and a mall around 30×30. **Every
 size on this table breaks those**, so the choice is not whether blueprints
 survive — it is how much room you get to improvise in.
 
 - **15** is brutal. One machine and some belt. Novel, probably exhausting.
-- **26** is the default because 11×11 is roughly one assembler cluster: enough
-  that you are building, not fighting, while everything larger is hand-fitted.
-- **41** is comfortable. Real sub-builds per cell, spaghetti mostly between them.
+- **26** is hard. 11×11 is roughly one assembler cluster: enough that you are
+  building, not fighting, while everything larger is hand-fitted.
+- **41** is the default. Real sub-builds per cell, spaghetti mostly between
+  them, and every imported blueprint still breaks.
 - **52** matches Hextorio's hexagons by area, if you want that feel.
 
 ![size 15](https://raw.githubusercontent.com/vetkat/hattorio/main/docs/preview/bands-15-2.png)
 ![size 26](https://raw.githubusercontent.com/vetkat/hattorio/main/docs/preview/bands-26-2.png)
 ![size 41](https://raw.githubusercontent.com/vetkat/hattorio/main/docs/preview/bands-41-2.png)
 ![size 52](https://raw.githubusercontent.com/vetkat/hattorio/main/docs/preview/bands-52-2.png)
+
+## Band appearance
+
+Three styles, all of them dark. **Dark liquid** is the default: an animated
+surface that moves and oozes. **Void** is flat and still, a hole rather than a
+liquid. **Glowing rift** uses the lava shader and needs Space Age; without it
+the mod falls back to dark liquid and says so in the log.
 
 ## Band width
 

@@ -23,10 +23,12 @@ function Surface.is_tiled(surface)
   return planet_of(surface) ~= nil
 end
 
-local function read_setting(name, default)
+-- The size and band dropdowns hold strings, as Factorio requires for
+-- allowed_values. Convert here, at the single point where settings are read.
+local function read_number_setting(name, default)
   local s = settings.startup[name]
   if s == nil then return default end
-  return s.value
+  return tonumber(s.value) or default
 end
 
 --- Derive and store this surface's geometry. Idempotent.
@@ -39,8 +41,8 @@ function Surface.init(surface)
   if existing then return existing end
 
   local g = Config.geometry(
-    read_setting("hattorio-hat-size-" .. planet, Config.DEFAULT_SIZE),
-    read_setting("hattorio-band-width-" .. planet, Config.DEFAULT_BAND))
+    read_number_setting("hattorio-hat-size-" .. planet, Config.DEFAULT_SIZE),
+    read_number_setting("hattorio-band-width-" .. planet, Config.DEFAULT_BAND))
   g.planet = planet
   g.tile = "hattorio-band-" .. planet
   g.mirror_tile = "hattorio-band-" .. planet .. "-mirror"

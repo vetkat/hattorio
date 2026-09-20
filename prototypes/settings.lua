@@ -13,22 +13,24 @@ local order = 0
 
 for planet, _ in pairs(planets) do
   order = order + 1
+  -- Dropdowns rather than sliders: the difficulty of a given size is not
+  -- obvious from the number, and the interesting range is four values, not
+  -- seventy-six. Values are strings, as Factorio requires for a dropdown, and
+  -- mod/surface.lua converts them.
   settings_list[#settings_list + 1] = {
-    type = "int-setting",
+    type = "string-setting",
     name = "hattorio-hat-size-" .. planet,
     setting_type = "startup",
-    default_value = 26,
-    minimum_value = 15,
-    maximum_value = 90,
+    default_value = "41",
+    allowed_values = { "15", "26", "41", "52" },
     order = string.format("a[size]-%02d[%s]", order, planet),
   }
   settings_list[#settings_list + 1] = {
-    type = "int-setting",
+    type = "string-setting",
     name = "hattorio-band-width-" .. planet,
     setting_type = "startup",
-    default_value = 2,
-    minimum_value = 1,
-    maximum_value = 6,
+    default_value = "3",
+    allowed_values = { "1", "2", "3", "4" },
     order = string.format("b[band]-%02d[%s]", order, planet),
   }
 end

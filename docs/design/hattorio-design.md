@@ -409,13 +409,27 @@ Per planet, startup:
 
 | Setting | Default | Range |
 |---|---|---|
-| `hattorio-hat-size-<planet>` | **26** (centre-to-vertex, tiles) | 15-90 |
-| `hattorio-band-width-<planet>` | **2** | 1-6 |
+| `hattorio-hat-size-<planet>` | **41** (normal) | 15, 26, 41, 52 |
+| `hattorio-band-width-<planet>` | **3** (wide) | 1, 2, 3, 4 |
+| `hattorio-band-style` | liquid | liquid, void, rift |
+| `hattorio-richness-override` (map) | 0 = automatic | 0 - 10 |
+| `hattorio-show-outline` (per player) | off | on, off |
 
-Both are genuine player settings, per planet, exactly as Hextorio does
-it. 26/2 gives a 347-tile cell where blueprints up to 11x11 -- about
-one assembler cluster -- stay reusable while everything larger must be
-hand-fitted. Hextorio parity would be size 52; 41 is a middle option.
+Size and band are **dropdowns**, not sliders: the difficulty of a given
+size is not readable from the number, and the interesting range is four
+values rather than seventy-six. Each is labelled with the difficulty it
+implies -- 15 very hard, 26 hard, 41 normal, 52 easy.
+
+**41/3 is the default, chosen by playtest.** An earlier 26/2 proved
+cramped in practice. 41 gives a 944-tile cell where blueprints up to
+18x18 stay reusable -- enough to build in, while every standard layout
+still breaks. Band 3 keeps the bands visually substantial, which band 2
+does not at that cell size.
+
+Only size and band are per planet. Band style is global, and the other
+two are scoped by what they affect: richness is map-wide because ore is
+shared, and the outline is per player because it is pure presentation
+and cannot change what anyone else sees.
 
 **Why startup rather than runtime.** The geometry determines terrain,
 so changing it under an existing save would leave every generated
