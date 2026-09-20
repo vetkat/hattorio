@@ -362,16 +362,28 @@ which is mutated in place for performance. It is local to
 
 ## 9. Build enforcement
 
-Script-side, not collision masks — precise, whitelistable, and it
-touches no prototypes, so it does not break other mods.
+**Native, via a custom collision layer.** This reverses an earlier
+decision in this document, which specified script-side rejection.
 
-- Hooks: `on_built_entity`, `on_robot_built_entity`,
-  `script_raised_built`, `on_pre_build`, plus ghost handling so bots do
-  not retry forever.
-- Whitelist: rails, and any entity type that tunnels.
-- Rejection returns the item and shows flying text.
-- Band membership is a cached per-chunk bitmap in `storage` — the hot
-  path must not re-run geometry.
+Factorio 2.0 lets mods declare collision layers
+(`{type="collision-layer", name="hattorio_band"}`, 256 available), and
+two prototypes collide only if they share a layer. The band tiles carry
+that layer; `data-final-fixes` adds it to buildable structures but not
+to the character, vehicles or rails.
+
+The game then refuses the placement itself: red preview, blueprints
+skip those tiles, bots never attempt them, and no ghosts are left
+behind. Script rejection would place the entity and then remove it,
+which is visibly worse, and would need `on_built_entity`,
+`on_robot_built_entity`, `script_raised_built`, `on_pre_build` and
+ghost cleanup to approximate what one prototype field gets for free.
+
+The cost is that `data-final-fixes` must enumerate the entity types to
+patch. That list is explicit rather than heuristic, so an unpatched
+modded entity fails open (buildable on bands) rather than breaking.
+
+No per-chunk band bitmap is needed in `storage` as a result — the
+collision system does the lookup.
 
 ## 10. Visuals
 
@@ -540,11 +552,12 @@ changing the core.
 
 ## 16. Open items for review
 
-1. **Starting area.** At default settings the spawn cell has ~310
-   buildable tiles, which is tight for a starting base. Options: a
-   grace radius with bands suppressed, guaranteeing spawn in a
-   large-orientation cell, or leaving it as intended difficulty.
-   Needs a decision.
+1. **Starting area — decided: no grace area.** At the default 26/2 the
+   spawn cell holds ~347 buildable tiles, enough for a burner start,
+   and bands are walkable so nothing is unreachable before underground
+   belts arrive. A grace area would undercut the premise exactly where
+   a new player forms their impression. First thing to revisit after
+   playtesting; the cell-size setting is the escape hatch meanwhile.
 2. **Default cell size is a guess.** 20/2 is reasoned, not playtested.
    Expect to tune it.
 3. **Resource compensation factor** (~2.2x) is derived from drill
