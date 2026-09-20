@@ -1,0 +1,123 @@
+local Config = require("mod.config")
+local Ti = require("hat.tiling")
+
+describe("config", function()
+  it("clamps out-of-range settings", function()
+    local s, b = Config.clamp(3, 99)
+    assert.are.equal(Config.MIN_SIZE, s)
+    assert.are.equal(Config.MAX_BAND, b)
+    s, b = Config.clamp(1000, -5)
+    assert.are.equal(Config.MAX_SIZE, s)
+    assert.are.equal(Config.MIN_BAND, b)
+  end)
+
+  it("leaves valid settings alone", function()
+    local s, b = Config.clamp(26, 2)
+    assert.are.equal(26, s)
+    assert.are.equal(2, b)
+  end)
+
+  it("falls back to defaults for nil or NaN", function()
+    local s, b = Config.clamp(nil, nil)
+    assert.are.equal(Config.DEFAULT_SIZE, s)
+    assert.are.equal(Config.DEFAULT_BAND, b)
+    local nan = 0 / 0
+    s, b = Config.clamp(nan, nan)
+    assert.are.equal(Config.MIN_SIZE, s)
+    assert.are.equal(Config.MIN_BAND, b)
+  end)
+
+  it("derives a unit that yields the requested hat size", function()
+    for _, size in ipairs({ 15, 26, 41, 90 }) do
+      local g = Config.geometry(size, 2)
+      assert.is_true(math.abs(Ti.hat_size_for_unit(g.unit) - size) < 1e-9,
+        "size " .. size)
+    end
+  end)
+
+  it("derives a depth that covers the whole map", function()
+    for _, size in ipairs({ 15, 26, 41, 90 }) do
+      local g = Config.geometry(size, 2)
+      local t = Ti.new({ unit = g.unit, depth = g.depth })
+      assert.is_true(t:coverage() >= Config.REQUIRED_COVER, "size " .. size)
+    end
+  end)
+
+  it("uses a deeper root for a smaller cell", function()
+    assert.is_true(Config.geometry(15, 2).depth > Config.geometry(90, 2).depth)
+  end)
+
+  it("carries half the band width for distance tests", function()
+    assert.are.equal(1, Config.geometry(26, 2).half)
+    assert.are.equal(1.5, Config.geometry(26, 3).half)
+  end)
+
+  it("compensates richness more when less ore is drillable", function()
+    local small = Config.richness_multiplier(15, 2)
+    local large = Config.richness_multiplier(90, 2)
+    assert.is_true(small > large, small .. " should exceed " .. large)
+    assert.is_true(large >= 1.0)
+    assert.is_true(small <= 5.0, "compensation is capped at 5x")
+  end)
+
+  it("caps compensation at the smallest cells", function()
+    -- At size 15 / band 2 barely 15% of a cell's ore is reachable, so the
+    -- drillable floor of 0.2 binds and compensation saturates at 5x. That is
+    -- deliberate: an uncapped formula would hand out absurd richness at the
+    -- extreme end of the settings range.
+    assert.are.equal(0.2, Config.drillable_fraction(15, 2))
+    assert.are.equal(5.0, Config.richness_multiplier(15, 2))
+    -- the default is comfortably off the floor
+    assert.is_true(Config.drillable_fraction(26, 2) > 0.4)
+  end)
+
+  it("compensates more for a wider band", function()
+    assert.is_true(Config.richness_multiplier(26, 4) > Config.richness_multiplier(26, 1))
+  end)
+
+  it("defaults to 26 and 2", function()
+    assert.are.equal(26, Config.DEFAULT_SIZE)
+    assert.are.equal(2, Config.DEFAULT_BAND)
+  end)
+
+  it("matches the bounds declared in prototypes/settings.lua", function()
+    local f = assert(io.open("prototypes/settings.lua", "r"))
+    local src = f:read("*a"); f:close()
+    assert.is_not_nil(src:find("default_value = " .. Config.DEFAULT_SIZE))
+    assert.is_not_nil(src:find("minimum_value = " .. Config.MIN_SIZE))
+    assert.is_not_nil(src:find("maximum_value = " .. Config.MAX_SIZE))
+    assert.is_not_nil(src:find("default_value = " .. Config.DEFAULT_BAND))
+    assert.is_not_nil(src:find("maximum_value = " .. Config.MAX_BAND))
+  end)
+end)
+
+describe("richness calibration", function()
+
+
+  -- Measured by rasterising a cell's interior and testing where a 3x3 drill
+  -- fits, worst case across all 12 orientations. If the formula drifts from
+  -- these, ore compensation silently becomes wrong.
+  local measured = {
+    { 20, 1, 0.511 }, { 20, 2, 0.398 }, { 26, 2, 0.522 },
+    { 41, 2, 0.682 }, { 41, 3, 0.610 }, { 52, 2, 0.749 },
+  }
+
+  it("predicts the measured drillable fractions", function()
+    for _, m in ipairs(measured) do
+      local size, band, want = m[1], m[2], m[3]
+      local got = Config.drillable_fraction(size, band)
+      assert.is_true(math.abs(got - want) < 0.05,
+        string.format("size %d band %d: predicted %.3f, measured %.3f",
+                      size, band, got, want))
+    end
+  end)
+
+  it("gives a compensation that restores roughly vanilla yield", function()
+    for _, m in ipairs(measured) do
+      local size, band, want = m[1], m[2], m[3]
+      local effective = want * Config.richness_multiplier(size, band)
+      assert.is_true(effective > 0.85 and effective < 1.25,
+        string.format("size %d band %d: effective yield %.2f", size, band, effective))
+    end
+  end)
+end)
