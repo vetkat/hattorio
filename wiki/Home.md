@@ -8,9 +8,10 @@ alike. Your blueprints will not save you.
 
 ![The tiling](https://raw.githubusercontent.com/vetkat/hattorio/main/docs/preview/tiling.png)
 
-> **Not playable yet.** The tiling engine is finished and tested; the mod
-> around it is still being built. Nothing to install from the mod portal today.
-> Watch the repo if you want to know when that changes.
+> **Playable, but not released.** Everything works and has been tested in a
+> real game. It is not on the mod portal yet, and multiplayer has not been
+> verified — play single player for now. Watch
+> [the repo](https://github.com/vetkat/hattorio) for the release.
 
 ## How it plays
 

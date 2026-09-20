@@ -17,6 +17,19 @@ jobs:
       - run: pip install pytest
       - name: verify the tiling and regenerate data
         run: python -m pytest tools/tests -q
+      - name: validate the mod manifest
+        run: |
+          python3 -c "
+          import json
+          d = json.load(open('info.json'))
+          assert d['factorio_version'] == '2.0', d['factorio_version']
+          for k in ('name','version','title','author','description','dependencies'):
+              assert k in d, k
+          print('manifest ok:', d['name'], d['version'])
+          "
+      # Catch version drift on every push, not only when a release is cut.
+      - name: check version consistency
+        run: python3 tools/check_version.py
 
   core:
     name: tiling core (Lua 5.2)
@@ -32,4 +45,4 @@ jobs:
       - run: luarocks install busted
       - run: luarocks install luacheck
       - run: busted
-      - run: luacheck hat spec
+      - run: luacheck hat mod prototypes spec

@@ -1,0 +1,9 @@
+{
+  "name": "hattorio",
+  "version": "0.1.0",
+  "title": "Hattorio",
+  "author": "vetkat",
+  "factorio_version": "2.0",
+  "description": "Replaces the square grid with the aperiodic hat monotile tiling. Cells never repeat, so neither can your blueprints.",
+  "dependencies": ["base >= 2.0.0", "? space-age"]
+}

@@ -11,7 +11,7 @@ else
   RUN_BUSTED := $(BUSTED)
 endif
 
-.PHONY: all test pytest lint data check preview wiki
+.PHONY: all test pytest lint data check preview wiki package version
 
 all: check
 
@@ -38,9 +38,17 @@ preview:
 	done
 
 lint:
-	luacheck hat spec
+	luacheck hat mod prototypes spec
 
-check: pytest test lint
+check: version pytest test lint
+
+## check info.json, changelog and tag agree
+version:
+	python3 tools/check_version.py
+
+## build the distributable mod zip
+package:
+	python3 tools/package.py
 
 ## publish wiki/ to the GitHub wiki (needs one page created in the UI first)
 wiki:

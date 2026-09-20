@@ -1,3 +1,4 @@
+import json
 import math
 import pathlib
 import re
@@ -55,3 +56,36 @@ def test_golden_fixture_is_written():
     p = ROOT / "spec" / "fixtures" / "golden_depth3.lua"
     assert p.exists()
     assert len(p.read_text().splitlines()) > 1000
+
+
+def test_mod_package_has_the_right_shape():
+    """The zip must hold one <name>_<version>/ directory with info.json at its
+    root, the tiling core and its data, and no development files."""
+    import zipfile
+    subprocess.run([sys.executable, "tools/package.py"], cwd=ROOT, check=True)
+    info = json.loads((ROOT / "info.json").read_text())
+    stem = f"{info['name']}_{info['version']}"
+    z = zipfile.ZipFile(ROOT / "build" / f"{stem}.zip")
+    names = z.namelist()
+
+    assert f"{stem}/info.json" in names
+    assert f"{stem}/hat/tiling.lua" in names
+    assert f"{stem}/data/hat_rules.lua" in names
+    assert f"{stem}/control.lua" in names
+    for forbidden in ("/spec/", "/docs/", "/tools/", "/wiki/", "__pycache__"):
+        assert not any(forbidden in n for n in names), forbidden
+
+
+def test_version_is_consistent():
+    """info.json, changelog.txt and any release tag must agree. A mod portal
+    page describing a build nobody has is the failure this prevents."""
+    r = subprocess.run([sys.executable, "tools/check_version.py"],
+                       cwd=ROOT, capture_output=True, text=True)
+    assert r.returncode == 0, r.stderr
+
+
+def test_version_check_rejects_a_mismatched_tag():
+    r = subprocess.run([sys.executable, "tools/check_version.py", "v99.99.99"],
+                       cwd=ROOT, capture_output=True, text=True)
+    assert r.returncode != 0, "a wrong tag must fail the check"
+    assert "does not match" in r.stderr

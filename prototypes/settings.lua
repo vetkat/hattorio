@@ -1,0 +1,84 @@
+local planets = require("mod.planets")
+
+-- STARTUP, not runtime. The geometry decides terrain, so changing it under an
+-- existing save would leave every generated chunk built to the old geometry.
+-- mod/surface.lua stores the values per surface at creation, so a later change
+-- affects only NEW surfaces and nothing ever seams.
+--
+-- The bounds are repeated here rather than required from mod/config.lua: the
+-- settings stage cannot load a module that pulls in hat/tiling.lua's generated
+-- data. A test in spec/config_spec.lua keeps the two in step.
+local settings_list = {}
+local order = 0
+
+for planet, _ in pairs(planets) do
+  order = order + 1
+  -- Dropdowns rather than sliders: the difficulty of a given size is not
+  -- obvious from the number, and the interesting range is four values, not
+  -- seventy-six. Values are strings, as Factorio requires for a dropdown, and
+  -- mod/surface.lua converts them.
+  settings_list[#settings_list + 1] = {
+    type = "string-setting",
+    name = "hattorio-hat-size-" .. planet,
+    setting_type = "startup",
+    default_value = "41",
+    allowed_values = { "15", "26", "41", "52" },
+    order = string.format("a[size]-%02d[%s]", order, planet),
+  }
+  settings_list[#settings_list + 1] = {
+    type = "string-setting",
+    name = "hattorio-band-width-" .. planet,
+    setting_type = "startup",
+    default_value = "3",
+    allowed_values = { "1", "2", "3", "4" },
+    order = string.format("b[band]-%02d[%s]", order, planet),
+  }
+end
+
+-- Band appearance. Startup, because it selects which tile prototypes exist.
+settings_list[#settings_list + 1] = {
+  type = "string-setting",
+  name = "hattorio-band-style",
+  setting_type = "startup",
+  default_value = "liquid",
+  allowed_values = { "liquid", "void" },
+  order = "c[style]-a[style]",
+}
+
+-- Band colour, independent of style: any colourway works with any shader.
+-- Deep violet by default -- it is the only option that reads as deliberate
+-- rather than as dark ground, since every body colour here is near-black and
+-- it is the highlight that distinguishes them.
+settings_list[#settings_list + 1] = {
+  type = "string-setting",
+  name = "hattorio-band-colour",
+  setting_type = "startup",
+  default_value = "violet",
+  allowed_values = { "violet", "cold", "oily", "ember", "ink" },
+  order = "c[style]-b[colour]",
+}
+
+-- Map-scoped, because ore is shared between everyone on it. 0 means "use the
+-- automatic compensation derived from cell size and band width"; any other
+-- value replaces it outright.
+settings_list[#settings_list + 1] = {
+  type = "double-setting",
+  name = "hattorio-richness-override",
+  setting_type = "runtime-global",
+  default_value = 0.0,
+  minimum_value = 0.0,
+  maximum_value = 10.0,
+  order = "d[richness]",
+}
+
+-- Per player, because it is pure presentation: one player having the overlay
+-- on cannot affect what anyone else sees or what the terrain is.
+settings_list[#settings_list + 1] = {
+  type = "bool-setting",
+  name = "hattorio-show-outline",
+  setting_type = "runtime-per-user",
+  default_value = false,
+  order = "e[outline]",
+}
+
+data:extend(settings_list)

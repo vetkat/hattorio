@@ -7,9 +7,10 @@ discovered in 2023. Cells never repeat, so neither can your blueprints.
 
 ![The hat tiling as Hattorio generates it](docs/preview/tiling.png)
 
-> **Status: in development.** The tiling engine is finished and tested. The
-> mod itself — terrain, build restrictions, settings — is not written yet.
-> There is nothing to install from the mod portal today.
+> **Status: playable, not yet released.** Terrain, build restrictions and
+> settings all work and have been tested in game. Not on the mod portal yet,
+> and **multiplayer is unverified** — the determinism argument is sound but
+> has never been confirmed with two clients. Single player should be solid.
 
 ## What it does to your game
 
@@ -24,33 +25,35 @@ That single rule changes how you build:
   default settings there are **624 distinct buildable tile shapes**, and no
   single one covers more than 1.1% of the map. A layout that fills one cell
   will not fit the next.
-- **Small blueprints still travel.** Anything up to 11×11 at the default
+- **Small blueprints still travel.** Anything up to 18×18 at the default
   settings fits every cell. Assembler clusters are fine; a 30×30 mall is not.
 - **Every connection between cells is a puzzle.** Belts cross by underground
   pair, against an edge that is never axis-aligned.
 
 The result is a factory that has to be fitted to the ground it sits on.
 
-![Cells rasterised onto Factorio's tile grid](docs/preview/bands-26-2.png)
+![Cells rasterised onto Factorio's tile grid](docs/preview/bands-41-3.png)
 
 ## Settings
 
 Per planet, set at world creation.
 
-| Setting | Default | Range |
+| Setting | Default | Choices |
 |---|---|---|
-| Hat size (centre to vertex, tiles) | **26** | 15–90 |
-| Band width (tiles) | **2** | 1–6 |
+| Cell size (centre to vertex, tiles) | **41** (normal) | 15, 26, 41, 52 |
+| Band width (tiles) | **3** (wide) | 1, 2, 3, 4 |
+| Band appearance | Dark liquid | liquid, void |
+| Band colour | Deep violet | violet, cold, oily, ember, void black |
 
 Hat size is the dial that matters. It decides how much room you get and how
 large a blueprint survives:
 
-| size | cell area | unbuildable | reusable blueprint | preview |
+| size | difficulty | cell area | reusable blueprint | preview |
 |---|---|---|---|---|
-| 15 | 116 t | 37.4% | ~5×5 | [look](docs/preview/bands-15-2.png) |
-| **26** | **347 t** | **22.5%** | **11×11** | [look](docs/preview/bands-26-2.png) |
-| 41 | 944 t | 14.6% | 18×18 | [look](docs/preview/bands-41-2.png) |
-| 52 | 1,584 t | 11.5% | 23×23 | [look](docs/preview/bands-52-2.png) |
+| 15 | very hard | 116 t | ~5×5 | [look](docs/preview/bands-15-2.png) |
+| 26 | hard | 347 t | 11×11 | [look](docs/preview/bands-26-2.png) |
+| **41** | **normal** | **944 t** | **18×18** | [look](docs/preview/bands-41-3.png) |
+| 52 | easy | 1,584 t | 23×23 | [look](docs/preview/bands-52-2.png) |
 
 Changing the setting later affects only newly created surfaces; existing ones
 keep the geometry their terrain was built with, so nothing ever seams.
