@@ -1,5 +1,9 @@
 # Third-party notices
 
+Hattorio itself is MIT licensed; see LICENSE. The components below are not,
+and their terms apply to the files named.
+
+
 ## hatviz — BSD-3-Clause
 Copyright (c) 2023 Craig S. Kaplan. https://github.com/isohedral/hatviz
 
