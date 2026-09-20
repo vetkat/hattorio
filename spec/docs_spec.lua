@@ -16,7 +16,7 @@ local function read(path)
 end
 
 local DOCS = { "README.md", "wiki/Settings.md", "wiki/Home.md",
-               "wiki/Building-in-hats.md" }
+               "wiki/Building-in-hats.md", "docs/portal-description.md" }
 
 describe("documentation", function()
   local default = Config.cell_stats(Config.DEFAULT_SIZE, Config.DEFAULT_BAND)
@@ -76,7 +76,8 @@ describe("documentation", function()
   it("does not claim the square grid is replaced", function()
     -- Factorio's grid is engine-level. The mod decides where you may build;
     -- it cannot and does not change the unit of construction.
-    for _, path in ipairs({ "README.md", "wiki/Home.md", "info.json" }) do
+    for _, path in ipairs({ "README.md", "wiki/Home.md", "info.json",
+                            "docs/portal-description.md" }) do
       local text = read(path):lower()
       assert.is_nil(text:find("replaces the square grid", 1, true),
         path .. " claims to replace the square grid, which is not possible")
