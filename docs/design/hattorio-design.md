@@ -3,8 +3,12 @@
 Status: draft for review
 Date: 2026-09-19
 
-A Factorio mod that replaces the buildable plane with the cells of an
-aperiodic "hat" monotile tiling, separated by unbuildable bands.
+A Factorio mod that divides each planet's buildable area into cells of
+the aperiodic "hat" monotile tiling, separated by unbuildable bands.
+
+It does NOT replace Factorio's square grid, which is engine-level and
+unreachable from Lua; see section 2. What it changes is where you may
+build, which turns out to be enough.
 
 ## 1. Goal
 
@@ -71,11 +75,11 @@ What does the work is sub-tile placement. Hat positions are irrational
 multiples of the tile pitch, so every cell sits at a different offset
 and rasterises differently. Measured over 1,156 hats:
 
-| | size 20 / band 2 | size 41 / band 2 |
+| | size 26 / band 2 | **size 41 / band 3 (default)** |
 |---|---|---|
 | orientation classes | 12 | 12 |
-| **distinct buildable tile-masks** | **624** | **918** |
-| most common single mask | 1.1% of cells | 0.5% of cells |
+| **distinct buildable tile-masks** | **624** | **885** |
+| most common single mask | 1.1% of cells | **0.5% of cells** |
 
 No single cell shape covers more than about 1% of the map. A layout
 that fills a cell must be fitted to that cell.
@@ -84,12 +88,17 @@ that fills a cell must be fitted to that cell.
 blueprint with margin transfers fine. Anything up to the worst-case
 inscribed square fits every cell:
 
+At the default band width of 3:
+
 | size / band | universally reusable | cell area |
 |---|---|---|
-| 20 / 2 | up to 8x8 | 189 t |
-| 26 / 2 | up to 11x11 | 347 t |
-| 41 / 2 | up to 18x18 | 944 t |
-| 52 / 2 | up to 23x23 | 1,584 t |
+| 15 / 3 | up to 5x5 | 63 t |
+| 26 / 3 | up to 10x10 | 294 t |
+| **41 / 3** | **up to 17x17** | **858 t** |
+| 52 / 3 | up to 22x22 | 1,473 t |
+
+These come from `Config.CELL_STATS`, which holds a measurement for every
+combination the dropdowns offer; a test asserts none is missing.
 
 A smelter block is ~20x20 and a mall ~30x30, so every size up to 41
 defeats real imported blueprints while leaving room to build.
@@ -422,9 +431,9 @@ values rather than seventy-six. Each is labelled with the difficulty it
 implies -- 15 very hard, 26 hard, 41 normal, 52 easy.
 
 **41/3 is the default, chosen by playtest.** An earlier 26/2 proved
-cramped in practice. 41 gives a 944-tile cell where blueprints up to
-18x18 stay reusable -- enough to build in, while every standard layout
-still breaks. Band 3 keeps the bands visually substantial, which band 2
+cramped in practice. 41 with band 3 gives an 858-tile cell where
+blueprints up to 17x17 stay reusable -- enough to build in, while every
+standard layout still breaks. Band 3 keeps the bands visually substantial, which band 2
 does not at that cell size.
 
 Band style and band colour are **independent**: the style picks the

@@ -4,6 +4,9 @@
   "title": "Hattorio",
   "author": "vetkat",
   "factorio_version": "2.0",
-  "description": "Replaces the square grid with the aperiodic hat monotile tiling. Cells never repeat, so neither can your blueprints.",
-  "dependencies": ["base >= 2.0.0", "? space-age"]
+  "description": "Divides every planet into cells of the aperiodic hat monotile tiling, separated by unbuildable bands. No two cells are the same shape, so imported blueprints stop fitting.",
+  "dependencies": [
+    "base >= 2.0.0",
+    "? space-age"
+  ]
 }

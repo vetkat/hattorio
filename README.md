@@ -1,16 +1,17 @@
 # Hattorio
 
-**A Factorio mod that replaces the square grid with an aperiodic one.**
+**A Factorio mod that carves every planet into cells of an aperiodic tiling.**
 
 Your factory is built on the "hat" monotile tiling — the aperiodic tiling
 discovered in 2023. Cells never repeat, so neither can your blueprints.
 
 ![The hat tiling as Hattorio generates it](docs/preview/tiling.png)
 
-> **Status: playable, not yet released.** Terrain, build restrictions and
-> settings all work and have been tested in game. Not on the mod portal yet,
-> and **multiplayer is unverified** — the determinism argument is sound but
-> has never been confirmed with two clients. Single player should be solid.
+> **Status: released as 0.1.0**, on
+> [the mod portal](https://mods.factorio.com/mod/hattorio) and as a
+> [GitHub release](https://github.com/vetkat/hattorio/releases).
+> **Multiplayer is unverified** — the determinism argument is sound but has
+> never been confirmed with two clients, so play single player for now.
 
 ## What it does to your game
 
@@ -22,10 +23,10 @@ That single rule changes how you build:
 
 - **Imported blueprints stop working.** Not because of rotation — because
   every cell is a genuinely different shape. Over 1,156 cells measured at the
-  default settings there are **624 distinct buildable tile shapes**, and no
-  single one covers more than 1.1% of the map. A layout that fills one cell
+  default settings there are **885 distinct buildable tile shapes**, and no
+  single one covers more than 0.5% of the map. A layout that fills one cell
   will not fit the next.
-- **Small blueprints still travel.** Anything up to 18×18 at the default
+- **Small blueprints still travel.** Anything up to 17×17 at the default
   settings fits every cell. Assembler clusters are fine; a 30×30 mall is not.
 - **Every connection between cells is a puzzle.** Belts cross by underground
   pair, against an edge that is never axis-aligned.
@@ -48,12 +49,14 @@ Per planet, set at world creation.
 Hat size is the dial that matters. It decides how much room you get and how
 large a blueprint survives:
 
+At the default band width of 3:
+
 | size | difficulty | cell area | reusable blueprint | preview |
 |---|---|---|---|---|
-| 15 | very hard | 116 t | ~5×5 | [look](docs/preview/bands-15-2.png) |
-| 26 | hard | 347 t | 11×11 | [look](docs/preview/bands-26-2.png) |
-| **41** | **normal** | **944 t** | **18×18** | [look](docs/preview/bands-41-3.png) |
-| 52 | easy | 1,584 t | 23×23 | [look](docs/preview/bands-52-2.png) |
+| 15 | very hard | 63 t | 5×5 | [look](docs/preview/bands-15-2.png) |
+| 26 | hard | 294 t | 10×10 | [look](docs/preview/bands-26-2.png) |
+| **41** | **normal** | **858 t** | **17×17** | [look](docs/preview/bands-41-3.png) |
+| 52 | easy | 1,473 t | 22×22 | [look](docs/preview/bands-52-2.png) |
 
 Changing the setting later affects only newly created surfaces; existing ones
 keep the geometry their terrain was built with, so nothing ever seams.

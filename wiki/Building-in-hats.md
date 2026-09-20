@@ -31,14 +31,14 @@ the interesting decisions.
 ## What to blueprint
 
 Blueprint the things that fit inside the largest square your settings allow
-(11×11 at the default). Those work everywhere:
+(17×17 at the default). Those work everywhere:
 
 - an assembler with its inserters and a short belt
 - a splitter or balancer block
 - a small power or radar block
 
 Do not try to blueprint a whole cell. It will fit exactly one cell, and you
-have 624 shapes to go.
+have 884 other shapes to go.
 
 ## Things that catch people out
 

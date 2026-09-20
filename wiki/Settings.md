@@ -17,19 +17,24 @@ game. They are set per planet.
 It decides how much room a cell gives you, and — more importantly — how large
 a blueprint can still be reused everywhere.
 
+At the default band width of 3:
+
 | Size | Difficulty | Cell area | Largest blueprint that fits every cell |
 |---|---|---|---|
-| 15 | very hard | 116 tiles | about 5×5 |
-| 26 | hard | 347 tiles | 11×11 |
-| **41** (default) | **normal** | **944 tiles** | **18×18** |
-| 52 | easy | 1,584 tiles | 23×23 |
+| 15 | very hard | 63 tiles | 5×5 |
+| 26 | hard | 294 tiles | 10×10 |
+| **41** (default) | **normal** | **858 tiles** | **17×17** |
+| 52 | easy | 1,473 tiles | 22×22 |
+
+A wider band shrinks the cell, a narrower one grows it. At band 1 a size-41
+cell holds 1,012 tiles and takes a 19×19 blueprint.
 
 For scale: a smelter block is around 20×20 and a mall around 30×30. **Every
 size on this table breaks those**, so the choice is not whether blueprints
 survive — it is how much room you get to improvise in.
 
 - **15** is brutal. One machine and some belt. Novel, probably exhausting.
-- **26** is hard. 11×11 is roughly one assembler cluster: enough that you are
+- **26** is hard. 10×10 is roughly one assembler cluster: enough that you are
   building, not fighting, while everything larger is hand-fitted.
 - **41** is the default. Real sub-builds per cell, spaghetti mostly between
   them, and every imported blueprint still breaks.

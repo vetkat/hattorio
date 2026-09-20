@@ -8,10 +8,9 @@ alike. Your blueprints will not save you.
 
 ![The tiling](https://raw.githubusercontent.com/vetkat/hattorio/main/docs/preview/tiling.png)
 
-> **Playable, but not released.** Everything works and has been tested in a
-> real game. It is not on the mod portal yet, and multiplayer has not been
-> verified — play single player for now. Watch
-> [the repo](https://github.com/vetkat/hattorio) for the release.
+> **Released as 0.1.0**, on
+> [the mod portal](https://mods.factorio.com/mod/hattorio). Multiplayer has
+> not been verified yet, so play single player for now.
 
 ## How it plays
 
@@ -27,8 +26,8 @@ Not because of rotation. Because **every cell is a different shape**.
 
 Hat cells sit at irrational offsets from Factorio's tile grid, so each one
 rounds onto the squares differently. Measured across 1,156 cells at default
-settings: **624 distinct buildable shapes**, with no single shape covering
-more than 1.1% of the map.
+settings: **885 distinct buildable shapes**, with no single shape covering
+more than 0.5% of the map.
 
 A layout that fills one cell will not fit the next one along.
 
