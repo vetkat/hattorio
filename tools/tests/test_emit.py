@@ -74,3 +74,18 @@ def test_mod_package_has_the_right_shape():
     assert f"{stem}/control.lua" in names
     for forbidden in ("/spec/", "/docs/", "/tools/", "/wiki/", "__pycache__"):
         assert not any(forbidden in n for n in names), forbidden
+
+
+def test_version_is_consistent():
+    """info.json, changelog.txt and any release tag must agree. A mod portal
+    page describing a build nobody has is the failure this prevents."""
+    r = subprocess.run([sys.executable, "tools/check_version.py"],
+                       cwd=ROOT, capture_output=True, text=True)
+    assert r.returncode == 0, r.stderr
+
+
+def test_version_check_rejects_a_mismatched_tag():
+    r = subprocess.run([sys.executable, "tools/check_version.py", "v99.99.99"],
+                       cwd=ROOT, capture_output=True, text=True)
+    assert r.returncode != 0, "a wrong tag must fail the check"
+    assert "does not match" in r.stderr

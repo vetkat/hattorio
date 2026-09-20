@@ -94,3 +94,34 @@ Design section 7 states the three rules that make it explicit.
 
 The one deliberate exception is the descent's output accumulator, mutated in
 place for speed. It is local to `hat/tiling.lua` and never escapes.
+
+## Releasing
+
+`info.json` is the single source of truth for the version. Everything else
+must agree with it, and `tools/check_version.py` enforces that on every push,
+not only when a release is cut:
+
+- the changelog must have a `Version: X.Y.Z` entry for it, listed first
+- the changelog must open with exactly 99 dashes, or Factorio refuses to load
+  the mod with an unhelpful message
+- a release tag, if given, must be `v<version>`
+
+A release is cut by pushing a tag:
+
+```bash
+# bump info.json and add a changelog entry first
+git tag v0.2.0 && git push origin v0.2.0
+```
+
+`.github/workflows/release.yml` then verifies the version, runs the full suite
+under Lua 5.2, builds the zip, attaches it to a GitHub release, and uploads it
+to the Factorio mod portal.
+
+The portal upload needs a `FACTORIO_API_KEY` repository secret, from
+https://factorio.com/profile with the *ModPortal: Upload Mods* permission. It
+runs in a `mod-portal` GitHub environment, which can be given a required
+reviewer so a human approves before anything is published.
+
+**A portal release cannot be withdrawn.** That is why every check runs before
+the upload step rather than after, and why the upload never fires on a branch
+push — only on a tag, or a manual dispatch that explicitly asks for it.

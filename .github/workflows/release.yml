@@ -1,0 +1,100 @@
+name: release
+
+# Releases are cut by pushing a tag. info.json is the single source of truth
+# for the version; the tag and the changelog must agree with it or nothing is
+# built. That is the whole point -- a mod portal page describing a build
+# nobody has is the failure being designed against.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Also upload to the Factorio mod portal"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: verify and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pytest
+
+      # Before anything is built, let alone published.
+      - name: check version consistency
+        run: python3 tools/check_version.py ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+
+      - name: offline pipeline tests
+        run: python -m pytest tools/tests -q
+
+      # Factorio embeds Lua 5.2.1; testing on anything newer would mask the
+      # all-doubles behaviour the tiling core depends on.
+      - uses: leafo/gh-actions-lua@v10
+        with:
+          luaVersion: "5.2"
+      - uses: leafo/gh-actions-luarocks@v4
+      - run: luarocks install busted
+      - run: luarocks install luacheck
+      - run: busted
+      - run: luacheck hat mod prototypes spec
+
+      - name: build the mod zip
+        run: python3 tools/package.py
+
+      - name: name the artifact
+        id: zip
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          i = json.load(open("info.json"))
+          print(f"path=build/{i['name']}_{i['version']}.zip")
+          print(f"version={i['version']}")
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mod-zip
+          path: ${{ steps.zip.outputs.path }}
+          if-no-files-found: error
+
+      - name: attach to the GitHub release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.zip.outputs.path }}
+          generate_release_notes: true
+
+  publish:
+    name: upload to the mod portal
+    needs: build
+    runs-on: ubuntu-latest
+    # Only on a tag, or an explicit dispatch asking for it. A portal release
+    # cannot be withdrawn, so this must never fire by accident.
+    if: github.ref_type == 'tag' || inputs.publish
+    # Configure this environment with a required reviewer if you want a human
+    # gate before anything reaches the portal.
+    environment: mod-portal
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: mod-zip
+          path: build
+      - name: upload
+        env:
+          FACTORIO_API_KEY: ${{ secrets.FACTORIO_API_KEY }}
+        run: |
+          if [ -z "$FACTORIO_API_KEY" ]; then
+            echo "::error::FACTORIO_API_KEY is not set; add it as a repository secret"
+            exit 1
+          fi
+          sh tools/publish_mod.sh build/*.zip
