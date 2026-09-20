@@ -41,3 +41,18 @@ lint:
 	luacheck hat spec
 
 check: pytest test lint
+
+## publish wiki/ to the GitHub wiki (needs one page created in the UI first)
+wiki:
+	@rm -rf .wiki-tmp
+	git clone -q git@github.com:vetkat/hattorio.wiki.git .wiki-tmp || \
+	  { echo "Wiki repo does not exist yet. Create any page at"; \
+	    echo "  https://github.com/vetkat/hattorio/wiki"; \
+	    echo "then re-run 'make wiki'."; exit 1; }
+	cp wiki/*.md .wiki-tmp/
+	rm -f .wiki-tmp/README.md
+	cd .wiki-tmp && git add -A && \
+	  (git diff --cached --quiet || git commit -q -m "Update wiki from wiki/") && \
+	  git push -q
+	@rm -rf .wiki-tmp
+	@echo "wiki published: https://github.com/vetkat/hattorio/wiki"
