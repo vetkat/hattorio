@@ -1,3 +1,4 @@
+import json
 import math
 import pathlib
 import re
@@ -55,3 +56,21 @@ def test_golden_fixture_is_written():
     p = ROOT / "spec" / "fixtures" / "golden_depth3.lua"
     assert p.exists()
     assert len(p.read_text().splitlines()) > 1000
+
+
+def test_mod_package_has_the_right_shape():
+    """The zip must hold one <name>_<version>/ directory with info.json at its
+    root, the tiling core and its data, and no development files."""
+    import zipfile
+    subprocess.run([sys.executable, "tools/package.py"], cwd=ROOT, check=True)
+    info = json.loads((ROOT / "info.json").read_text())
+    stem = f"{info['name']}_{info['version']}"
+    z = zipfile.ZipFile(ROOT / "build" / f"{stem}.zip")
+    names = z.namelist()
+
+    assert f"{stem}/info.json" in names
+    assert f"{stem}/hat/tiling.lua" in names
+    assert f"{stem}/data/hat_rules.lua" in names
+    assert f"{stem}/control.lua" in names
+    for forbidden in ("/spec/", "/docs/", "/tools/", "/wiki/", "__pycache__"):
+        assert not any(forbidden in n for n in names), forbidden
