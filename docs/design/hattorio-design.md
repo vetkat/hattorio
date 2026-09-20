@@ -453,10 +453,12 @@ state. `on_configuration_changed` drops and rebuilds them.
 
 ## 13. Testing
 
-Per DECISIONS.md: red-green-refactor, busted + luassert, luacheck,
-lua-quickcheck. Static typing via LuaLS annotations plus FMTK's
-generated Factorio API definitions — no build step, ships as plain Lua,
-runs unmodified under busted.
+Red-green-refactor with busted + luassert, and luacheck for static
+analysis. Tests run under **Lua 5.2 specifically** — 5.3+ adds an
+integer subtype that would mask the all-doubles behaviour the core
+depends on. Property-style tests are plain loops over fixed seeds
+rather than a generative library. No static type checker is in use.
+See `toolchain-decisions.md`.
 
 1. **Offline (Python).** Overlap, gap, density, SVG diff, coefficient
    bound. Catches a sign error before any Lua exists.
@@ -509,13 +511,12 @@ Recorded so they are not re-derived.
   every hat. Only the band is a custom tile, against vanilla terrain.
 - **Target runtime is not a choice.** Factorio embeds Lua 5.2.1. No
   integer subtype, all doubles, 2^53 ceiling. LuaJIT NaN-boxing does
-  not apply. DECISIONS.md lists this as an open question.
-- **Most of DECISIONS.md's floating-point section is moot.** There is
-  no IEEE-sensitive code in the core. Comparison policy is exact
-  integer equality. FPBench, FPTaylor, Gappa and Herbie are not needed.
-  What survives: the 2^53 ceiling (now an asserted obligation),
-  `tostring` being lossy `%.14g` (the reason identity is a descent
-  path), and `%` being floor-mod.
+  not apply. The original toolchain notes listed this as an open
+  question.
+- **Most of those notes' floating-point section was moot**, and the
+  rest was superseded once the core moved to doubles. What survives is
+  in `toolchain-decisions.md`: the 2^53 ceiling, and `tostring` being
+  lossy `%.14g`, which is why identity is a descent path.
 - **Teal and Luau are both out.** Luau is the wrong runtime; Teal has
   no Factorio API definitions, so every API call would be an untyped
   escape hatch anyway.

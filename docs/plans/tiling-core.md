@@ -6,7 +6,7 @@
 
 **Architecture:** A Python pipeline ports hatviz's combinatorial substitution into exact arithmetic over Q(phi, sqrt3), validates the resulting tiling (overlap, gaps, reflected density, coefficient bounds), and emits Lua data files containing only integer literals. Six pure Lua modules consume that data to answer one question — which hats overlap this box — with no floating point in the composition path and no Factorio dependency anywhere.
 
-**Tech Stack:** Python 3.11+ (`fractions`, stdlib only), Lua 5.2, busted, luassert, lua-quickcheck, luacheck.
+**Tech Stack:** Python 3.11+ (`fractions`, stdlib only), Lua 5.2, busted, luassert, luacheck.
 
 **Spec:** `docs/design/hattorio-design.md`
 

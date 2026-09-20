@@ -1,64 +1,96 @@
-> **Status: partly superseded.** Written before the project had Factorio
-> context. The runtime question is settled (Factorio embeds Lua 5.2.1, not a
-> choice), and most of the floating-point section is moot now that the tiling
-> core composes in doubles rather than exact integers. What survives: busted +
-> luassert, luacheck, the 2^53 ceiling, and `tostring` being lossy `%.14g`.
-> See `hattorio-design.md` sections 5 and 14 for the current position.
+# Toolchain
 
-# Approach
+What the project actually uses, and why. Anything proposed but not adopted
+has been removed; the reasoning behind the arithmetic choices lives in
+`hattorio-design.md` sections 5 and 14.
+
+## Runtime: Lua 5.2.1
+
+Not a choice. Factorio embeds Lua 5.2.1 and the mod runs inside it.
+
+Two consequences that shape the code:
+
+- **No integer subtype.** Every number is a double, exact only to 2^53. The
+  tiling core stores values rather than exact integers precisely because of
+  this; see design section 5.
+- **`tostring` is `%.14g`, and lossy.** This is why hat identity is a packed
+  descent path (`hat/index.lua`) and never a formatted coordinate. The
+  original scaffold keyed identity off `string.format("%.3f", ...)`, which
+  can collide two hats or give one hat two ids.
+
+Where floats are emitted for Lua to read, `%.17g` is used, which round-trips
+a double exactly. A test asserts every emitted value survives the round trip.
+
+## Testing: busted + luassert
+
+Red-green-refactor throughout. `spec/*_spec.lua`, auto-discovered via
+`.busted`.
+
+Tests must run under **Lua 5.2 specifically**. Running them on 5.4 would
+silently mask the all-doubles behaviour the core depends on, since 5.3+ adds
+an integer subtype. CI pins 5.2 for the same reason.
+
+On Arch, `lua52-busted` installs the rock off PATH with a shebang pointing at
+Lua 5.5, where its modules do not exist. The Makefile prefers a `busted` on
+PATH and falls back to the rock path.
+
+**Property-style tests are plain loops over fixed seeds**, not a generative
+library. `lua-quickcheck` was considered and dropped: no luarocks package on
+Arch ships a CLI, so it cannot be installed without building from source, and
+fixed seeds are more reproducible anyway.
+
+## Static analysis: luacheck
+
+Run by `make lint` and in CI, over `hat/` and `spec/`. Zero warnings is the
+standard.
+
+**No static type checker is used.** Teal was considered and rejected: it has
+no Factorio API definitions, so every game call would become an untyped escape
+hatch, and it adds a `.tl` to `.lua` build step. LuaLS annotations were chosen
+in the design phase but never actually applied — there are none in the
+codebase today. If typing is wanted, that is the route, and it should be
+adopted deliberately rather than assumed.
+
+## Layout
+
+```
+hat/     tiling core, no Factorio dependencies, loads under plain lua5.2
+tools/   offline pipeline (Python 3, stdlib only) and dev renderers
+data/    generated Lua data; regenerate with `make data`, never hand-edit
+spec/    busted tests, plus fixtures exported from the pipeline
+wiki/    source for the GitHub wiki; publish with `make wiki`
+```
+
+The split that matters: `hat/` has no Factorio dependencies, so it runs in CI
+under plain Lua, and `tools/` never ships. Exactness lives offline where it is
+free; only values ship.
 
 ## Verification strategy
-Formal verification: **dropped**. No practical tooling exists for Lua
-(mechanized semantics are research artifacts, not verifiers).
 
-Replaced by three layers:
-1. TDD (red-green-refactor) — busted + luassert
-2. Static typing — Teal (`tl`), or Luau `--!strict` if on that runtime
-3. Static analysis — luacheck
+Formal verification was considered and dropped — no practical tooling exists
+for Lua; mechanised semantics are research artifacts, not verifiers.
 
-## Testing
-- busted: test runner
-- luassert: assertions, spies, stubs, mocks
-- luacov: coverage (optional, add once suite has shape)
-- lua-quickcheck: property-based tests for numeric kernels
+What replaces it is three layers that do run:
 
-## IEEE / floating-point constraints
-- 5.1/5.2/LuaJIT: all numbers are doubles; exact-integer ceiling 2^53
-- 5.3+: int64 and float subtypes; `math.type()` distinguishes;
-  integer overflow wraps silently
-- LuaJIT NaN-boxing: NaN payloads and signaling NaNs do not round-trip
-- `%` is floor-mod, not C `fmod`; differs from IEEE remainder
-- `tostring` is `%.14g` — lossy. Use `%a` or `%.17g` to round-trip
-- `0.0 == -0.0` is true, but `1/0.0` ~= `1/-0.0`; -0.0 normalizes as table key
-- NaN as table key is an error; `x ~= x` is the only NaN test
-- No rounding modes, no `fma`, no FP exception flags without a C module
+1. **Offline proofs** (`tools/verify.py`) — the generated tiling is checked
+   for overlapping hats, gaps by flood-fill, reflected-hat density converging
+   to 1/(phi^4+1), and hat counts matching F(2n+3)^2 exactly.
+2. **Golden fixtures** — the pipeline exports a reference patch that the Lua
+   descent must reproduce. This validates the code that ships against the
+   arithmetic that was proved correct.
+3. **Invariant tests** — `spec/invariants_spec.lua` greps the shipped modules
+   for `math.sin`, `math.cos`, `math.random` and `^`, none of which are
+   bit-identical across platforms.
 
-For FP error bounds, validate outside Lua (FPBench/FPCore + FPTaylor or
-Gappa; Herbie for expression rewriting), then port and pin with tests.
+## Functional core
 
-## SUPER/ SPIRALS
-here is super/spirals: https://cyrusradfar.com/thoughts/functional-programming-is-the-only-way-to-scale-with-ai.
+The `hat/` modules are pure: no mutable state, no Factorio API, total
+functions of their inputs. Side effects belong in the Factorio-facing layer.
 
-```
-I can't open that URL — no tools in this response. So I can't tell you what SUPER/SPIRALS actually stands for in Radfar's piece.
+This was arrived at from the determinism constraint rather than from a
+principle, but it lines up with SUPER (side effects at the edge, uncoupled
+logic, pure and total functions, explicit data flow, replaceable by value).
+Design section 7 states the three rules that make it explicit.
 
-What I can say from the title alone: "Functional programming is the only way to scale with AI" points at a fairly recognizable cluster of ideas — pure functions, immutability, explicit data flow, small composable units, no hidden state — on the argument that these make code tractable for AI agents to reason about and modify safely. If SUPER and SPIRALS are acronyms in that piece, each letter presumably expands into one of those principles. But I'd be reconstructing them from the genre, not from the text, and a fabricated acronym is worse than no acronym — especially since you want the whole code layout built on it.
-
-Worth noting, though: the design already in flight lines up with that family of ideas independently, which is probably why it appealed to you here. The five pure modules — hat/exact.lua, transform.lua, tiling.lua, geometry.lua, index.lua — have zero Factorio dependencies, no mutable state, and are total functions of their inputs. hats_in_box() is referentially transparent. The exact ℤ[φ][√3] ring is immutable values with algebraic laws. Side effects are quarantined in exactly two places, hat/surface.lua and the control.lua/render layer. That's roughly what a functional-core/imperative-shell argument would ask for, arrived at from the determinism constraint rather than from the principle.
-
-So the useful question when the main thread picks this up is narrower than "apply SUPER/SPIRALS": it's whether those principles demand anything the current structure doesn't already have. Candidates that come to mind — an explicit no-mutation rule enforced by the linter, persistent rather than in-place data structures in the descent accumulator, or pushing the storage reads in surface.lua up into the shell so even that module is pure.
-
-Paste the two acronyms' expansions and that comparison becomes concrete rather than speculative.
-```
-
-## Questions brainstorming needs to settle
-These are the ones where a wrong assumption costs real rework:
-
-- Target runtime — this is the first fork. Lua 5.4, 5.3, 5.1, or LuaJIT? It determines whether you have an integer subtype at all, and whether NaN-boxing is a constraint.
-- Teal or Luau — Teal is runtime-agnostic and more mature as a standalone; Luau only makes sense if you're already on that runtime. If Teal: is the build step (.tl → .lua) acceptable, and do tests run against .tl sources or generated .lua?
-- Where the IEEE-sensitive code lives — is there a numeric core that should be isolated from the rest, so property tests and tolerance decisions concentrate in one module?
-- Comparison policy — exact bit equality, ULP distance, or relative epsilon? This wants to be a single shared test helper, decided once, not re-improvised per test.
-- Distribution — luarocks package, vendored, or embedded in a host application? Affects layout more than anything else on this list.
-- Directory shape — src/ + spec/ is the busted default (busted auto-discovers spec/**/*_spec.lua). Worth confirming before files start landing.
-- When the main thread picks this up, the sequence is: brainstorming first to resolve the above, then /tdd once the first test is ready to be written.
-
+The one deliberate exception is the descent's output accumulator, mutated in
+place for speed. It is local to `hat/tiling.lua` and never escapes.
