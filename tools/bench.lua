@@ -5,7 +5,7 @@ package.path = "./?.lua;" .. package.path
 local Ti = require("hat.tiling")
 
 local UNIT = 4.365          -- hat size 20 tiles
-local depth = Ti.safe_depth()
+local depth = Ti.max_depth()
 local t = Ti.new({ unit = UNIT, depth = depth })
 
 print(string.format("depth %d, unit %.3f, coverage %.0f tiles",

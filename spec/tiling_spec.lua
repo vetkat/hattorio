@@ -80,7 +80,7 @@ describe("tiling descent", function()
       for n in g.path:gmatch("[^,]+") do path[#path + 1] = tonumber(n) end
       local h = by_path[I.encode(path)]
       assert.is_not_nil(h, "missing hat " .. g.path)
-      local x, y = T.origin_float(h.xf)
+      local x, y = T.origin(h.xf)
       assert.is_true(math.abs(x - g.x) < 1e-6, "x mismatch at " .. g.path)
       assert.is_true(math.abs(y - g.y) < 1e-6, "y mismatch at " .. g.path)
       assert.are.equal(g.reflected, h.reflected, "chirality at " .. g.path)

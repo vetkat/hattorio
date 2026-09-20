@@ -82,69 +82,64 @@ further.
 
 ## 5. Geometry and arithmetic
 
-### Ring
+### Doubles, not exact integers
 
-Every coordinate is four integers, `(a + b*phi) + (c + d*phi)*sqrt(3)`,
-with `phi^2 = phi + 1` and `sqrt(3)^2 = 3` closing multiplication
-exactly. Hat vertices are exact integer points in the triangular basis
-`{(1,0), (1/2, sqrt(3)/2)}`; the 12 orientations are integer matrices
-there (60 degrees is `[[1,-1],[1,0]]`). Only the substitution's `phi^2`
-leaves Z, which is what the ring is for.
+**This reverses an earlier decision in this document.** The original
+design carried every coordinate as four exact integers in
+`Z[phi][sqrt3]`. That came from conflating two different things, and
+implementation proved it both unnecessary and unworkable.
 
-`hat/exact.lua` provides add, sub, mul, negate, equality, to_float.
-There is deliberately **no division** — the descent only composes.
-Division occurs solely in offline rule extraction, where exact
-rationals are free.
+The desync risk in Factorio is `math.sin`, `math.cos` and `^`/`pow`,
+whose libm implementations genuinely differ between platforms. But
+IEEE-754 requires `+ - * /` and `sqrt` to be **correctly rounded**, so
+they are bit-identical everywhere. Lua's interpreter executes each as
+its own VM instruction, so no compiler FMA contraction can fuse them,
+and Factorio 2.0 is x86-64 only, so there is no x87 80-bit excess
+precision either. **Doubles are exactly as deterministic as integers
+here.** They are only less accurate.
 
-### Determinism is not exactness
+Measured against exact ground truth from the offline pipeline:
 
-Factorio has no server authority; every client simulates independently
-and a divergence is a desync.
+```
+depth   coverage       relative error   absolute error
+   8      26,660 t       5.7e-16          8e-12 tiles
+  10     183,419 t       4.3e-16          7e-11 tiles
+  12   1,194,588 t       5.3e-16          4e-10 tiles
+```
 
-- IEEE `+ - * /` and `sqrt` are deterministic across platforms.
-- `sin`, `cos` and `^`/`pow` are **not**.
-- Exactness is needed only where error accumulates: composing
-  transforms down 9-12 levels, where drift eventually splits a shared
-  edge.
-- Determinism alone suffices for leaf queries — pruning tests, band
-  distance tests — which run in plain floats.
+Relative error sits at machine epsilon and **does not grow with
+depth** — the composition is well conditioned. Depth 12 covers the
+whole map with an error of four ten-billionths of a tile.
 
-Rule: **exact ring for composition, deterministic floats for leaf
-queries.**
+Exact integers, by contrast, could not reach past **depth 4**:
+level-6 rule numerators are 1.4e14, so a single composition produces a
+raw product near 1e28, far past 2^53. Reducing afterwards is too late,
+and cross-reducing beforehand does not help — measured operand gcd is
+1, because the cancellation is additive, inside the sums, rather than
+multiplicative.
+
+So a transform is six plain doubles and `hat/exact.lua` does not exist.
+The exact arithmetic stays where it belongs: **offline**, in
+`tools/`, deriving the rules and proving them correct. Only the values
+ship.
+
+What must never appear in shipped Lua: `math.sin`, `math.cos`,
+`math.random`, `^`. An invariant test greps for them.
 
 ### Depth and coverage
 
-**Measured, and more constrained than first estimated.** The per-level
-substitution rules are exact rationals converging on irrational limits,
-so their numerators blow up with level:
+**Depth 12**, which covers ~1,112,791 tiles at the default scale —
+the entire Factorio map, whose half-extent is ~1e6 tiles. Coverage
+scales linearly with the hat-size setting.
 
-```
-level 6:  numerators 1.4e14   OK
-level 7:  numerators 1.7e16   exceeds 2^53 = 9.0e15
-```
+Depth is derived per surface from the size setting and stored at
+surface creation, so a smaller hat size simply uses a deeper root
+rather than losing coverage.
 
-Lua 5.2 has no integer subtype, so a rule coefficient above 2^53 is not
-exactly representable. **Maximum emittable depth is 6**, which covers:
-
-```
-hat size 20 (default)  ->  ~14,000 tiles from spawn
-hat size 41            ->  ~28,800 tiles
-hat size 90            ->  ~63,200 tiles
-```
-
-Beyond that radius the mod must fall back to vanilla terrain. For a
-genuinely unbounded map the limiting metatiles must be exactified
-(section 6) — one rule set, small exact coefficients, any depth.
-
-Two separate ceilings, not to be confused:
-
-- **Rule data**, above: binds at level 7. The hard limit today.
-- **Composition during descent**, which is fine: intermediate
-  coefficients grow ~18x per level and peak at 3.6e14 at depth 11,
-  24x inside 2^53. Hats land back on the clean kite lattice, so the
-  ugly rationals cancel. This requires the Lua transform multiply to
-  **reduce by gcd after every composition**; without reduction the
-  denominators multiply and overflow almost immediately.
+Descent cost at depth 12 is **0.73 ms per chunk** (~39 hats/chunk),
+measured — three times faster than the exact-integer version managed at
+depth 4, because a composition is now six multiply-adds rather than a
+ring multiply plus a gcd reduction.
 
 ### Identity
 
@@ -275,8 +270,7 @@ Attribution and the BSD-3-Clause notice ship with the mod.
 
 | Module | Responsibility | Factorio deps |
 |---|---|---|
-| `hat/exact.lua` | the number ring | none |
-| `hat/transform.lua` | affine matrices over the ring | none |
+| `hat/transform.lua` | affine matrices, six doubles | none |
 | `hat/tiling.lua` | lazy descent, `hats_in_box()` | none |
 | `hat/geometry.lua` | outline, edges, band distance | none |
 | `hat/index.lua` | descent-path identity | none |
@@ -285,7 +279,7 @@ Attribution and the BSD-3-Clause notice ship with the mod.
 | `build/enforce.lua` | build rejection + whitelist | events |
 | `render/outline.lua` | optional crisp lines | rendering |
 
-The first **six** have zero Factorio dependencies and run under plain
+The first **five** have zero Factorio dependencies and run under plain
 Lua in CI. That is where the risk lives and where it gets tested.
 
 ### Functional-core discipline
@@ -299,12 +293,13 @@ rather than from the principle. Three rules make it explicit:
   parameter; it does not read `storage`. The read happens in
   `control.lua`, so every side effect lives in one of the three
   Factorio-facing modules.
-- **Ring and transform values are immutable.** Lua tables are mutable
-  by reference, so this is discipline rather than guarantee: every
+- **Transform values are immutable.** Lua tables are mutable by
+  reference, so this is discipline rather than guarantee: every
   operation returns a new table, none mutates an argument. Asserted by
-  property tests.
-- **Totality comes free.** The ring has no division, so no operation
-  is partial — there is no divide-by-zero to define behaviour for.
+  test.
+- **Totality.** The only division is by a squared length in
+  `dist_to_segment`, guarded by a zero test, so no operation is
+  partial.
 
 The single deliberate exception is the descent's output accumulator,
 which is mutated in place for performance. It is local to
@@ -416,8 +411,15 @@ Recorded so they are not re-derived.
 - **Metatile area does not equal its hats' area.** Hats straddle
   metatile boundaries, so an area check is not a validity test for
   H, T or F. Use overlap plus gap detection.
-- **Per-level rule coefficients exceed 2^53 at level 7.** This caps
-  depth at 6 until exactify lands; see section 5.
+- **Per-level rule coefficients exceed 2^53 at level 7**, and raw
+  products overflow from depth 5, capping exact-integer descent at
+  depth 4. This is what forced the move to doubles; see section 5.
+- **Exact integer arithmetic was the wrong call, and it was mine.**
+  The brainstorm presented it as necessary for multiplayer
+  determinism. It is not: determinism needs only correctly-rounded
+  IEEE operations, which doubles have. The exact machinery cost a
+  depth ceiling, a gcd reduction in the hot path, and ~200 lines of
+  Lua, and bought nothing the cheaper option lacked.
 - **"14 tile types and enormous transition tables"** assumed colouring
   every hat. Only the band is a custom tile, against vanilla terrain.
 - **Target runtime is not a choice.** Factorio embeds Lua 5.2.1. No

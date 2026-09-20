@@ -1,43 +1,23 @@
 -- Hat outline and world-space geometry.
 --
--- Floats appear here, and only here, as LEAF QUERIES: bounding tests, point
--- containment, distance to an edge. They use nothing but + - * / and sqrt, all
--- of which are IEEE-deterministic across platforms, so two clients agree. What
--- they are NOT used for is composing transforms, where error would accumulate
--- across a deep descent -- that stays exact, in hat/exact.lua.
+-- The hat is a 13-gon (hatviz's hat_outline in the hexPt basis), not the
+-- 14-gon the original scaffold carried. H_init indexes hat_outline[5], [7],
+-- [9] and [11], so a wrong vertex list silently produces wrong placements.
 
-local E = require("hat.exact")
 local T = require("hat.transform")
 local DATA = require("data.hat_geometry")
 
 local G = {}
 
-local N = DATA.vertices
-
--- Decode the emitted outline: alternating x, y ring elements over a shared
--- denominator. The hat is a 13-gon in hatviz's hexPt basis.
-G.OUTLINE = {}
-for i = 1, N do
-  local xv = DATA.outline[(i - 1) * 2 + 1]
-  local yv = DATA.outline[(i - 1) * 2 + 2]
-  G.OUTLINE[i] = {
-    E.to_float(E.new(xv[1], xv[2], xv[3], xv[4])) / DATA.den,
-    E.to_float(E.new(yv[1], yv[2], yv[3], yv[4])) / DATA.den,
-  }
-end
-
-G.RADIUS = 0
-for i = 1, N do
-  local p = G.OUTLINE[i]
-  local r = math.sqrt(p[1] * p[1] + p[2] * p[2])
-  if r > G.RADIUS then G.RADIUS = r end
-end
+G.N = DATA.vertices
+G.OUTLINE = DATA.outline
+G.RADIUS = DATA.circumradius
 
 function G.polygon(xf, unit)
   local out = {}
-  for i = 1, N do
+  for i = 1, G.N do
     local p = G.OUTLINE[i]
-    local x, y = T.apply_float(xf, p[1], p[2])
+    local x, y = T.apply(xf, p[1], p[2])
     out[i] = { x = x * unit, y = y * unit }
   end
   return out
@@ -46,9 +26,8 @@ end
 function G.edges(xf, unit)
   local poly = G.polygon(xf, unit)
   local out = {}
-  for i = 1, N do
-    local a = poly[i]
-    local b = poly[i % N + 1]
+  for i = 1, G.N do
+    local a, b = poly[i], poly[i % G.N + 1]
     out[i] = { a.x, a.y, b.x, b.y }
   end
   return out
