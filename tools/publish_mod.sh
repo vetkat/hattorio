@@ -48,22 +48,42 @@ INIT=$(curl -sS -X POST \
 # UnknownMod. That is the expected answer before the first manual upload, and
 # it still proves the key is good -- so report it distinctly rather than as a
 # flat failure.
-UPLOAD_URL=$(printf '%s' "$INIT" | python3 -c "
-import json, sys
+# Three outcomes worth telling apart:
+#   upload_url    the key works and the portal knows this mod
+#   UnknownMod    the key works; the mod has never been uploaded. Expected
+#                 before the first manual upload, so a CHECK treats it as a
+#                 pass -- the key is what is being tested -- while a real
+#                 publish must still fail.
+#   InvalidApiKey the key is wrong or lacks the upload permission
+STATUS=$(printf '%s' "$INIT" | CHECK_ONLY="$CHECK_ONLY" MOD="$MOD" python3 -c "
+import json, os, sys
 d = json.load(sys.stdin)
 if 'upload_url' in d:
-    print(d['upload_url']); sys.exit(0)
+    print('OK ' + d['upload_url']); sys.exit(0)
 err = d.get('error', '?')
+mod = os.environ['MOD']
 if err == 'UnknownMod':
-    sys.exit(\"AUTH OK, but the portal has no mod named '\" + '$MOD' + \"' yet. \"
-             'The first release of a new mod must be uploaded by hand at '
-             'https://mods.factorio.com/upload -- init_upload only adds '
-             'releases to a mod that already exists.')
+    msg = ('the portal has no mod named ' + repr(mod) + ' yet. The first '
+           'release of a new mod must be uploaded by hand at '
+           'https://mods.factorio.com/upload; init_upload only adds releases '
+           'to a mod that already exists.')
+    if os.environ['CHECK_ONLY'] == 'yes':
+        print('UNKNOWN_MOD ' + msg); sys.exit(0)
+    sys.exit('cannot publish: ' + msg)
 if err == 'InvalidApiKey':
-    sys.exit('AUTH FAILED: the API key is rejected. Check it has the '
-             '\"ModPortal: Upload Mods\" permission.')
+    sys.exit('AUTH FAILED: the API key is rejected. Check it exists and has '
+             'the \"ModPortal: Upload Mods\" permission.')
 sys.exit('init_upload failed: %s -- %s' % (err, d.get('message', d)))
 ")
+
+case "$STATUS" in
+  "UNKNOWN_MOD "*)
+    echo "AUTH OK. However, ${STATUS#UNKNOWN_MOD }"
+    exit 0
+    ;;
+esac
+
+UPLOAD_URL=${STATUS#OK }
 
 if [ "$CHECK_ONLY" = yes ]; then
   echo "AUTH OK, and the portal already knows $MOD -- a real publish would proceed"
