@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.1
+Date: 2026-11-17
+  Bugfixes:
+    - Factorio 2.1 did not load the mod. The mod now targets Factorio 2.1 and
+      needs base 2.1.0 or later. Version 1.0.0 stays available for Factorio 2.0.
+---------------------------------------------------------------------------------------------------
 Version: 1.0.0
 Date: 2026-11-10
   Changes:

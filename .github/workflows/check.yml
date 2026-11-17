@@ -22,7 +22,7 @@ jobs:
           python3 -c "
           import json
           d = json.load(open('info.json'))
-          assert d['factorio_version'] == '2.0', d['factorio_version']
+          assert d['factorio_version'] == '2.1', d['factorio_version']
           for k in ('name','version','title','author','description','dependencies'):
               assert k in d, k
           print('manifest ok:', d['name'], d['version'])

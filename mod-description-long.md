@@ -152,7 +152,7 @@ connected clients yet. If you try it in multiplayer and have problems, let me
 know in the comments below or open an
 [issue on my GitHub repo](https://github.com/vetkat/hattorio/issues).
 
-### Factorio 2.0 or later
+### Factorio 2.1 or later
 
 Space Age is supported but not required.
 

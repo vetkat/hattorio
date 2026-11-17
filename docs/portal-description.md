@@ -88,7 +88,7 @@ surface uses.
   sound: the tiling uses only correctly rounded IEEE arithmetic and no
   trigonometry. But nobody has tested it with two clients yet. Please do not
   rely on it in multiplayer yet.
-- You need Factorio 2.0 or later. Space Age is supported but not required.
+- You need Factorio 2.1 or later. Space Age is supported but not required.
 
 ## Credits
 

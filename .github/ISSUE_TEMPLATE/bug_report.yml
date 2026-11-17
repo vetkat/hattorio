@@ -11,7 +11,7 @@ body:
     id: factorio
     attributes:
       label: Factorio version
-      placeholder: "2.0.77"
+      placeholder: "2.1.24"
     validations:
       required: true
   - type: input
