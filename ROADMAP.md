@@ -33,7 +33,17 @@ and the descent-path hierarchy can take them without changes to the core.
 - Impassable band variants, and band removal.
 - A territory layer.
 
+The next idea needs a second tiling next to the hat:
+
+- Cells of different areas. A player suggested Voronoi cells from a noise
+  field with variable density, and warped edges that curve. The mod uses the
+  hat because the hat is its theme ([design section 17][alternatives]). So
+  this can only be an option next to the hat. An underground belt must still
+  cross every band ([design section 4][rules]).
+
 [releasing]: docs/design/toolchain-decisions.md#releases
 [prose]: docs/design/toolchain-decisions.md#prose-check
 [scope]: docs/design/hattorio-design.md#15-out-of-scope
 [root]: docs/design/hattorio-design.md#root-placement
+[alternatives]: docs/design/hattorio-design.md#17-alternatives
+[rules]: docs/design/hattorio-design.md#4-gameplay-rules
