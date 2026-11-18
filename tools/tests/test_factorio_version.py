@@ -6,21 +6,21 @@ def latest(headless, experimental="2.1.25"):
             "experimental": {"headless": experimental}}
 
 
-def test_same_version_passes():
-    assert fv.problems(latest("2.1.24"), "2.1.24") == []
+def test_good_data_and_pin_have_no_problems():
+    assert fv.problems(latest("2.1.25"), "2.1.24") == []
 
 
-def test_older_stable_passes():
-    assert fv.problems(latest("2.1.9"), "2.1.24") == []
+def test_bump_moves_the_pin_to_a_newer_stable_release():
+    assert fv.bump_to("2.1.25", "2.1.24") == "2.1.25"
 
 
-def test_newer_stable_fails():
-    found = fv.problems(latest("2.1.25"), "2.1.24")
-    assert found and "2.1.25" in found[0] and "2.1.24" in found[0]
+def test_bump_leaves_the_pin_at_the_same_or_an_older_release():
+    assert fv.bump_to("2.1.24", "2.1.24") is None
+    assert fv.bump_to("2.1.9", "2.1.24") is None
 
 
-def test_numeric_order_not_text_order():
-    assert fv.problems(latest("2.1.100"), "2.1.24")
+def test_bump_uses_numeric_order_not_text_order():
+    assert fv.bump_to("2.1.100", "2.1.24") == "2.1.100"
 
 
 def test_a_changed_format_is_a_problem():
@@ -46,28 +46,25 @@ FOUND = {"stable": "2.1.24", "experimental": "2.1.25"}
 
 def test_plan_tests_each_new_release_in_each_mode():
     plan = fv.plan(FOUND, "2.1.24", "abc", set())
-    assert plan["matrix"] == [{"version": "2.1.25", "mode": "base"},
+    assert plan == [{"version": "2.1.25", "mode": "base"},
                               {"version": "2.1.25", "mode": "space-age"}]
-    assert plan["remind"] is False
 
 
 def test_plan_skips_what_this_commit_already_tested():
     keys = {"watch-2.1.25-base-abc"}
-    assert fv.plan(FOUND, "2.1.24", "abc", keys)["matrix"] == [
+    assert fv.plan(FOUND, "2.1.24", "abc", keys) == [
         {"version": "2.1.25", "mode": "space-age"}]
-    assert len(fv.plan(FOUND, "2.1.24", "def", keys)["matrix"]) == 2
+    assert len(fv.plan(FOUND, "2.1.24", "def", keys)) == 2
 
 
 def test_plan_has_nothing_to_test_at_the_pin():
     same = {"stable": "2.1.24", "experimental": "2.1.24"}
-    assert fv.plan(same, "2.1.24", "abc", set())["matrix"] == []
+    assert fv.plan(same, "2.1.24", "abc", set()) == []
 
 
-def test_plan_reminds_once_about_a_newer_stable_release():
+def test_plan_tests_a_newer_stable_and_experimental_release():
     newer = {"stable": "2.1.25", "experimental": "2.2.0"}
-    assert fv.plan(newer, "2.1.24", "abc", set())["remind"] is True
-    assert fv.plan(newer, "2.1.24", "abc", {"watch-pin-2.1.25-abc"})["remind"] is False
-    assert [m["version"] for m in fv.plan(newer, "2.1.24", "abc", set())["matrix"]] == [
+    assert [m["version"] for m in fv.plan(newer, "2.1.24", "abc", set())] == [
         "2.1.25", "2.1.25", "2.2.0", "2.2.0"]
 
 

@@ -1,0 +1,105 @@
+name: factorio-version
+
+# Every day: move the pin in .factorio-version to Factorio's newest stable
+# release, through a PR that merges itself when CI passes. A red PR means
+# the mod does not work on the new version. A new minor version is always
+# red at first, because info.json must name it. That needs a release.
+#
+# A merged PR is a commit on main, but it comes only with a new stable
+# release. So watch.yml still keeps this workflow enabled.
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: factorio-version
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      # The tool writes version=X.Y.Z only when the stable release is newer
+      # than the pin, and only after it checks the form X.Y.Z.
+      - id: pin
+        run: python3 -m tools.factorio_version bump >> "$GITHUB_OUTPUT"
+      # A PR from github.token starts no CI, so the PR uses an App token.
+      - uses: actions/create-github-app-token@v2
+        id: app
+        if: steps.pin.outputs.version
+        with:
+          app-id: ${{ vars.HATTORIO_BOT_ID }}
+          private-key: ${{ secrets.HATTORIO_BOT_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+      # Each run builds the branch again from main and force-pushes it. That
+      # keeps the PR up to date with main, so auto-merge never waits on a
+      # stale branch, and CI runs again after a fix lands on main.
+      - name: Open or update the PR that moves the pin
+        if: steps.pin.outputs.version
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          VERSION: ${{ steps.pin.outputs.version }}
+        run: |
+          set -o pipefail
+          branch="ci/factorio-version"
+          title="ci: test Factorio $VERSION"
+          # CI on a PR from the App emails nobody. So when the open PR is
+          # red, this run mentions the owner on the PR once per version,
+          # and fails after the retest.
+          pr=$(gh pr list --head "$branch" --state open --json url,isCrossRepository \
+            --jq '[.[] | select(.isCrossRepository | not)][0].url // empty')
+          red=0
+          if [ -n "$pr" ]; then
+            gh pr view "$pr" --json statusCheckRollup,comments > "$RUNNER_TEMP/pr.json"
+            jq .statusCheckRollup "$RUNNER_TEMP/pr.json" | python3 -m tools.pr_status || red=1
+          fi
+          gh auth setup-git
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add .factorio-version
+          git commit -m "$title"
+          # A push restarts every check on the PR. So push only when main or
+          # the version changed since the last push.
+          current=0
+          if [ -n "$pr" ] && git fetch -q origin "$branch" \
+            && [ "$(git rev-parse FETCH_HEAD^)" = "$GITHUB_SHA" ] \
+            && git diff --quiet FETCH_HEAD HEAD; then
+            current=1
+          fi
+          if [ "$current" = 0 ]; then
+            git push --force origin "$branch"
+          fi
+          cat > "$RUNNER_TEMP/body.md" <<BODY
+          Factorio $VERSION is the newest stable release. This PR moves the
+          pin in \`.factorio-version\`, so CI runs every test on it. The PR
+          merges itself when CI passes. If CI fails, the mod needs a fix for
+          this version.
+
+          A new minor version fails the version check until \`info.json\`
+          names it. That change needs a release PR.
+          BODY
+          if [ -z "$pr" ]; then
+            pr=$(gh pr create --head "$branch" --title "$title" --body-file "$RUNNER_TEMP/body.md")
+          elif [ "$current" = 0 ]; then
+            gh pr edit "$pr" --title "$title" --body-file "$RUNNER_TEMP/body.md"
+          fi
+          gh pr merge "$pr" --auto --squash
+          if [ "$red" = 1 ]; then
+            echo "::error::CI failed on Factorio $VERSION in $pr. The mod needs a fix."
+            marker="<!-- factorio-version red $VERSION -->"
+            if ! jq -r '.comments[].body' "$RUNNER_TEMP/pr.json" | grep -qF "$marker"; then
+              gh pr comment "$pr" --body "$marker
+          @$GITHUB_REPOSITORY_OWNER CI fails on Factorio $VERSION. The mod needs a fix for this version."
+            fi
+          fi
+          [ "$red" = 0 ]

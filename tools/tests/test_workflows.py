@@ -112,3 +112,30 @@ def test_watch_keeps_the_scheduled_workflows_enabled():
                        if "\n  schedule:\n" in p.read_text(encoding="utf-8"))
     for name in scheduled:
         assert name in keepalive, name
+
+
+def test_factorio_version_moves_the_pin_through_a_daily_pr():
+    text = read("factorio-version.yml")
+    assert re.search(r'cron: "\d+ \d+ \* \* \*"', text), "the bump must run every day"
+    bump = job(text, "bump")
+    assert "python3 -m tools.factorio_version bump >> \"$GITHUB_OUTPUT\"" in bump
+    assert 'branch="ci/factorio-version"' in bump
+    assert "gh pr merge \"$pr\" --auto --squash" in bump
+    assert "python3 -m tools.pr_status" in bump
+
+
+def test_the_bump_pr_uses_an_app_token_and_stores_no_credentials():
+    bump = job(read("factorio-version.yml"), "bump")
+    # A PR from github.token starts no CI.
+    assert "actions/create-github-app-token@" in bump
+    assert "${{ vars.HATTORIO_BOT_ID }}" in bump
+    assert "${{ secrets.HATTORIO_BOT_KEY }}" in bump
+    assert "GH_TOKEN: ${{ steps.app.outputs.token }}" in bump
+    assert "persist-credentials: false" in bump
+    assert "contents: read" in bump
+
+
+def test_watch_leaves_the_pin_to_the_bump_pr():
+    text = read("watch.yml")
+    assert "\n  pin:\n" not in text
+    assert "remind" not in text

@@ -209,10 +209,37 @@ with and without Space Age. Before each test it runs
 version this is necessary, because the game does not load a mod that names
 another minor version.
 
-The workflow also fails when the stable release is newer than the pin, as a
-reminder to move the pin. It tests each release once for each commit on
-`main`, so a failure notifies the maintainer once. A run with nothing new to
-test starts no test runner.
+The workflow tests each release once for each commit on `main`, so a
+failure notifies the maintainer once. A run with nothing new to test starts
+no test runner.
+
+`.github/workflows/factorio-version.yml` runs every day. When the stable
+release is newer than the pin, `tools.factorio_version bump` writes it to
+`.factorio-version`. The workflow pushes that change to the branch
+`ci/factorio-version` and opens a PR with auto-merge. CI then runs every
+test on the new release, and the PR merges itself when CI passes.
+
+Each run builds the branch again from `main`. When `main` or the version
+changed, it force-pushes the branch. So CI runs again after a fix lands on
+`main`, and a newer release replaces the version in the open PR.
+
+A new minor version always makes the PR red, because `check_version.py`
+wants `factorio_version` in `info.json` to name it. That change needs a
+release PR.
+
+A PR opened with `github.token` starts no workflows. So the workflow opens
+the PR with a token from a GitHub App. The App ID is the repository
+variable `HATTORIO_BOT_ID`, and its private key is the secret
+`HATTORIO_BOT_KEY`. The App needs read and write access to contents and pull
+requests. Auto-merge must be on in the repository settings, and the branch
+protection of `main` must require `all-checks`. Without that rule,
+auto-merge merges the PR before CI ends.
+
+CI on a PR from the App emails nobody. So when the open PR has a red
+`all-checks`, the next daily run fails. It also mentions the repository
+owner in a comment on the PR, once for each version. `tools/pr_status.py`
+reads the result. A cancelled run next to a green or running one does not
+count as red.
 
 Factorio 2.1 refused to load Hattorio 1.0.0, which said "2.0", and the
 players found the problem first. With this workflow, CI finds a new release
@@ -228,10 +255,15 @@ files by hand.
 GitHub turns off the schedules of a public repository after 60 days with no
 commit, and it sends a warning email first. Hattorio can go quiet for longer
 than that. So each run of `watch.yml` also calls the GitHub API to enable
-`watch.yml` and `weekly.yml` again, which resets the count. The
+`watch.yml`, `weekly.yml` and `factorio-version.yml` again, which resets the
+count. The
 [keepalive-workflow](https://github.com/gautamkrishnar/keepalive-workflow)
 action does the same in its API mode. GitHub does not document this effect.
 If the schedules stop anyway, enable them again on the Actions tab.
+
+Each merged PR from `factorio-version.yml` is also a commit on `main`, and
+that resets the count too. But such a PR comes only with a new stable
+release, so the keepalive job stays.
 
 ## Versions
 

@@ -6,8 +6,9 @@ name: watch
 # in-game tests in that release, with and without Space Age.
 #
 # A failed scheduled run makes GitHub notify the maintainer. A cache entry
-# marks each test and each reminder as done for one commit on main. So each
-# result notifies once, and a run with nothing new starts no test runner.
+# marks each test as done for one commit on main. So each result notifies
+# once, and a run with nothing new starts no test runner.
+# factorio-version.yml moves the pin to a new stable release.
 #
 # GitHub turns off the schedules of a public repository after 60 days with
 # no commit. On each run, the keepalive job enables the scheduled workflows
@@ -29,7 +30,7 @@ jobs:
       - env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          for workflow in watch.yml weekly.yml; do
+          for workflow in watch.yml weekly.yml factorio-version.yml; do
             gh api --method PUT "repos/$GITHUB_REPOSITORY/actions/workflows/$workflow/enable"
           done
 
@@ -40,8 +41,6 @@ jobs:
       actions: read
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
-      remind: ${{ steps.plan.outputs.remind }}
-      stable: ${{ steps.plan.outputs.stable }}
     steps:
       - uses: actions/checkout@v7
       - name: List the markers of earlier runs
@@ -52,21 +51,6 @@ jobs:
           --json key --jq '.[].key' > "$RUNNER_TEMP/keys"
       - id: plan
         run: python3 -m tools.factorio_version plan "$GITHUB_SHA" "$RUNNER_TEMP/keys" >> "$GITHUB_OUTPUT"
-
-  # A newer stable release than the pin needs a PR that moves the pin. The
-  # marker comes first, so the reminder fails only once.
-  pin:
-    needs: plan
-    if: needs.plan.outputs.remind == 'true'
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v7
-      - run: touch .watch-done
-      - uses: actions/cache/save@v6
-        with:
-          path: .watch-done
-          key: watch-pin-${{ needs.plan.outputs.stable }}-${{ github.sha }}
-      - run: python3 -m tools.factorio_version
 
   ingame:
     name: in-game on ${{ matrix.version }} (${{ matrix.mode }})
