@@ -50,6 +50,11 @@ def test_a_release_tag_must_be_on_main():
     assert "git merge-base --is-ancestor" in job(read("release.yml"), "build")
 
 
+def test_a_manual_publish_must_be_on_main_too():
+    build = job(read("release.yml"), "build")
+    assert "if: github.event_name == 'push' || inputs.mode == 'publish'" in build
+
+
 def test_the_portal_upload_runs_only_on_a_tag_or_on_request():
     publish = job(read("release.yml"), "publish")
     assert "github.event_name == 'push' || inputs.mode == 'publish'" in publish

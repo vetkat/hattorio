@@ -260,8 +260,8 @@ git tag v1.0.2 && git push origin v1.0.2
 
 `.github/workflows/release.yml` then does these steps:
 
-1. It fails unless the tagged commit is on `main`.
-2. It runs every job of `check.yml`.
+1. It runs every job of `check.yml`.
+2. It fails unless the tagged commit is on `main`.
 3. It checks the version against the tag and builds the zip.
 4. It makes a GitHub release with the zip. The notes are the section of
    `CHANGELOG.md` for the version.
@@ -275,9 +275,14 @@ description. The portal steps run in a GitHub environment called
 `mod-portal`. You can give that environment a required reviewer, so that a
 person approves before the workflow publishes anything.
 
-A manual run of the release workflow has four modes. `dry-run` checks and
-builds. `check-credentials` tests the key. `publish` checks, builds and
-uploads. `description` only sends the long description.
+A manual run of the release workflow has four modes:
+
+- `dry-run` checks and builds any branch.
+- `check-credentials` tests the key.
+- `publish` checks, builds and uploads, and then sends the long
+  description. Like a tag, it fails unless the commit is on `main`. It makes
+  no GitHub release.
+- `description` only sends the long description.
 
 The long description also has a workflow of its own, `description.yml`. It
 runs when `mod-description-long.md` changes on `main`, so a merged text edit
