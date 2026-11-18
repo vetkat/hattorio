@@ -121,9 +121,9 @@ design spec records both.
 
 The offline pipeline checks every patch:
 
-- no hats overlap
-- a flood fill finds no gaps
-- the density of reflected hats converges to 1/(φ⁴+1) ≈ 12.73%
+- no hats overlap (sampled)
+- no gaps inside the patch (sampled)
+- the density of reflected hats is close to 1/(φ⁴+1) ≈ 12.73%
 - the hat counts match F(2n+3)² exactly: 4, 25, 169, 1,156, 7,921
 
 The pipeline then exports a golden fixture, and the Lua descent must produce

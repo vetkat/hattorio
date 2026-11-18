@@ -17,6 +17,12 @@ describes it. The maintainer decides what moves from Ideas to Next.
   determinism is sound, but no such test exists yet
   ([README](README.md)).
 
+## For 2.0
+
+- [ ] Move the root of the tiling, so that spawn is not on the centre of the
+  H metatile. The mod must store the offset for each surface, and the
+  change needs a major version ([design section 5][root]).
+
 ## Ideas
 
 These are out of scope for now ([design section 15][scope]). The tiling core
@@ -30,3 +36,4 @@ and the descent-path hierarchy can take them without changes to the core.
 [releasing]: docs/design/toolchain-decisions.md#releases
 [prose]: docs/design/toolchain-decisions.md#prose-check
 [scope]: docs/design/hattorio-design.md#15-out-of-scope
+[root]: docs/design/hattorio-design.md#root-placement

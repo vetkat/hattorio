@@ -43,8 +43,8 @@ from tools.substitution import levels
 from tools.verify import verify_all
 
 # Coverage grows linearly with the hat size, so the SMALLEST allowed size sets
-# the depth that we must emit. At size 15 (the minimum setting), depth 13 is
-# necessary to reach the edge of the map. 15 leaves a margin. Doubles have no
+# the depth to emit. At size 15 (the minimum setting), depth 12 reaches the
+# edge of the map. 15 leaves a margin. Doubles have no
 # coefficient limit, so each extra level costs only a few hundred bytes.
 MAX_LEVEL = 15
 ROOT = pathlib.Path(__file__).resolve().parents[1]

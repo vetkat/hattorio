@@ -35,8 +35,8 @@ end
 
 --- The shallowest depth whose root covers `cover` world units at this unit.
 -- Coverage grows linearly with the hat size, so a smaller hat needs a deeper
--- root. At the minimum size setting that is depth 13, and at the maximum it
--- is depth 11. Returns nil if the emitted data cannot reach that far.
+-- root. Sizes 15 and 26 need depth 12, and sizes 41 and 52 need depth 11.
+-- Returns nil if the emitted data cannot reach that far.
 function Ti.depth_covering(unit, cover)
   for d = 0, RULES.max_level do
     if RULES.radius[d].H * unit >= cover then return d end
