@@ -29,7 +29,8 @@ local LAYER = "hattorio_band"
 local BLOCKED_TYPES = {
   "accumulator", "agricultural-tower", "ammo-turret", "arithmetic-combinator",
   "artillery-turret", "assembling-machine", "asteroid-collector", "beacon",
-  "boiler", "burner-generator", "cargo-landing-pad", "constant-combinator",
+  "boiler", "burner-generator", "cargo-bay", "cargo-landing-pad",
+  "constant-combinator",
   "container", "decider-combinator", "display-panel",
   "electric-energy-interface", "electric-pole", "electric-turret",
   "fluid-turret", "furnace", "fusion-generator", "fusion-reactor", "gate",
@@ -65,3 +66,22 @@ for _, type_name in ipairs(BLOCKED_TYPES) do
 end
 
 log("hattorio: added " .. LAYER .. " to " .. patched .. " entity prototypes, skipped " .. skipped)
+
+-- Floor tiles. Stone brick, concrete, landfill and, in Space Age, foundation
+-- and the soils check the tile under them against a condition. The band tile
+-- has only the band layer, so no condition matched it, and a player could
+-- pave a band and then build on the new tile. The band layer in each
+-- condition stops that.
+local paving = 0
+for _, prototypes_of_type in pairs(data.raw) do
+  for _, proto in pairs(prototypes_of_type) do
+    local tile = proto.place_as_tile
+    if type(tile) == "table" then
+      tile.condition.layers = tile.condition.layers or {}
+      tile.condition.layers[LAYER] = true
+      paving = paving + 1
+    end
+  end
+end
+
+log("hattorio: added " .. LAYER .. " to the tile condition of " .. paving .. " items")

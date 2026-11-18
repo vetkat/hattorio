@@ -11,6 +11,14 @@ This is the only changelog that people edit. The build makes Factorio's
 
 ## [Unreleased]
 
+### Fixed
+
+- You could pave a band with a floor tile and then build on it. Stone brick,
+  concrete and landfill did this, and in Space Age also foundation, ice
+  platform and the Gleba soils. No floor tile can go on a band now.
+- You could build a cargo bay on a band. It is blocked now, like the other
+  structures.
+
 ### Changed
 
 - Clearer descriptions for the band appearance, band colour, ore richness
