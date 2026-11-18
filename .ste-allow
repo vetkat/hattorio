@@ -30,11 +30,3 @@ ing-form | wiki/The-mathematics.md | floating | the term floating point
 ing-form | wiki/_Sidebar.md | playing | a heading that names the topic
 ing-form | wiki/Building-in-hats.md | crossing | a heading that names the topic
 ing-form | tools/README.md | previewing | a heading that names the topic
-
-# mod-description-long.md is in the author's first-person voice, which
-# CLAUDE.md says to keep. These findings are voice, not AI tells.
-passive | mod-description-long.md | | the author's voice
-perfect-tense | mod-description-long.md | | the author's voice
-sentence-length | mod-description-long.md | | the author's voice
-paragraph-length | mod-description-long.md | | the author's voice
-ing-form | docs/portal-description.md | working | "stops working" is the plain phrase

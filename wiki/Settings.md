@@ -11,12 +11,12 @@ they stay fixed after that.
 | Band colour | Deep violet | violet, cold, oily, ember, void black |
 
 Cell size and band width are dropdowns. Each choice has a label that tells you
-how hard it makes the game. You set them per planet.
+how hard it makes the game.
 
-## Hat size is the most important setting
+## Cell size
 
-Hat size sets how much room a cell gives you. More importantly, it sets the
-largest blueprint that you can reuse everywhere.
+The cell size is the most important setting. It sets how much room a cell
+gives you, and the largest blueprint that you can reuse everywhere.
 
 At the default band width of 3:
 
@@ -30,8 +30,8 @@ At the default band width of 3:
 A wider band makes the cell smaller, and a narrower band makes it larger. At
 band 1, a size-41 cell holds 1,012 tiles and takes a 19×19 blueprint.
 
-For scale, a smelter block is about 20×20 and a mall is about 30×30. **Every
-size in this table breaks those blueprints.** So the choice is how much room
+For scale, a smelter block is about 20×20 and a mall is about 30×30. Every
+size in this table breaks those blueprints, so the choice is how much room
 you get to improvise.
 
 - **15** is brutal. A cell holds one machine and some belt. It is new, and
@@ -82,7 +82,7 @@ The geometry controls the terrain. Suppose you change it in an existing save.
 Every chunk that already exists keeps the old geometry, every new chunk gets
 the new one, and the seam between them stays for ever.
 
-If you change a setting later, the change applies **only to new surfaces**.
+If you change a setting later, the change applies only to new surfaces.
 Existing surfaces keep the geometry that their terrain was built with, so no
 seams appear.
 
@@ -90,7 +90,7 @@ seams appear.
 
 Bands cut through ore patches, and a mining drill needs a clear 3×3 area. So
 you cannot reach some of the ore. The mod raises the richness to compensate.
-It uses measured values, not a guess. The reachable fraction is 80% at the
+It uses measured values. The reachable fraction is 80% at the
 largest cells and falls to 5% at the smallest cells with the widest band.
 
 `/hattorio-info` shows the cell size, the band width and the richness

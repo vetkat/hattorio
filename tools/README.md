@@ -20,5 +20,5 @@ lua5.2 tools/render_bands.lua [hat-size] [band] [tiles] [out.svg]
 `render_bands.lua` shows how the mod will look in the game: it rasterises the
 hat cells onto Factorio's tile grid and puts unbuildable bands between them.
 
-Both scripts use the **Lua** descent, so they run the same code that ships.
+Both scripts use the Lua descent, so they run the same code that ships.
 To make a PNG, run `rsvg-convert -w 900 x.svg -o x.png`.

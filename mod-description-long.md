@@ -1,103 +1,85 @@
 # Hattorio
 
-**Every planet is cut into cells of the hat tiling. The hat is the aperiodic
-monotile that was found in 2023. The tiling never repeats, so no two cells
-have the same shape, and your blueprint library stops fitting.**
+A Factorio mod. It cuts every planet into cells of the hat tiling, the
+aperiodic monotile found in 2023. The tiling never repeats, so no two cells
+have the same shape, and your blueprint library stops fitting.
 
 ![The hat tiling, as Hattorio generates it](https://raw.githubusercontent.com/vetkat/hattorio/main/docs/preview/tiling.png)
 
-## Why does this mod exist?
+## Why this mod exists
 
-Ask any experienced Factorio player to sketch a green circuit build. I bet
-I'd get roughly the same thing back every time. Three assemblers make copper
-wire and feed two that make circuits. An iron plate belt runs down the side.
-The power poles are placed so that the whole block tiles cleanly and marches
-off in one of the cardinal directions for ever.
+Most experienced players build a green circuit block the same way. Three
+assemblers make copper wire and feed two that make circuits. An iron plate
+belt runs down the side. The power poles sit so that the block tiles cleanly
+and repeats in one direction for ever.
 
-We did not each arrive there on our own. At some point early on, we worked
-out the ratios or looked them up. Then we stamped the result down and never
-had a reason to think about it again.
+Players found the ratios early, or looked them up, and then stamped the
+result down in every game after that. The block is correct. A solved
+problem stays solved, and each new game reaches the same rectangles a little
+faster.
 
 ![Spaghetti is the true final form of Factorio](https://img1.joyreactor.com/pics/post/Factorio-games-Wojak-7532889.jpeg)
 
-That block isn't bad. It's correct, and that is the problem. A solved problem
-stays solved. Every playthrough after the first one arrives at the same
-rectangles a little faster than the last.
+In 2023 four mathematicians answered a question that was fifty years old: can
+one shape tile the plane and never repeat? It can, and they called it the hat.
+A tileable blueprint cannot work on a floor plan that never repeats. Hattorio
+puts that floor plan on the map.
 
-In 2023 four mathematicians answered a question that had been open for fifty
-years: can one shape tile the plane and never repeat? It can, and they called
-it the hat.
-
-A tileable blueprint cannot survive a floor plan that never repeats. So I put
-that floor plan on the map and built the factory on it.
-
-## What this mod does
+## What the mod does
 
 Each hat is a buildable cell. A narrow band runs between the cells, and you
-cannot build on it. You can walk and drive across a band, but underground
-belts and pipes must go under it. Rails do cross it, and power and bots ignore
-it.
+cannot build on it. You can walk and drive across a band. Underground belts
+and pipes go under it, rails cross it, and power and bots ignore it.
 
 ![Cells and bands at the default settings](https://raw.githubusercontent.com/vetkat/hattorio/main/docs/preview/bands-41-3.png)
 
-That is the whole mod. It adds no items, recipes or technologies, so the
-ratios you already know are still the ratios. The only restriction is where
-you can put things.
+The mod adds no items, recipes or technologies, so your ratios do not
+change. It only limits where you can build.
 
 ## Why your blueprints stop fitting
 
-If this were only about orientation, it would cost you one keypress. Hats
-occur in twelve orientation classes. Factorio rotates in 90° steps and 2.0
-can flip, so those twelve classes collapse to about three, and `r` cycles
-between them for free.
+Rotation costs one keypress. Hats occur in twelve orientation classes.
+Factorio rotates in 90° steps and 2.0 can flip, so the twelve classes come
+down to about three, and `r` cycles between them.
 
-The real cause is that hats sit at irrational multiples of the tile pitch.
-Every cell meets the square grid at a different sub-tile offset, so every cell
-rasterises into a different set of squares. I measured 1,156 cells at the
-default settings and found 885 different buildable shapes. The most common
-shape covers 0.5% of the map.
+Position is the real cause. The hats sit at irrational multiples of the tile
+pitch. So each cell meets the square grid at a different sub-tile offset,
+and it rasterises into a different set of squares. At the default settings, 1,156
+measured cells have 885 different buildable shapes. The most common shape
+covers 0.5% of the map. A layout that fills one cell fits that cell and no
+other.
 
-So a layout that fills one cell fits that cell and no other.
-
-### Blueprints up to a certain size still work
-
-At the default settings, anything up to 17×17 fits every cell on the map.
-That is the real limit of the mechanism, and it is deliberate. The mod does
-not take away your knowledge. It takes away the habit of stamping a block
-that uses a space well, because no two spaces are the same.
+Small blueprints still work. At the default settings, anything up to 17×17
+fits every cell on the map. You keep your knowledge of the game. You lose
+the habit of stamping a block that fills a space well, because no two spaces
+are the same.
 
 ## What changes in play
 
-**Think ahead.** Cells are all different, and they meet each other in
-different ways. Some neighbours share a long edge, and some touch at a point.
-A group of cells that fits well together is worth the walk, and you can only
-see it on the map.
+**Look before you build.** Cells meet their neighbours in different ways.
+Some share a long edge, and some touch at a point. A group of cells that
+fits well together is worth the walk, and the map shows you where it is.
 
 **Cells replace the bus.** A bus needs parallel lines that run as far as you
-want. Nothing here runs that far. Each cell becomes a small factory with one
-job, and the interesting decisions move to the connections between cells.
+want, and nothing here runs that far. Each cell becomes a small factory with
+one job, and the decisions move to the connections between cells.
 
-**Every crossing needs a plan.** Belts leave a cell with an underground pair,
-and the cell edge is never parallel to an axis. Power poles ignore the ground,
-so power is never the problem. Belts are the problem, and you will build and
-rebuild them the most.
+**Each crossing needs a plan.** Belts leave a cell with an underground pair,
+and the cell edge is never parallel to an axis. Power poles ignore the
+ground, so power is never the problem. You build and rebuild belts the most.
 
-**Trains get better.** Rails are exempt and cross bands freely, so at any
-distance they hurt much less than belts. Expect to build rail earlier than
-usual.
+**Trains come earlier.** Rails cross bands freely, so over any distance they
+cost much less than belts.
 
-**Bots will lift the constraint.** They fly over the whole problem, and they
-arrive with normal progression. That is intended. The constraint should hurt
-most in the belt era and ease as you research more. It should not follow you
-to the end of the run.
+**Bots remove the constraint.** They fly over the bands, and they arrive with
+normal progression. This is intended. The constraint is strongest in the
+belt era and gets weaker as you research.
 
 ## Settings
 
 You set the cell size and the band width per planet when you create the
-world. In Space Age each planet gets its own pair, so Nauvis can be
-comfortable while Vulcanus is not.
-
-The cell size controls how much pain you are about to receive:
+world. In Space Age, each planet has its own pair, so Nauvis can be easy
+while Vulcanus is not.
 
 | Cell size | Cell area | Largest blueprint that fits every cell |
 | --- | --- | --- |
@@ -106,97 +88,82 @@ The cell size controls how much pain you are about to receive:
 | _41: normal (default)_ | _858 tiles_ | _17×17_ |
 | 52: easy | 1,473 tiles | 22×22 |
 
-A smelter block is about 20×20 and a mall is about 30×30. So every option,
-"easy" included, breaks an imported blueprint. The size only sets how much
-room you get to improvise.
+A smelter block is about 20×20 and a mall is about 30×30. Every size breaks
+an imported blueprint, "easy" included. The size sets how much room you get
+to improvise.
 
-The band width is 1 to 4 tiles. An underground belt can cross every width, so
-no cell is ever cut off from its neighbours.
+The band width is 1 to 4 tiles. An underground belt crosses every width, so
+no cell is cut off from its neighbours.
 
-**Ore.** Bands put some ore out of the reach of a 3×3 drill. In new chunks
-the mod raises the richness automatically to compensate, and it scales the
-increase to your cell size and band width. If you prefer to set it yourself,
-there is a manual multiplier. `/hattorio-info` shows the geometry and the
-richness that the surface under you actually uses.
+**Ore.** Bands put some ore out of reach of a 3×3 drill. In new chunks the
+mod raises the richness to compensate, and it scales the increase to your
+cell size and band width. A manual multiplier replaces the calculated value
+if you want to set it yourself. `/hattorio-info` shows the geometry and the
+richness of the surface under you.
 
-### Appearance
-
-By default the bands are an animated dark liquid. You can also choose a flat
-void if you prefer something still. Both come in five near-black colours. The
-highlight at the edges of the surface is what makes the bands visible. About
-one cell in eight is reflected, and the mod gives these cells a stronger tint
-so you can spot them. A per-player option draws a line down the centre of
-each band if you want clear boundaries.
+**Appearance.** The bands are an animated dark liquid by default, or a flat
+void if you want them still. Both come in five near-black colours. The
+highlight at the edges makes the bands visible. About one cell in eight is
+reflected, and the mod gives these cells a stronger tint so that you can find
+them. A per-player option draws a line down the centre of each band.
 
 ## Before you start
 
-### Start a new world
+**Start a new world.** The mod paints the bands when a chunk generates. If
+you add Hattorio to a save in progress, the explored area keeps vanilla
+ground, with a permanent seam at its edge. The mod tells you when this
+happens, but it cannot undo it.
 
-The mod paints the bands when chunks generate. If you add Hattorio to a save
-in progress, everything you already explored keeps vanilla ground, with a
-permanent seam at its edge. The mod tells you when this happens, but it cannot
-undo it.
+**Each surface keeps its settings.** The terrain records the cell size and
+the band width when it generates. A later change applies only to new
+surfaces, so no seam appears in the middle of the map.
 
-### Your settings are fixed per surface
+**Single player for now.** The tiling uses only correctly rounded IEEE
+arithmetic and no trigonometry, so every client calculates the same cells.
+No test with two connected clients exists yet. If you play it in
+multiplayer and have problems, report them in the comments below or in an
+[issue on GitHub](https://github.com/vetkat/hattorio/issues).
 
-The terrain records the cell size and band width when it generates. If you
-change them later, the change applies only to new surfaces. A world in
-progress keeps the geometry it was built with, so no seam appears in the
-middle of the map.
+**Factorio 2.1 or later.** The mod works with and without Space Age.
 
-### Single player, for now
-
-The tiling uses only correctly rounded IEEE arithmetic and no trigonometry,
-so every client calculates the same cells. But nobody has tested it with two
-connected clients yet. If you try it in multiplayer and have problems, let me
-know in the comments below or open an
-[issue on my GitHub repo](https://github.com/vetkat/hattorio/issues).
-
-### Factorio 2.1 or later
-
-Space Age is supported but not required.
-
-## Credits and inspiration
+## Credits
 
 David Smith, Joseph Samuel Myers, Craig S. Kaplan and Chaim Goodman-Strauss
-found the hat in 2023. Smith found the shape. The other three proved that it
-does what it appears to do.
+found the hat in 2023. Smith found the shape, and the other three proved
+that it tiles the plane without repeating.
 
-Hattorio generates the tiling with a substitution structure that comes from
-Kaplan's [hatviz](https://github.com/isohedral/hatviz) (BSD-3-Clause). See
+Hattorio generates the tiling with a substitution structure from Kaplan's
+[hatviz](https://github.com/isohedral/hatviz) (BSD-3-Clause). See
 [THIRD_PARTY.md](https://github.com/vetkat/hattorio/blob/main/THIRD_PARTY.md).
 
 [Hextorio](https://mods.factorio.com/mod/hextorio) did this for hexagons
-first and had already solved several of the same problems. Hattorio uses its
-method to store geometry per surface.
+first and solved several of the same problems. Hattorio uses its method to
+store the geometry per surface.
 
 Hattorio is MIT licensed. The source code and a description of how the mod
 generates the tiling are at
 [github.com/vetkat/hattorio](https://github.com/vetkat/hattorio). The
-[wiki](https://github.com/vetkat/hattorio/wiki) covers the maths. It shows how
-I recovered the limiting metatiles as exact algebraic numbers. It also shows
-why plain doubles beat exact integer arithmetic by nine orders of
-magnitude (in Lua 5.2 at least).
+[wiki](https://github.com/vetkat/hattorio/wiki) covers the maths. It shows
+how the limiting metatiles came out as exact algebraic numbers. It also shows
+why plain doubles beat exact integer arithmetic by nine orders of magnitude
+in Lua 5.2.
 
-## Use of GenAI and LLMs
+## Use of generative AI
 
-A large language model wrote most of the code in this mod. I set the
-direction, made the design decisions, reviewed what came back and decided
-what shipped. But I'm not going to claim I typed it.
+A large language model wrote most of the code. The author set the direction,
+made the design decisions, reviewed the results and decided what shipped.
 
-I'm saying so because you have a right to know. The obvious worry is also a
-fair one: generated code is confident about things it has not checked. So I
-built the mod so that you do not have to rely on that confidence.
+Generated code can make claims that nobody checked. So the mod
+does not ask you to trust it:
 
-A Lua core produces the tiling. A golden fixture from a separate Python
-pipeline validates that core. The pipeline checks the fixture itself for
-overlaps, for gaps, for the correct density of reflected hats and for hat
-counts that match F(2n+3)². Every figure in this description is a
-measurement. If the documentation and the code stop agreeing about these
-figures, a test fails the build. All of it is MIT licensed and on GitHub. That
-includes a design document that records what turned out to be wrong.
+- A golden fixture from a separate Python pipeline validates the Lua core
+  that produces the tiling.
+- The pipeline checks the fixture for overlaps and gaps, for the density of
+  reflected hats, and for hat counts that match F(2n+3)².
+- Every figure on this page is a measurement. If the documentation and the
+  code disagree about a figure, a test fails the build.
+- The code, the tests and a design document that records what turned out to
+  be wrong are on GitHub, under the MIT licence.
 
-None of that makes the mod correct. It makes the mod checkable, and that is
-the most I can honestly offer. The one thing I haven't been able to check is
-multiplayer. So if you feel like it, please try it, and if you have problems,
-let me know.
+None of this makes the mod correct, but you can check it. Multiplayer is the
+one part without a check yet. If you try it, report what happens.

@@ -28,7 +28,15 @@ rules, the changelog and the release workflow.
 - Write all prose in British English: Markdown, code comments, docstrings and
   commit messages.
 - Use the /ste80-humanizer skill for new prose and for commit messages.
-- In `mod-description-long.md`, keep the author's first-person voice.
+- Write in the tone of the reference project (`README.md` and
+  `docs/design.md` there). It is plain and dry. Say what the mod does, and
+  give the numbers.
+- Address the player as "you". Do not write "I" or "we": name who acts, such
+  as the mod, the pipeline or a test.
+- Do not sell. Do not stage a point, and do not end on a punchline. The
+  subject can be funny, but the sentences stay flat.
+- Use bold only for a label at the start of a paragraph or a list item, and
+  for a warning. Do not use bold for emphasis inside a sentence.
 
 ## Skills
 

@@ -15,8 +15,7 @@ A main bus needs parallel lines that run as far as you want. Here they cannot.
 Treat each cell as a small factory with one job, and move items between the
 cells.
 
-Then the hard part is the *connections*. The mod puts the interesting
-decisions there.
+The hard part moves to the connections between the cells.
 
 ## Crossing bands
 
@@ -48,5 +47,5 @@ Do not blueprint a whole cell. The blueprint will fit exactly one cell, and
 - **You can walk on bands.** They look like a wall, but they are not one. You
   can always reach a cell.
 - **Reflected cells.** About 1 cell in 8 is a mirror image. No rotation makes
-  it match the others. This is a mathematical property of the tiling, not a
-  bug: a proof shows that the tiling needs mirrored tiles.
+  it match the others. A proof shows that the tiling needs mirrored tiles,
+  so this is correct.

@@ -1,12 +1,12 @@
 # Toolchain
 
-This page lists the tools that the project actually uses, and the reasons. We
-removed every proposal that the project did not adopt. The reasons for the
+This page lists the tools that the project actually uses, and the reasons. It
+leaves out every proposal that the project did not adopt. The reasons for the
 arithmetic choices are in sections 5 and 14 of `hattorio-design.md`.
 
 ## Runtime: Lua 5.2.1
 
-We did not choose this. Factorio embeds Lua 5.2.1, and the mod runs inside it.
+This is not a choice. Factorio embeds Lua 5.2.1, and the mod runs inside it.
 
 This has two effects on the code:
 
@@ -25,10 +25,10 @@ the round trip.
 
 ## Testing: busted and luassert
 
-We used red-green-refactor for all the work. The tests are in
+All the work used red-green-refactor. The tests are in
 `spec/*_spec.lua`, and busted finds them through `.busted`.
 
-The tests must run under **Lua 5.2 specifically**. Lua 5.3 and later add an
+The tests must run under Lua 5.2 specifically. Lua 5.3 and later add an
 integer subtype, so on 5.4 the tests would hide the all-doubles behaviour that
 the core depends on. CI pins 5.2 for the same reason.
 
@@ -37,9 +37,9 @@ at Lua 5.5, where its modules do not exist. The Makefile uses a `busted` on
 PATH if there is one. If not, it uses the rock path.
 
 **Property-style tests are plain loops over fixed seeds**, not a generative
-library. We considered `lua-quickcheck` and dropped it. No luarocks package on
-Arch includes a CLI, so you can install it only if you build it from source.
-Fixed seeds are also easier to reproduce.
+library. The project considered `lua-quickcheck` and dropped it. No luarocks
+package on Arch includes a CLI, so you can install it only if you build it
+from source. Fixed seeds are also easier to reproduce.
 
 ## In-game tests: factorio-test
 
@@ -66,11 +66,11 @@ turns water off in the map generator before it makes a new chunk.
 `mod/`, `prototypes/`, `spec/`, `tests/` and the stage entry points such as
 `control.lua`. The standard is zero warnings.
 
-**We use no static type checker.** We considered Teal and rejected it. It has
+**No static type checker.** The project considered Teal and rejected it. It has
 no definitions for the Factorio API, so every call to the game would become
-an untyped escape hatch. It also adds a build step from `.tl` to `.lua`. In
-the design phase we chose LuaLS annotations, but we never added them, and the
-code has none today. If you want types, use LuaLS annotations, and adopt them
+an untyped escape hatch. It also adds a build step from `.tl` to `.lua`. The
+design phase chose LuaLS annotations, but nobody added them, and the code
+has none today. If you want types, use LuaLS annotations, and adopt them
 as a deliberate decision.
 
 ## Prose check
@@ -89,8 +89,7 @@ The check has three parts:
 
 `.ste-allow` lists the findings that are false positives, each with a
 reason. An example is "the preview is red", which the checker reads as a
-passive. `mod-description-long.md` is in the author's own voice, so the
-check accepts its passives and long sentences.
+passive.
 
 ## Layout
 
@@ -109,7 +108,7 @@ offline, where it costs nothing. Only the values ship.
 
 ## Verification strategy
 
-We considered formal verification and dropped it. No practical tools exist
+The project considered formal verification and dropped it. No practical tools exist
 for Lua. The mechanised semantics for Lua are research artefacts, not
 verifiers.
 
@@ -121,7 +120,7 @@ In its place, three layers of checks run:
    hat counts match F(2n+3)^2 exactly.
 2. **Golden fixtures.** The pipeline exports a reference patch, and the Lua
    descent must produce the same patch. This tests the code that ships against
-   the arithmetic that we proved correct.
+   arithmetic with a proof of correctness.
 3. **Invariant tests.** `spec/invariants_spec.lua` searches the shipped
    modules for `math.sin`, `math.cos`, `math.random` and `^`. None of these
    give the same bits on all platforms.
@@ -132,10 +131,10 @@ The `hat/` modules are pure. They have no mutable state and do not use the
 Factorio API, and every function is total over its inputs. Side effects
 belong in the layer that talks to Factorio.
 
-We got here from the determinism constraint, not from a principle. But the
-result matches SUPER (side effects at the edge, uncoupled logic, pure and
-total functions, explicit data flow, replaceable by value). Design section 7
-gives the three rules that make this explicit.
+The determinism constraint led to this design. The result also matches SUPER
+(side effects at the edge, uncoupled logic, pure and total functions, explicit
+data flow, replaceable by value). Design section 7 gives the three rules that
+make this explicit.
 
 There is one deliberate exception. The descent changes its output accumulator
 in place, for speed. The accumulator is local to `hat/tiling.lua` and never

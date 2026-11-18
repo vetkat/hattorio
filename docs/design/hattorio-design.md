@@ -16,8 +16,8 @@ build, and that is enough.
 Make imported Cartesian blueprints useless, and make players build organic
 factories that do not repeat.
 
-The tiling is the means, not the goal. We judge every decision below by one
-test: does it serve that goal?
+The tiling is a means to that goal. Every decision below answers one
+question: does it serve the goal?
 
 ### Non-goals
 
@@ -29,7 +29,8 @@ test: does it serve that goal?
 
 ## 2. What the engine forbids
 
-We settled these points. Do not argue them again during implementation.
+This section settles these points. Do not argue them again during
+implementation.
 
 - **Tiles are 1x1 and aligned to the axes.** Tile storage, collision boxes,
   belt transport lines, pipe and inserter connections, the pathfinder and
@@ -69,14 +70,14 @@ chiralities. The frequencies are nearly uniform (about 14.5% for each
 unreflected class and about 2.1% for each reflected class). Factorio rotates
 blueprints in 90 degree steps, so 0/180, 60/240 and 120/300 each collapse to
 one class. Factorio 2.0 and later can also flip, which maps reflected classes
-onto unreflected ones. **So orientation alone would need only about 3
-layouts.**
+onto unreflected ones. So orientation alone would need only about 3
+layouts.
 
 An earlier draft of this document said 12, which overstated the case.
 
-The real cause is the placement at sub-tile offsets. Hat positions are irrational
-multiples of the tile pitch. So every cell sits at a different offset and
-rasterises in a different way. Measured over 1,156 hats:
+The real cause is the placement at sub-tile offsets. Hat positions are
+irrational multiples of the tile pitch. So every cell sits at a different
+offset and rasterises in a different way. Measured over 1,156 hats:
 
 | | size 26 / band 2 | **size 41 / band 3 (default)** |
 | --- | --- | --- |
@@ -121,8 +122,8 @@ every cell is the same shape rotated, and only the rasterisation changes.
   intended connection between cells and the main source of spaghetti. Every
   crossing costs an underground pair, placed against an edge that is not
   parallel to an axis.
-- **Rails are exempt** and can cross bands. We considered removing trains
-  completely, and rejected it because it takes away too much.
+- **Rails are exempt** and can cross bands. The design considered removing
+  trains completely, and rejected it because it takes away too much.
 - **Mining drills are not exempt.** The mod raises resource richness to
   compensate (see section 8).
 - **Tiles do not affect power poles, wires and bots.** Bots are the natural
@@ -142,12 +143,12 @@ both unnecessary and unworkable.
 
 The desync risk in Factorio is `math.sin`, `math.cos` and `^`/`pow`, because
 their libm implementations really are different on different platforms. But
-IEEE-754 requires **correct rounding** for `+ - * /` and `sqrt`, so they give
+IEEE-754 requires correct rounding for `+ - * /` and `sqrt`, so they give
 the same bits everywhere. The Lua interpreter runs each operation as a
 separate VM instruction, so no compiler can contract two of them into an FMA.
 Factorio runs on 64-bit x86 and ARM processors, which do double arithmetic
-without the 80-bit excess precision of x87. **Here, doubles are exactly as
-deterministic as integers.** They are only less accurate.
+without the 80-bit excess precision of x87. Here, doubles are exactly as
+deterministic as integers. They are only less accurate.
 
 Measured against exact values from the offline pipeline:
 
@@ -158,18 +159,18 @@ depth   coverage       relative error   absolute error
   12   1,194,588 t       5.3e-16          4e-10 tiles
 ```
 
-The relative error stays at machine epsilon and **does not grow with depth**,
+The relative error stays at machine epsilon and does not grow with depth,
 because the composition is well conditioned. Depth 12 covers the whole map
 with an error of four ten-billionths of a tile.
 
-Exact integers could not go past **depth 4**. The numerators of the level-6
+Exact integers could not go past depth 4. The numerators of the level-6
 rules are 1.4e14, so one composition makes a raw product near 1e28, far past
 2^53. A reduction after the product comes too late. A cross-reduction before
 it does not help either. The measured gcd of the operands is 1, because the
 cancellation is additive (inside the sums) and not multiplicative.
 
 So a transform is six plain doubles, and `hat/exact.lua` does not exist. The
-exact arithmetic stays where it belongs: **offline**, in `tools/`, where it
+exact arithmetic stays where it belongs: offline, in `tools/`, where it
 derives the rules and proves them correct. Only the values ship.
 
 Shipped Lua must never contain `math.sin`, `math.cos`, `math.random` or `^`.
@@ -177,7 +178,7 @@ An invariant test searches for them.
 
 ### Depth and coverage
 
-We use **depth 12**. At the default scale it covers about 1,112,791 tiles,
+The descent uses depth 12. At the default scale it covers about 1,112,791 tiles,
 which is the whole Factorio map (its half-extent is about 1e6 tiles).
 Coverage grows linearly with the hat size setting.
 
@@ -185,14 +186,14 @@ The mod derives the depth for each surface from the size setting and stores
 it when it creates the surface. So a smaller hat size uses a deeper root and
 does not lose coverage.
 
-We measured the descent at depth 12 at **0.73 ms per chunk** (about 39 hats
+The descent at depth 12 takes 0.73 ms per chunk (about 39 hats
 per chunk). That is three times faster than the exact-integer version was at
 depth 4. The reason is that a composition is now six multiply-adds, not a
 ring multiplication plus a gcd reduction.
 
 ### Identity
 
-A hat's identity is its **descent path**: the child indices from the root to
+A hat's identity is its descent path: the child indices from the root to
 the hat, packed with `string.char`. These are exact bytes, with no float
 formatting. Each prefix is an ancestor, so `path:sub(1,k)` names the level-k
 supertile. Any future region layer gets this for free.
@@ -209,7 +210,7 @@ place to put the player.
 
 ## 6. Offline pipeline (`tools/`, Python, not shipped)
 
-hatviz (BSD-3-Clause, isohedral/hatviz) does **not** store the substitution
+hatviz (BSD-3-Clause, isohedral/hatviz) does not store the substitution
 rules as matrices. It holds a fixed combinatorial table with 29 entries in
 `constructPatch` and calculates transforms at runtime with `matchTwo`.
 `constructMetatiles` then derives the metatile outlines for each level from
@@ -220,12 +221,12 @@ explicit and exact, and they contain no phi.
 - `hatviz_port.py` implements `matchTwo`, `constructPatch` and
   `constructMetatiles` again, in exact arithmetic over Q(sqrt3, sqrt5). It
   records the outlines and transforms for each level.
-- We **finished and verified** `exactify.py`. We recovered the limiting
+- `exactify.py` is complete. It recovers the limiting
   metatiles with integer-relation recognition against a level-22
   normalisation. The results agree independently at level 14 (1e-8) and level
   22 (1e-14). All 36 coordinates are exact elements of `Q(phi)[sqrt3]`, with
   denominators that divide 100. If you substitute them, you get the same
-  shapes scaled by phi^2 **exactly, as ring elements**. This is a true fixed
+  shapes scaled by phi^2 exactly, as ring elements. This is a true fixed
   point, not an approximation.
 
   The self-similar rule set that results has a maximum coefficient of
@@ -236,15 +237,15 @@ explicit and exact, and they contain no phi.
   **That open question is now settled, and the answer is no.** A self-similar
   rule set cannot reach the hats exactly. The evidence:
 
-  - We attached the hats from `level0()` to a self-similar descent. The counts
-    are right (F(2n+3)^2) and the hats are congruent, but the gate reports
-    overlaps and 0.9% gaps.
-  - We anchored the hats again against the limit outlines, by combinatorics
-    that do not depend on the frame (which hat vertices are on which outline
-    vertices). This made it worse: the hats came out at four different scales.
-    A chord of a rigid hat cannot match a deformed outline edge and stay
-    congruent. H, P and F all deform in different ways (the edge ratio of H
-    goes from 4:1 to phi^4-1, and the interior angles of F change
+  - The first try attached the hats from `level0()` to a self-similar descent.
+    The counts are right (F(2n+3)^2) and the hats are congruent, but the gate
+    reports overlaps and 0.9% gaps.
+  - The second try anchored the hats again against the limit outlines, by
+    combinatorics that do not depend on the frame (which hat vertices are on
+    which outline vertices). This made it worse: the hats came out at four
+    different scales. A chord of a rigid hat cannot match a deformed outline
+    edge and stay congruent. H, P and F all deform in different ways (the edge
+    ratio of H goes from 4:1 to phi^4-1, and the interior angles of F change
     completely).
   - The reason is structural. A substitution maps the 4 hats on a decorated
     tile to 25 smaller hats, so the decoration does not stay the same under
@@ -253,8 +254,8 @@ explicit and exact, and they contain no phi.
     alone.
 
   The limit shapes are still useful, because the rules for each level
-  converge to them precisely. The linear parts are **exactly the same at
-  every level**, and the sequences of child shapes match exactly. Only the
+  converge to them precisely. The linear parts are exactly the same at
+  every level, and the sequences of child shapes match exactly. Only the
   translations are different. They differ by a factor that converges to
   exactly phi^(2L), with a relative spread of about phi^(-2L) (4.9e-5 at
   level 6, 4.8e-10 at level 12).
@@ -263,11 +264,11 @@ explicit and exact, and they contain no phi.
   earlier draft of this section offered "cap at depth 6, ~14,000 tiles" as an
   option to ship. That is wrong for two reasons.
 
-  First, depth 6 covers **3,498 tiles** at the default scale, not 14,000. The
+  First, depth 6 covers 3,498 tiles at the default scale, not 14,000. The
   earlier figure used an estimated metatile radius, not the emitted one.
 
-  Second, and more important, **Lua doubles cannot compose the rules for each
-  level at depth 6 at all.** The numerators at level 6 reach 1.4e14, so one
+  Second, and more important, Lua doubles cannot compose the rules for each
+  level at depth 6 at all. The numerators at level 6 reach 1.4e14, so one
   composition makes a raw product near 1e28. The reduced result is only about
   1e9. But a reduction after the product comes too late. A cross-reduction
   before it does not help either. The measured gcd of the operands is 1,
@@ -281,14 +282,14 @@ explicit and exact, and they contain no phi.
   depth 6   2.3e20   overflow
   ```
 
-  So the rules for each level stop at **depth 4 = 546 tiles**, and that is
+  So the rules for each level stop at depth 4 = 546 tiles, and that is
   not enough to ship. `Ti.safe_depth()` encodes this limit. A test checks that
   the overflow still occurs, so the limit cannot move without notice.
 
   The self-similar rules compose very well (maximum coefficient 219, and only
   2,149 at depth 25), but they cannot reach the hats. So any design that can
-  ship uses **self-similar rules above a junction level and the rules for
-  each level below it**. The only question is where the junction goes:
+  ship uses self-similar rules above a junction level and the rules for
+  each level below it. The only question is where the junction goes:
 
   | junction | block radius | rel. error | seam | occurs every |
   | --- | --- | --- | --- | --- |
@@ -299,7 +300,7 @@ explicit and exact, and they contain no phi.
   Junction 4 needs no new machinery, but it leaves a seam of about 1.3 tiles
   every 546 tiles, and you can see that seam. Junction 6 leaves a seam of
   0.17 tiles every 3,498 tiles. That is less than one tile, so it disappears
-  after rasterisation. But it needs **two-word (106-bit) integer arithmetic**
+  after rasterisation. But it needs two-word (106-bit) integer arithmetic
   in the ring to compose levels 5 and 6. The raw peak at depth 6 is 2.3e20,
   which is far inside 2^106 = 8.1e31.
 
@@ -341,17 +342,17 @@ The attribution and the BSD-3-Clause notice ship with the mod.
 | `mod/commands.lua` | `/hattorio-info` | commands |
 | `prototypes/patch.lua` | band layer on buildable entities | data stage |
 
-The first **six** modules have no Factorio dependencies, and they run under
-plain Lua in CI. The risk is in those modules, and that is where we test it.
+The first six modules have no Factorio dependencies, and they run under
+plain Lua in CI. The risk is in those modules, and the tests cover them.
 The collision layer blocks construction (section 9), so no runtime module
 enforces it.
 
 ### Functional-core discipline
 
 The layout meets SUPER (Radfar): side effects at the edge, uncoupled logic,
-pure and total functions, explicit data flow, replaceable by value. We got
-there from the determinism constraint, not from the principle. Three rules
-make it explicit:
+pure and total functions, explicit data flow, replaceable by value. The
+determinism constraint led to this layout, and the principle came after. Three
+rules make it explicit:
 
 - **`mod/config.lua` is pure.** It takes the setting values as parameters
   and does not read `settings` or `storage`. `mod/surface.lua` does those
@@ -375,8 +376,8 @@ accumulator in place, for performance. The accumulator is local to
   made larger by the band width). Rasterise each of its 13 edges as a thick
   line. An exact endpoint key removes the copies of a shared edge, so the code
   walks each edge only once. This is about ten times cheaper than a
-  point-in-polygon test for each tile, and it calculates the quantity that we
-  actually want.
+  point-in-polygon test for each tile, and it calculates the quantity that the
+  mod needs.
 - **Do not fill water.** Paint only where the existing tile is land, so that
   lakes and their vanilla shore transitions stay.
 - **Ore is already in place** when the event fires. Leave it. The mod raises
@@ -432,7 +433,7 @@ system does the lookup.
   only within 64 tiles of the player and draws it again after the player
   moves 24 tiles. Without the copies of shared edges, a full screen would
   hold about 7k objects at size 20 and about 19k at size 12.
-- We do **not** use `draw_polygon`. It is a triangle strip, not a polygon,
+- The mod does not use `draw_polygon`. It is a triangle strip, not a polygon,
   and it has no `draw_on_ground`, so fills would tint entities.
 
 ## 11. Settings
@@ -448,21 +449,21 @@ Per planet, startup:
 | `hattorio-richness-override` (map) | 0 = automatic | 0 - 10 |
 | `hattorio-show-outline` (per player) | off | on, off |
 
-Size and band are **dropdowns**, not sliders. You cannot read the difficulty
+Size and band are dropdowns, not sliders. You cannot read the difficulty
 of a size from the number, and the interesting range is four values, not
 seventy-six. Each choice has a label for its difficulty: 15 very hard, 26
 hard, 41 normal, 52 easy.
 
-**We chose 41/3 as the default after playtests.** The earlier default of 26/2
+**41/3 became the default after playtests.** The earlier default of 26/2
 was too cramped in practice. Size 41 with band 3 gives a cell of 858 tiles in
 which blueprints up to 17x17 stay reusable. That is enough room to build, and
 every standard layout still breaks. Band 3 keeps the bands clearly visible at
 that cell size, and band 2 does not.
 
-Band style and band colour are **independent**. The style sets the shader on
+Band style and band colour are independent. The style sets the shader on
 the surface, and the colour sets its tint.
 
-We built a third style with the lava shader from Vulcanus and removed it
+A third style with the lava shader from Vulcanus was built and removed
 after playtests. It looked like a hazard, not a void, and it clashed with the
 calm look of everything else. Its removal also took a Space Age conditional
 out of the data stage.
@@ -477,12 +478,12 @@ geometry changed in an existing save, every generated chunk would be out of
 date, and you would see the seam. Startup settings cannot change after the
 game loads.
 
-**How the mod makes a change safe.** The mod stores the scale, band, depth and root
-offset for each surface when it creates the surface (section 12). If a player
-changes the setting later, the change affects only NEW surfaces. Existing
-surfaces keep the geometry that their terrain was built with. This removes
-the out-of-date chunk problem by construction, without regeneration. It is
-the idea worth taking from the `continuous_geometry` flag in Hextorio.
+**How the mod makes a change safe.** The mod stores the scale, band, depth and
+root offset for each surface when it creates the surface (section 12). If a
+player changes the setting later, the change affects only NEW surfaces.
+Existing surfaces keep the geometry that their terrain was built with. This
+removes the out-of-date chunk problem by construction, without regeneration.
+It is the idea worth taking from the `continuous_geometry` flag in Hextorio.
 
 **The mod derives the depth. Nobody sets it.** Coverage grows linearly with
 the hat size, so a smaller hat needs a deeper root.
@@ -507,8 +508,8 @@ that broke congruence would fail the build.
 Callers must give a hat size and use `Ti.unit_for_hat_size()`. One manual
 conversion already made cells at half the intended size.
 
-The mod **stores the scale, depth and root offset for each surface when it
-creates the surface**. A later change to a startup setting affects only new
+The mod stores the scale, depth and root offset for each surface when it
+creates the surface. A later change to a startup setting affects only new
 surfaces. So chunks that already exist never go out of date, and no seam can
 appear. This is the one idea worth taking from the `continuous_geometry` flag
 in Hextorio.
@@ -524,18 +525,18 @@ derives the tiling for each surface, and builds it again on load.
 
 ## 13. Testing
 
-We use red-green-refactor with busted and luassert, and luacheck for static
-analysis. The tests run under **Lua 5.2 specifically**. Lua 5.3 and later add
-an integer subtype, which would hide the all-doubles behaviour that the core
-depends on. Property-style tests are plain loops over fixed seeds, not a
-generative library. We use no static type checker. See
+The tests use red-green-refactor with busted and luassert, and luacheck for
+static analysis. The tests run under Lua 5.2 specifically. Lua 5.3 and later
+add an integer subtype, which would hide the all-doubles behaviour that the
+core depends on. Property-style tests are plain loops over fixed seeds, not a
+generative library. The project uses no static type checker. See
 `toolchain-decisions.md`.
 
 1. **Offline (Python).** Overlap, gaps, density, SVG comparison and the
    coefficient limit. These tests find a sign error before any Lua exists.
 2. **busted, pure Lua, no Factorio.** Transform composition, unique
    identities, band rasterisation, settings and the measured cell stats.
-   There are also **golden-file tests**: the pipeline exports the exact set
+   There are also golden-file tests: the pipeline exports the exact set
    of hats for a known box, and `hat/tiling.lua` must produce the same hats.
    Further tests check that shipped Lua never uses `math.sin`, `math.cos`,
    `math.random` or `^`, that the locale files are well formed, and that the
@@ -546,7 +547,7 @@ generative library. We use no static type checker. See
 
 ## 14. Corrections to earlier documents
 
-We record these here so that nobody has to work them out again.
+This section records them so that nobody has to work them out again.
 
 - **hatviz does not store the substitution rules as matrices.** The earlier
   chat transcript says that it does. It does not (see section 6).
@@ -556,25 +557,24 @@ We record these here so that nobody has to work them out again.
   `hexPt(x,y) = (x + y/2, (sqrt3/2)*y)`. `H_init` uses `hat_outline[5]`, `[7]`,
   `[9]` and `[11]`, so a wrong vertex list gives wrong hat placements without
   any error.
-- **We first calculated every gameplay number in this document with the
+- **The first version of every gameplay number in this document used the
   wrong hat.** The 14-gon in the first scaffold has an area of 22.08, and the
   real 13-gon has 13.86. That is 1.59x too large. It made the cell-size table,
   the largest-rectangle figures, the ore drillability numbers and the scale
   for equal area with Hextorio (52, not 41) wrong. The sections above give
-  the values that we calculated again. We found the error when we rendered
-  the tiling and saw that the measured band coverage was twice the predicted
-  value.
+  the recalculated values. A render of the tiling found the error: the
+  measured band coverage was twice the predicted value.
 - **Band coverage is not perimeter x width / 2.** Rounded corners and
-  rasterisation at tile centres push it well above that estimate. We measured
-  28.0% at size 41 / band 2, against a prediction of 14.8%. Always measure it
-  by rasterisation, never with a formula.
+  rasterisation at tile centres push it well above that estimate. The measured
+  value is 28.0% at size 41 / band 2, against a prediction of 14.8%. Always
+  measure it by rasterisation, never with a formula.
 - **The area of a metatile is not the area of its hats.** Hats cross metatile
   boundaries, so an area check does not prove that H, T or F is valid. Use
   overlap and gap detection.
 - **The coefficients of the rules for each level go past 2^53 at level 7**,
   and raw products overflow from depth 5. This stops exact-integer descent at
-  depth 4, and it is why we moved to doubles (see section 5).
-- **Exact integer arithmetic was the wrong decision, and it was mine.** The
+  depth 4, and it is why the core moved to doubles (see section 5).
+- **Exact integer arithmetic was the wrong decision.** The
   brainstorm said it was necessary for determinism in multiplayer. It is not.
   Determinism needs only correctly rounded IEEE operations, and doubles have
   them. The exact machinery cost a depth limit, a gcd reduction in the hot
@@ -582,7 +582,7 @@ We record these here so that nobody has to work them out again.
   did not.
 - **"14 tile types and enormous transition tables"** assumed a colour for
   every hat. Only the band is a custom tile, on vanilla terrain.
-- **We did not choose the target runtime.** Factorio embeds Lua 5.2.1. There
+- **The target runtime is not a choice.** Factorio embeds Lua 5.2.1. There
   is no integer subtype, every number is a double, and the limit is 2^53.
   LuaJIT NaN-boxing does not apply. The first toolchain notes listed this as
   an open question.
@@ -594,17 +594,17 @@ We record these here so that nobody has to work them out again.
 - **Teal and Luau are both out.** Luau is the wrong runtime. Teal has no
   definitions for the Factorio API, so every API call would be an untyped
   escape hatch anyway.
-- **`factorio_version = "2.0"` does not load on Factorio 2.1.** When we
-  wrote this document, 2.1 was experimental and 2.0.77 was stable. The
-  document said that "2.0" loads on both. That was wrong. Factorio 2.1
-  refuses a mod that names another minor version, so 1.0.0 did not load on
+- **`factorio_version = "2.0"` does not load on Factorio 2.1.** At the time of
+  the first draft of this document, 2.1 was experimental and 2.0.77 was
+  stable. The document said that "2.0" loads on both. That was wrong. Factorio
+  2.1 refuses a mod that names another minor version, so 1.0.0 did not load on
   2.1. Release 1.0.1 targets 2.1.
 
   Now `.factorio-version` pins the release that the tests use, and
   `watch.yml` tests each new release (`toolchain-decisions.md`).
 - **`draw_polygon` is a triangle strip** and has no `draw_on_ground`.
-- **The rasterisation problem is real here.** For a short time we thought a
-  line overlay could avoid it. But bands are terrain, so the stair steps come
+- **The rasterisation problem is real here.** For a short time a line overlay
+  looked like a way to avoid it. But bands are terrain, so the stair steps come
   back. They fall inside the band. This is why the ragged hexagons in
   Hextorio look deliberate.
 - **The `hex_lattice.lua` method from Hextorio does not transfer.** To snap a
@@ -614,8 +614,8 @@ We record these here so that nobody has to work them out again.
 ## 15. Out of scope
 
 Claims on cells, cores, trades, ore gating by cell, impassable band variants,
-band removal and any territory layer. We designed `hat/tiling.lua` and the
-descent-path hierarchy so that a later version can add these features
+band removal and any territory layer. The design of `hat/tiling.lua` and the
+descent-path hierarchy lets a later version add these features
 without changes to the core.
 
 ## 16. Open items for review

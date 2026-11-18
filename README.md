@@ -1,38 +1,37 @@
 # Hattorio
 
-**A Factorio mod that cuts every planet into cells of an aperiodic tiling.**
-
-The mod builds your factory on the "hat" monotile tiling. The hat is the
-aperiodic tile that four mathematicians found in 2023. The cells never
+A Factorio mod. It cuts every planet into cells of the "hat" tiling, the
+aperiodic monotile that four mathematicians found in 2023. The cells never
 repeat, so your blueprints cannot repeat either.
 
 ![The hat tiling as Hattorio generates it](docs/preview/tiling.png)
 
-> **Status: released as 1.0.1**, on
-> [the mod portal](https://mods.factorio.com/mod/hattorio) and as a
-> [GitHub release](https://github.com/vetkat/hattorio/releases).
-> **Multiplayer is not verified.** The argument for determinism is sound, but
-> no test with two clients exists yet. Play single player for now.
+## Status
+
+Release 1.0.1 is on [the mod portal](https://mods.factorio.com/mod/hattorio)
+and on the [GitHub releases page](https://github.com/vetkat/hattorio/releases).
+It needs Factorio 2.1. Space Age is optional. The [roadmap](ROADMAP.md) lists
+what comes next.
+
+> **Warning:** multiplayer is not verified. The argument that every client
+> calculates the same cells is sound, but no test with two clients exists
+> yet. Play single player for now.
 
 ## What it does to your game
 
-Each cell is a hat. A narrow **unbuildable band** separates each cell from its
+Each cell is a hat. A narrow unbuildable band separates each cell from its
 neighbours. You can walk and drive across a band, and underground belts and
-pipes can pass under it. You cannot build anything on a band.
+pipes go under it. You cannot build anything on a band.
 
-This one rule changes how you build:
-
-- **Imported blueprints stop working.** Rotation is not the cause. Each cell
-  has a different shape. We measured 1,156 cells at the default settings and
-  found **885 different buildable tile shapes**. No single shape covers more
-  than 0.5% of the map. A layout that fills one cell will not fit the next.
-- **Small blueprints still work everywhere.** At the default settings,
-  anything up to 17×17 fits in every cell. Assembler clusters are fine. A
-  30×30 mall is not.
+- **Imported blueprints stop fitting.** Each cell has a different shape. At
+  the default settings, 1,156 measured cells have 885 different buildable
+  tile shapes. No single shape covers more than 0.5% of the map, so a layout
+  that fills one cell does not fit the next.
+- **Small blueprints still fit everywhere.** At the default settings,
+  anything up to 17×17 fits in every cell. An assembler cluster fits. A
+  30×30 mall does not.
 - **Each connection between cells is a puzzle.** Belts cross a band with an
   underground pair, and the cell edge is never parallel to an axis.
-
-You must fit the factory to the ground it stands on.
 
 ![Cells rasterised onto Factorio's tile grid](docs/preview/bands-41-3.png)
 
@@ -47,10 +46,8 @@ You set these per planet when you create the world.
 | Band appearance | Dark liquid | liquid, void |
 | Band colour | Deep violet | violet, cold, oily, ember, void black |
 
-Hat size is the most important setting. It sets how much room you get and
-the largest blueprint that fits in every cell.
-
-At the default band width of 3:
+The cell size sets how much room you get, and the largest blueprint that
+fits in every cell. At the default band width of 3:
 
 | size | difficulty | cell area | reusable blueprint | preview |
 | --- | --- | --- | --- | --- |
@@ -59,26 +56,24 @@ At the default band width of 3:
 | **41** | **normal** | **858 t** | **17×17** | [look](docs/preview/bands-41-3.png) |
 | 52 | easy | 1,473 t | 22×22 | [look](docs/preview/bands-52-2.png) |
 
-If you change a setting later, the change applies only to new surfaces.
-Existing surfaces keep the geometry that their terrain was built with, so no
-seams appear.
+A later change to a setting applies only to new surfaces. An existing
+surface keeps the geometry that its terrain has, so no seam appears.
 
-## Why this is harder than it sounds
+## How it works
 
-In Factorio, the square grid is part of the engine. Tiles, collision, belt
-lanes, pipes and the pathfinder are all C++ code, and they all expect 1×1
-tiles on the axes. No mod can give the unit of construction a hat shape. A mod
-*can* decide where you may build, and that is enough.
+The square grid is part of the engine. Tiles, collision, belt lanes, pipes
+and the pathfinder are C++ code, and they all expect 1×1 tiles on the axes.
+A mod cannot give the unit of construction a hat shape. It can decide where
+you may build, and Hattorio does only that.
 
-The interesting part is to generate the tiling. The tiling is aperiodic, so it
-has no lattice to snap to and no period to use. To find the hats that overlap
-a chunk, the mod goes down a substitution tree. It uses bounding circles to
-skip branches. This takes about 0.7 ms per chunk.
+The tiling is aperiodic, so it has no lattice to snap to and no period to
+use. To find the hats that overlap a chunk, the mod goes down a substitution
+tree and uses bounding circles to skip branches. This takes about 0.7 ms per
+chunk.
 
-The [wiki](../../wiki) has the details for readers who want them. It shows how
-we recovered the limiting metatiles as exact algebraic numbers. It also shows
-why plain doubles beat exact integer arithmetic by nine orders of
-magnitude.
+The [wiki](../../wiki) has the details. It shows how the limiting metatiles
+came out as exact algebraic numbers, and why plain doubles beat exact integer
+arithmetic by nine orders of magnitude.
 
 ## For developers
 

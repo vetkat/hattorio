@@ -16,7 +16,7 @@ local function read(path)
 end
 
 local DOCS = { "README.md", "wiki/Settings.md", "wiki/Home.md",
-               "wiki/Building-in-hats.md", "docs/portal-description.md" }
+               "wiki/Building-in-hats.md", "mod-description-long.md" }
 
 describe("documentation", function()
   local default = Config.cell_stats(Config.DEFAULT_SIZE, Config.DEFAULT_BAND)
@@ -78,7 +78,7 @@ describe("documentation", function()
     -- Factorio's grid is part of the engine. The mod decides where you may
     -- build. It cannot change the unit of construction, and it does not.
     for _, path in ipairs({ "README.md", "wiki/Home.md", "info.json",
-                            "docs/portal-description.md" }) do
+                            "mod-description-long.md" }) do
       local text = read(path):lower()
       assert.is_nil(text:find("replaces the square grid", 1, true),
         path .. " claims to replace the square grid, which is not possible")
