@@ -17,7 +17,7 @@ local band   = tonumber(arg[2]) or 2
 local tiles  = tonumber(arg[3]) or 200
 local out    = arg[4] or "bands.svg"
 local band_c = arg[5] or "#2b2f36"        -- band colour
-local land_c = arg[6] or "#7a8b5a"        -- surrounding land
+local land_c = arg[6] or "#7a8b5a"        -- land around the bands
 
 local unit = Ti.unit_for_hat_size(size)
 local half = band / 2

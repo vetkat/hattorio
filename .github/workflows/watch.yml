@@ -1,12 +1,12 @@
 name: watch
 
-# Factorio 2.1 refused to load Hattorio 1.0.0, and the players found out
-# first. This workflow looks for a new Factorio release every three hours.
-# When the stable or the experimental release differs from the pin, it runs
-# the in-game tests in that release, with and without Space Age.
+# Factorio 2.1 refused to load Hattorio 1.0.0, and the players saw it first.
+# This workflow looks for a new Factorio release every three hours. A stable
+# or experimental release can differ from the pin. Then the workflow runs the
+# in-game tests in that release, with and without Space Age.
 #
 # A failed scheduled run makes GitHub notify the maintainer. A cache entry
-# marks each test and each reminder as done for one commit on main, so each
+# marks each test and each reminder as done for one commit on main. So each
 # result notifies once, and a run with nothing new starts no test runner.
 on:
   schedule:
@@ -79,7 +79,7 @@ jobs:
         env:
           FACTORIO_VERSION: ${{ matrix.version }}
           FACTORIO_CACHE: ${{ runner.temp }}/factorio-cache
-      # Pass or fail, this release is tested at this commit.
+      # Pass or fail, mark the test of this release at this commit as done.
       - if: always()
         run: touch .watch-done
       - if: always()

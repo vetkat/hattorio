@@ -5,10 +5,10 @@ else must agree with it. CHANGELOG.md must document that version, and a
 release tag must name it. If they drift apart, the mod portal page can
 describe a build that nobody has.
 
-Without a tag, the newest section of CHANGELOG.md is Unreleased or the
-version in info.json. With a tag, the tag names the version in info.json,
-the newest versioned section is that version and has a date, and
-Unreleased has no entries. In both cases, the changelog.txt that the build
+Without a tag, the newest section of CHANGELOG.md must be `Unreleased` or
+the version in info.json. With a tag, the tag must name the version in
+info.json. The newest versioned section must be that version and have a
+date, and `Unreleased` must have no entries. In both cases, the changelog.txt that the build
 makes from CHANGELOG.md must follow Factorio's format.
 
 .factorio-version pins the Factorio release that the tests use. The

@@ -21,10 +21,11 @@ question: which hats overlap this box? The composition path uses only
 > exact integers in `Z[phi][sqrt3]` in Lua, and tasks 7 to 10 still show that
 > version: `hat/exact.lua`, `den = 1` and the 24-integer rules. Exact integers
 > stopped the descent at depth 4, so the shipped core uses six plain doubles
-> per transform, and `hat/exact.lua` does not exist. The hat outline also
-> turned out to be a 13-gon, not the 14-gon in tasks 3 and 10. Section 5 and
-> section 14 of the spec give the details. The code in `hat/` and `tools/` is
-> the reference.
+> per transform, and `hat/exact.lua` does not exist.
+>
+> The hat outline also turned out to be a 13-gon, not the 14-gon in tasks 3
+> and 10. Section 5 and section 14 of the spec give the details. The code in
+> `hat/` and `tools/` is the reference.
 
 **Tech stack:** Python 3.11+ (`fractions`, standard library only), Lua 5.2,
 busted, luassert, luacheck.
@@ -47,7 +48,7 @@ busted, luassert, luacheck.
   up. They stop the descent at depth 4, and they give no determinism that
   doubles do not also give. See section 5 of the spec.
 - **Never use `math.sin`, `math.cos`, `math.random` or `^` in shipped Lua.**
-  They do not give identical bits on all platforms. `+ - * /` and `sqrt` do.
+  They do not give the same bits on all platforms. `+ - * /` and `sqrt` do.
 - **The hat outline is a 13-gon** in the `hexPt` basis, not a 14-gon.
 - **Attribution:** hatviz is BSD-3-Clause (isohedral/hatviz). Its notice ships
   in `THIRD_PARTY.md`.
@@ -375,7 +376,7 @@ git commit -m "feat(tools): exact arithmetic over Q(phi, sqrt3)"
     - `mul(self, other) -> Xf` (self after other),
       `apply(self, Pt) -> Pt`
     - `det(self) -> K`, `is_reflected(self) -> bool`
-    - `denominator(self) -> int`, `numerators(self) -> tuple` (6 x 4 ints)
+    - `denominator(self) -> int`, `numerators(self) -> tuple` (6 x 4 integers)
   - `match_two(p1: Pt, p2: Pt, q1: Pt, q2: Pt) -> Xf`: the similarity that
     takes the segment p1->p2 onto q1->q2
   - `HAT_OUTLINE: list[Pt]`: 14 exact vertices
@@ -1414,8 +1415,8 @@ if __name__ == "__main__":
 Run: `python3 -m pytest tools/tests/test_emit.py -v`
 Expected: 3 passed.
 
-If `test_substitution_rules_have_denominator_one` fails, the denominator
-invariant is broken. A substitution transform has a fraction, so `match_two`
+If `test_substitution_rules_have_denominator_one` fails, something broke the
+denominator invariant. A substitution transform has a fraction, so `match_two`
 in task 3 or a rule in task 5 is wrong. Do not work around it with
 `den > 1`. The error will grow over 12 levels.
 
@@ -1598,7 +1599,7 @@ git commit -m "feat(hat): exact integer ring Z[phi][sqrt3]"
     is a positive integer
   - `T.IDENTITY`
   - `T.from_ints(ints, den) -> xf`: `ints` is 24 integers, as emitted
-  - `T.mul(x, y) -> xf` (x after y; the denominators multiply)
+  - `T.mul(x, y) -> xf` (x after y, and the denominators multiply)
   - `T.apply_float(xf, px, py) -> number, number`: px and py are plain numbers
   - `T.origin_float(xf) -> number, number`
   - `T.scale_float(xf) -> number`: the uniform scale, `sqrt(abs(det))`
@@ -2089,7 +2090,7 @@ git commit -m "feat(hat): exact descent-path identity with ancestor prefixes"
     where `box = { left=, top=, right=, bottom= }` is in world units
   - `tiling:depth_for_radius(r) -> integer`: the smallest depth that covers
     the radius `r`
-  - The descent skips branches by bounding circle. The output accumulator is
+  - The descent skips branches with a bounding circle. The output accumulator is
     the only in-place mutation that the codebase allows.
 
 - [ ] **Step 1: Write the failing test**

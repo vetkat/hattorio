@@ -12,7 +12,7 @@
 #   2. POST the zip to that URL.
 #
 # After the portal accepts a release, you cannot withdraw it. So every check
-# that can run before this point must already have run.
+# that can run before this point runs before it.
 #
 #   FACTORIO_API_KEY=... sh tools/publish_mod.sh --check
 #
@@ -45,17 +45,15 @@ INIT=$(curl -sS -X POST \
   -F "mod=$MOD" \
   https://mods.factorio.com/api/v2/mods/releases/init_upload)
 
-# If the key works but the portal does not know the mod, the answer is
-# UnknownMod. That is the expected answer before the first manual upload, and
-# it still proves that the key is good. So report it separately, not as a
-# plain failure.
-# Three results must be kept apart:
+# init_upload gives one of three answers, and the script keeps them apart:
+#
 #   upload_url    the key works and the portal knows this mod
-#   UnknownMod    the key works, but nobody has uploaded the mod yet. This is
-#                 expected before the first manual upload. A CHECK tests the
-#                 key, so it counts this as a pass. A real publish must still
-#                 fail.
+#   UnknownMod    the key works, but the mod is not on the portal yet
 #   InvalidApiKey the key is wrong or does not have the upload permission
+#
+# UnknownMod is the expected answer before the first manual upload, and it
+# still proves that the key is good. So a check (--check) counts it as a
+# pass, and a real publish fails.
 STATUS=$(printf '%s' "$INIT" | CHECK_ONLY="$CHECK_ONLY" MOD="$MOD" python3 -c "
 import json, os, sys
 d = json.load(sys.stdin)

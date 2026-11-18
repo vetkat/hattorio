@@ -2,8 +2,8 @@
 --
 -- Some settings of this mod have effects that you cannot see directly. "Ore
 -- richness override = 0" means "derive it from the cell size and the band
--- width". Without this command you cannot see the derived value, or whether
--- an override had any effect.
+-- width". Without this command you cannot see the derived value, or if an
+-- override had any effect.
 
 local Surface = require("mod.surface")
 

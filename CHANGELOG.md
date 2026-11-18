@@ -11,6 +11,11 @@ This is the only changelog that people edit. The build makes Factorio's
 
 ## [Unreleased]
 
+### Changed
+
+- Clearer descriptions for the band appearance, band colour, ore richness
+  and band width settings.
+
 ## [1.0.1] - 2026-11-17
 
 ### Fixed

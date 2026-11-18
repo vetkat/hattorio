@@ -1,13 +1,14 @@
 local planets = require("mod.planets")
 
 -- STARTUP, not runtime. The geometry controls the terrain. If it changed in
--- an existing save, every generated chunk would keep the old geometry.
--- mod/surface.lua stores the values for each surface when it creates the
--- surface. So a later change affects only NEW surfaces, and no seams appear.
+-- an existing save, every generated chunk would keep the old geometry. The
+-- mod stores the values for each surface when it creates the surface
+-- (`mod/surface.lua`). So a later change affects only NEW surfaces, and no
+-- seams appear.
 --
--- The bounds are copied here and not loaded from mod/config.lua. The settings
--- stage cannot load a module that loads the generated data of
--- hat/tiling.lua. A test in spec/config_spec.lua keeps the two copies the
+-- This file copies the bounds, and does not load them from `mod/config.lua`.
+-- The settings stage cannot load a module that loads the generated data of
+-- `hat/tiling.lua`. A test in `spec/config_spec.lua` keeps the two copies the
 -- same.
 local settings_list = {}
 local order = 0

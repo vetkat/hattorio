@@ -3,9 +3,10 @@ local Ti = require("hat.tiling")
 
 describe("spec invariants", function()
   it("uses no platform-nondeterministic functions in shipped modules", function()
-    -- IEEE + - * / and sqrt are correctly rounded, so they give identical
-    -- bits on all platforms. sin, cos, random and pow do not, and a
-    -- difference between two Factorio clients is a desync.
+    -- IEEE-754 requires correct rounding for + - * / and sqrt, so they give
+    -- the same bits on all platforms. The functions sin, cos, random and pow
+    -- have no such rule, and a difference between two Factorio clients is a
+    -- desync.
     for _, name in ipairs({ "transform", "geometry", "index", "tiling" }) do
       local f = assert(io.open("hat/" .. name .. ".lua", "r"))
       local src = f:read("*a"); f:close()

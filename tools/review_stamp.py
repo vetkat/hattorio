@@ -1,11 +1,11 @@
-"""Block an agent commit until the review skills have run.
+"""Block an agent commit until the agent runs the review skills.
 
 A hook cannot run a skill, but it can refuse the commit until the agent
-has run them. `make stamp` saves the hash of the staged tree. Two hooks
+runs them. `make stamp` saves the hash of the staged tree. Two hooks
 then work together:
 
 - The git pre-commit hook runs `python3 -m tools.review_stamp check` for a
-  commit from Claude Code (CLAUDECODE is set). During a commit, git points
+  commit from Claude Code (`CLAUDECODE` is set). During a commit, git points
   `git write-tree` at the exact index that it is about to commit, so the
   check holds for -a, -i, -o and paths too.
 - The Claude Code PreToolUse hook runs `python3 -m tools.review_stamp`
@@ -27,8 +27,8 @@ import subprocess
 import sys
 from typing import TextIO
 
-# git commit at the start of a command line, or after ; & | ( or a shell
-# keyword, with git's own options before it.
+# git commit at the start of a command line, or after `;`, `&`, `|`, `(` or a
+# shell keyword, with git's own options before it.
 COMMIT = re.compile(
     r"(?:^|[;&|(]|\bthen\b|\bdo\b)[ \t]*git\s+"
     r"(?:(?:-C|-c)\s+\S+\s+|--?[\w-]+(?:=\S+)?\s+)*commit(?![\w-])", re.MULTILINE)

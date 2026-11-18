@@ -7,8 +7,8 @@
 -- pruning use only + - * / and sqrt, and IEEE-754 makes all of these
 -- deterministic.
 --
--- The rules are indexed BY LEVEL. hatviz derives the metatile outlines for
--- each level from the geometry, so the outlines really are different at each
+-- Each level has ITS OWN RULES. hatviz derives the metatile outlines for each
+-- level from the geometry, so the outlines really are different at each
 -- level. One rule table for every depth would be wrong.
 
 local T = require("hat.transform")
@@ -47,7 +47,7 @@ end
 --- opts = { unit = , depth = } or { unit = , cover = }
 -- `cover` is the world radius that the tiling must fill. It uses the same
 -- units as the box that goes to hats_in_box. Derive the depth once, when the
--- surface is created, and store it. Never calculate it again for each
+-- game creates the surface, and store it. Never calculate it again for each
 -- chunk.
 function Ti.new(opts)
   local self = setmetatable({}, Ti)

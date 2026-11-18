@@ -21,9 +21,10 @@ takes about 0.7 ms per chunk.
 
 ## Why deterministic
 
-Factorio has no server authority. Every client simulates the world on its
-own, so any difference between clients is a desync and not a visual glitch.
-Every machine must therefore calculate exactly the same tiling.
+Factorio runs in deterministic lockstep. The server orders the inputs, and
+every client simulates the whole world on its own. So any difference between
+clients is a desync and not a visual glitch. Every machine must calculate
+exactly the same tiling.
 
 The usual answer is to avoid floating point. That lesson was wrong here, and
 it sent this project on a long detour. The detour is worth a description.
@@ -65,11 +66,11 @@ Floating point in general was never the desync risk. The risk is `math.sin`,
 `math.cos` and `pow`, because their libm implementations really are different
 on different platforms.
 
-IEEE-754 requires `+ − × ÷` and `sqrt` to be **correctly rounded**, so they
-give identical bits everywhere. The Lua interpreter runs each operation as a
+IEEE-754 requires **correct rounding** for `+ − × ÷` and `sqrt`, so they give
+the same bits everywhere. The Lua interpreter runs each operation as a
 separate VM instruction, so no compiler can fuse two of them into an FMA.
-Factorio 2.0 runs only on x86-64, so there is no x87 80-bit excess precision
-either.
+Factorio runs on 64-bit x86 and ARM processors, which do double arithmetic
+without the 80-bit excess precision of x87.
 
 Here, doubles are exactly as deterministic as integers. They are only less
 accurate. We measured them against exact values, and the error does not
@@ -93,7 +94,7 @@ ship.
 This side project gave a very pretty result.
 
 hatviz does not store the substitution as matrices. It holds a combinatorial
-table with 29 entries. It calculates the transforms by matching edges against
+table with 29 entries. To calculate the transforms, it matches edges against
 the *current* metatile outlines. Then it derives the outlines for the next
 level from the geometry. So the outlines change from level to level, and they
 converge on limiting shapes with φ proportions.
@@ -115,8 +116,8 @@ exist only at level 0, where they attach to the original shapes. If you attach
 them to a self-similar descent, the counts are correct and the hats are
 congruent, but real overlaps and gaps appear.
 
-The result was satisfying, but the project did not need it after doubles
-solved the problem. The design spec records both.
+We liked the result, but the project did not need it after doubles solved
+the problem. The design spec records both.
 
 ## How we check it
 

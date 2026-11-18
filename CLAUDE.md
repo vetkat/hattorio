@@ -9,9 +9,13 @@ in Python.
 On a fresh clone, run `make setup` once. It installs the npm tools and turns
 on the git hook.
 
-- `make fast` runs before each commit, through the git hook: the version
-  check, the quick Python tests, busted under Lua 5.2, luacheck,
-  markdownlint and the internal links. It must stay under about 10 seconds.
+- `make fast` runs before each commit, through the git hook. It runs the
+  version check, the quick Python tests, busted under Lua 5.2 and luacheck.
+  It also runs markdownlint, the internal links and the prose check. It must
+  stay under about 10 seconds.
+- `make text` is the prose check. It reads Markdown, the locale file and the
+  comments of the code. Fix the text when it fails. Add an entry to
+  `.ste-allow` only for a false positive, and give the reason.
 - `make check` runs before a PR. It adds the slow offline pipeline tests and
   the in-game tests in the Factorio headless server, with and without Space
   Age.

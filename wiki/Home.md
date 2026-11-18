@@ -2,9 +2,9 @@
 
 **Factorio, but the ground is an aperiodic tiling.**
 
-You build your factory on the "hat" monotile. This shape was discovered in
-2023. It tiles the plane and the pattern never repeats. Every cell is a hat,
-and no two cells are quite the same. Your blueprints will not save you.
+You build your factory on the "hat" monotile. Four mathematicians found this
+shape in 2023. It tiles the plane and the pattern never repeats. Every cell
+is a hat, and no two cells are quite the same. Your blueprints will not save you.
 
 ![The tiling](https://raw.githubusercontent.com/vetkat/hattorio/main/docs/preview/tiling.png)
 

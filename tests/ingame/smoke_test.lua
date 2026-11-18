@@ -1,5 +1,5 @@
 -- In-game smoke tests. factorio-test runs them in the headless server, once
--- with the base game only and once with Space Age (tools/ingame.sh).
+-- with the base game only and once with Space Age (`tools/ingame.sh`).
 
 test("the mod is active", function()
   assert(script.active_mods["hattorio"], "hattorio is not active")

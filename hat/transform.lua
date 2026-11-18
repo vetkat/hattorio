@@ -3,13 +3,16 @@
 --   xf = { a, b, c, d, e, f }
 --   (x, y) -> (a*x + b*y + c, d*x + e*y + f)
 --
--- DETERMINISM. This file uses only + - * / and sqrt. IEEE-754 requires these
--- operations to be correctly rounded, so they give identical bits on every
+-- DETERMINISM. This file uses only + - * / and sqrt. IEEE-754 requires correct
+-- rounding for these operations, so they give the same bits on every
 -- platform. The Lua interpreter runs each one as a separate VM instruction, so
--- no compiler can contract two of them into an FMA. Factorio 2.0 runs only on
--- x86-64, so there is no x87 80-bit excess precision either. This file must
--- NEVER use math.sin, math.cos, math.random or the ^ operator. Their results
--- differ between platforms, and a difference between two clients is a desync.
+-- no compiler can contract two of them into an FMA. Factorio runs on 64-bit
+-- x86 and ARM processors, which do double arithmetic without the 80-bit
+-- excess precision of x87.
+--
+-- This file must NEVER use `math.sin`, `math.cos`, `math.random` or the `^`
+-- operator. Their results differ between platforms, and a difference between
+-- two clients is a desync.
 --
 -- ACCURACY. We measured composition against exact Z[phi][sqrt3] values from
 -- the offline pipeline. The relative error stays at machine epsilon (5e-16)

@@ -32,6 +32,6 @@ def test_denominators_divide_100():
 
 @pytest.mark.slow
 def test_constants_rederive_from_the_substitution():
-    """The constants are recovered, not invented. Slow: runs the recognition
-    again."""
+    """The pipeline recovers the constants and does not invent them. Slow: this
+    runs the recognition again."""
     assert rederive_outlines() == LIMIT_OUTLINES

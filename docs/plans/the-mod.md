@@ -6,8 +6,8 @@
 > use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Turn the finished tiling core into a Factorio mod that people can
-play: buildable cells in the shape of hats, with unbuildable bands between
-them.
+play. It has buildable cells in the shape of hats, with unbuildable bands
+between them.
 
 **Architecture:** The band tiles have a custom collision layer. Buildings
 collide with it and the character does not, so the game blocks construction
@@ -21,6 +21,16 @@ from plan 1.
 
 **Spec:** `docs/design/hattorio-design.md`
 
+> **Note: the mod changed after this plan.** `storage` holds no band bitmap.
+> It holds the geometry for each surface and the outline render objects of
+> each player (spec section 12).
+>
+> Task 9 made `tools/package.sh`, and today
+> `tools/package.py` builds the zip. It also makes `changelog.txt` from
+> `CHANGELOG.md`. Task 10 is still deferred, so `docs/design/desync-check.md`
+> does not exist, and [ROADMAP.md](../../ROADMAP.md) lists the multiplayer
+> test. The code is the reference.
+
 ## Global constraints
 
 - **Factorio 2.0.77** stable. `info.json` declares
@@ -29,7 +39,7 @@ from plan 1.
   section 14.)
 - **Lua 5.2.1.** There is no integer subtype. All numbers are doubles.
 - **Never use `math.sin`, `math.cos`, `math.random` or `^` in shipped Lua.**
-  They do not give identical bits on all platforms, and a difference is a
+  They do not give the same bits on all platforms, and a difference is a
   desync. `+ - * /` and `sqrt` are safe.
 - **`hat/` must keep zero Factorio dependencies.** New mod code goes in
   `mod/`, never in `hat/`.
@@ -508,10 +518,10 @@ end
 data:extend(settings_list)
 ```
 
-The bounds are copied here and not loaded from `mod/config.lua`. The reason
-is that the settings stage cannot `require` a module that loads the data files
-of `hat/tiling.lua`. A test in task 3 makes sure that the copies stay the
-same. Add it now:
+This file copies the bounds and does not load them from `mod/config.lua`.
+The reason is that the settings stage cannot `require` a module that loads
+the data files of `hat/tiling.lua`. A test in task 3 makes sure that the
+copies stay the same. Add it now:
 
 ```lua
   it("matches the bounds declared in prototypes/settings.lua", function()
@@ -1163,13 +1173,13 @@ git commit -m "feat(mod): thumbnail and distributable zip"
 > **We deferred this on purpose. We did not forget it.** The check needs a
 > second machine, and if possible a second operating system. That is the
 > whole point of the check, because the risk it tests is a difference between
-> platforms. It blocks the *release*, not the code. Until the check is done,
-> the mod is marked as single player only.
+> platforms. It blocks the *release*, not the code. Until somebody makes the
+> check, the mod says that it is for single player only.
 
 The determinism argument in the spec comes from first principles: correctly
 rounded IEEE operations, no `sin`/`cos`/`pow`, and one VM instruction per
-operation. Nobody has confirmed it by experiment yet. A desync is the one bug
-that we cannot ignore.
+operation. No experiment confirms it yet. A desync is the one bug that we
+cannot ignore.
 
 **Files:**
 
@@ -1220,8 +1230,10 @@ the screen. YAGNI: ship without it, and add it if anyone asks.
 41/3, the spawn cell holds about 858 buildable tiles. That is easily enough
 for a burner start. Bands are walkable, so everything is reachable before
 underground belts arrive. A grace area would also weaken the premise exactly
-where a new player forms an impression of the mod. Decision: no grace area.
-Look at this again first after playtests. Until then, the
+where a new player forms an impression of the mod.
+
+Decision: no grace area.
+The playtests come first, then this question again. Until then, the
 `hattorio-hat-size-*` setting is the escape hatch.
 
 **For now, the band graphics for each planet change only the colour.** Task 2
@@ -1244,8 +1256,8 @@ suite does not replace any of them.
 
 ## Notes for the executor
 
-- **`hat/` is finished. Do not change it.** If the mod seems to need a change
-  there, the mod is probably reaching past its interface.
+- **The work on `hat/` is complete. Do not change it.** If the mod seems to
+  need a change there, the mod is probably reaching past its interface.
 - **The game blocks construction natively, not a script.** If you start to add
   `on_built_entity` to reject placements, the collision layer does not work.
   Fix the layer. Rejection in a script places the entity and then removes it.

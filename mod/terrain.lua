@@ -126,8 +126,8 @@ end)
 -- The mod paints bands when chunks generate, so chunks that already existed
 -- keep their vanilla terrain for ever. The result is a hard, permanent line
 -- between the old area and everything explored after it. Only a new map can
--- fix that. So the mod at least says so, and the player does not find out
--- later.
+-- fix that. So the mod at least says so, and the player knows it from the
+-- start.
 local function warn_if_added_mid_save(data)
   local change = data and data.mod_changes and data.mod_changes["hattorio"]
   if not (change and change.old_version == nil) then return end

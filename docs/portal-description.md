@@ -86,9 +86,10 @@ surface uses.
   progress.
 - **Single player for now.** The argument for multiplayer determinism is
   sound: the tiling uses only correctly rounded IEEE arithmetic and no
-  trigonometry. But nobody has tested it with two clients yet. Please do not
-  rely on it in multiplayer yet.
-- You need Factorio 2.1 or later. Space Age is supported but not required.
+  trigonometry. But no test with two clients exists yet. Please do not rely
+  on it in multiplayer yet.
+- You need Factorio 2.1 or later. The mod supports Space Age, but it does not
+  need it.
 
 ## Credits
 

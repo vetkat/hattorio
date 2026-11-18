@@ -64,7 +64,7 @@ function Surface.init(surface)
   -- buildable. At cell size 15 with band 4, a cell holds 46 tiles, and the
   -- largest square that fits every cell is 4x4. A mining drill and an
   -- assembling machine are both 3x3, so there is no room to connect anything.
-  -- Say this once, so that the player does not find out an hour later.
+  -- Say this once, so that the player knows it now and not an hour later.
   if Config.is_severe(g.size, g.band) then
     local stats = Config.cell_stats(g.size, g.band)
     log(string.format(

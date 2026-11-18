@@ -34,5 +34,5 @@ def test_files_that_do_not_ship_need_no_entry():
 
 def test_every_shipped_entry_counts_as_mod_code():
     for path in ["info.json", "control.lua", "locale/en/hattorio.cfg", "hat/tiling.lua",
-                 "data/hat_constants.lua", "prototypes/tiles.lua"]:
+                 "data/hat_rules.lua", "prototypes/tiles.lua"]:
         assert pc.is_mod_code(path), path

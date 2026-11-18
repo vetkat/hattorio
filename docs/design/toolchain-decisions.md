@@ -1,7 +1,7 @@
 # Toolchain
 
 This page lists the tools that the project actually uses, and the reasons. We
-removed everything that was proposed but not adopted. The reasons for the
+removed every proposal that the project did not adopt. The reasons for the
 arithmetic choices are in sections 5 and 14 of `hattorio-design.md`.
 
 ## Runtime: Lua 5.2.1
@@ -73,6 +73,25 @@ the design phase we chose LuaLS annotations, but we never added them, and the
 code has none today. If you want types, use LuaLS annotations, and adopt them
 as a deliberate decision.
 
+## Prose check
+
+`make text` checks the prose of the repository: the Markdown files, the
+locale file and the comments of the code. The code comments are those of
+Lua, of Python (comments and docstrings), and the full-line `#` comments of
+shell scripts, workflows and the Makefile. Indented comment lines are tables
+or examples, so the check skips them. It skips code spans too.
+
+The check has three parts:
+
+- the checker of the ste80-humanizer skill, a copy in `tools/vendor/`
+- cspell with the en-GB dictionary, and the project words in `cspell.json`
+- a ban on en dashes
+
+`.ste-allow` lists the findings that are false positives, each with a
+reason. An example is "the preview is red", which the checker reads as a
+passive. `mod-description-long.md` is in the author's own voice, so the
+check accepts its passives and long sentences.
+
 ## Layout
 
 ```text
@@ -105,7 +124,7 @@ In its place, three layers of checks run:
    the arithmetic that we proved correct.
 3. **Invariant tests.** `spec/invariants_spec.lua` searches the shipped
    modules for `math.sin`, `math.cos`, `math.random` and `^`. None of these
-   give identical bits on all platforms.
+   give the same bits on all platforms.
 
 ## Functional core
 
@@ -155,10 +174,12 @@ factorio.com for the newest stable and experimental releases. When a release
 differs from `.factorio-version`, it runs the in-game tests in that release,
 with and without Space Age. For a new minor version, it first changes
 `factorio_version` in its own checkout, because the game does not load a mod
-that names another minor version. The job also fails when the stable release
-is newer than the pin, as a reminder to move the pin. The workflow tests
-each release once for each commit on `main`, so a failure notifies the
-maintainer once. A run with nothing new to test starts no test runner.
+that names another minor version.
+
+The workflow also fails when the stable release is newer than the pin, as a
+reminder to move the pin. It tests each release once for each commit on
+`main`, so a failure notifies the maintainer once. A run with nothing new to
+test starts no test runner.
 
 Factorio 2.1 refused to load Hattorio 1.0.0, which said "2.0", and the
 players found the problem first. With this workflow, CI finds a new release
@@ -205,7 +226,7 @@ characters, so the portal shows readable lines. `make version` and the build
 check the result against the rules in Factorio's
 [changelog format](https://lua-api.factorio.com/latest/auxiliary/changelog-format.html).
 
-## Releasing
+## Releases
 
 `info.json` is the only source of truth for the version. Everything else must
 agree with it. `tools/check_version.py` checks this on every push, not only

@@ -39,7 +39,7 @@ def rot_sixths(n: int) -> Xf:
 
 
 def rotate_about(centre: Pt, n: int) -> Xf:
-    """hatviz rotAbout: ttrans(p) . trot(ang) . ttrans(-p)."""
+    """hatviz `rotAbout`: `ttrans(p) . trot(ang) . ttrans(-p)`."""
     back = Xf.translate(Pt(-centre.x, -centre.y))
     return Xf.translate(centre).mul(rot_sixths(n)).mul(back)
 

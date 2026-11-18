@@ -41,7 +41,7 @@ class Q5:
         )
 
     def inverse(self):
-        # norm = p^2 + pq - q^2 ; conjugate is (p + q) - q phi
+        # The norm is p^2 + pq - q^2, and the conjugate is (p + q) - q phi.
         n = self.p * self.p + self.p * self.q - self.q * self.q
         if n == 0:
             raise ZeroDivisionError("Q5 inverse of zero")

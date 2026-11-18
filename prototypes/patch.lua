@@ -1,9 +1,9 @@
--- This runs in data-final-fixes, so it sees every entity that every other mod
--- has added.
+-- This runs in data-final-fixes, so it sees every entity that the other mods
+-- add.
 --
 -- Two prototypes collide only if they SHARE a collision layer. When buildable
 -- structures get the band layer, the game itself refuses to place them on a
--- band: the preview is red, blueprints skip the tiles, construction bots never
+-- band. The preview is red, blueprints skip the tiles, construction bots never
 -- try, and no ghosts remain. Rejection in a script would place the entity and
 -- then remove it. That looks worse, and it needs four event handlers and ghost
 -- cleanup to get close to this result.

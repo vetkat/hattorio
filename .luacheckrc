@@ -14,7 +14,7 @@ local factorio_writable = { "storage", "table" }
 
 files["prototypes"] = {
   read_globals = factorio_globals,
-  -- Factorio adds table.deepcopy
+  -- Factorio adds `table.deepcopy`.
   globals = factorio_writable,
 }
 

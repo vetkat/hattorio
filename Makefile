@@ -11,7 +11,7 @@ else
   RUN_BUSTED := $(BUSTED)
 endif
 
-.PHONY: all setup fast check test pytest pytest-fast lint markdown links ingame stamp \
+.PHONY: all setup fast check test pytest pytest-fast lint markdown links text ingame stamp \
         data preview wiki package version
 
 LUA_FILES := hat mod prototypes spec tests control.lua data.lua \
@@ -20,16 +20,16 @@ MARKDOWN   = $(shell git ls-files '*.md')
 
 all: check
 
-## once, after a clone: install the npm tools and turn on the git hook
+## once, after a clone: install the npm tools and activate the git hook
 setup:
 	npm ci
 	git config core.hooksPath .githooks
 
 ## every commit (the git hook). It must stay under about 10 seconds.
-fast: version pytest-fast test lint markdown links
+fast: version pytest-fast test lint markdown links text
 
-## before a PR: everything, including the in-game tests
-check: version pytest test lint markdown links ingame
+## before a PR: every check, with the in-game tests
+check: version pytest test lint markdown links text ingame
 
 ## Lua test suite, under the Lua version that Factorio embeds
 test:
@@ -63,9 +63,14 @@ lint:
 markdown:
 	npx --no-install markdownlint-cli2 $(MARKDOWN)
 
-## the links inside the repository; weekly.yml checks the external ones
+## the links inside the repository. weekly.yml checks the external ones.
 links:
 	lychee --offline --no-progress $(MARKDOWN)
+
+## the prose in Markdown, locale files and code comments: the humanizer
+## checker, cspell in en-GB and no en dashes. .ste-allow lists exceptions.
+text:
+	python3 -m tools.text_check
 
 ## the in-game tests in the Factorio headless server.
 ## MODE=base or MODE=space-age runs one mode. An empty MODE runs both.

@@ -20,11 +20,11 @@ end
 
 describe("locale", function()
   it("never puts a semicolon in a value", function()
-    -- The documentation of Factorio's .cfg format says that ';' starts a
-    -- comment. It does not say if this also applies in the middle of a line,
-    -- and vanilla never takes the risk: none of the 7,301 vanilla English
-    -- values contain ';', but '#' appears four times. It is cheaper to avoid
-    -- ';' than to depend on it.
+    -- The documentation of Factorio's .cfg format says that `;` starts a
+    -- comment. It does not say if this also applies in the middle of a line.
+    -- Vanilla never takes the risk. None of the 7,301 vanilla English values
+    -- contains `;`, but `#` appears four times. It is cheaper to avoid `;`
+    -- than to depend on it.
     for _, path in ipairs(locale_files()) do
       local n = 0
       for line in read(path):gmatch("[^\n]+") do

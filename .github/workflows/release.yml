@@ -5,9 +5,12 @@ name: release
 # it, or nothing is built. So the mod portal can never describe a build that
 # nobody has.
 #
-# A tag runs every check in check.yml, builds the zip, makes the GitHub
-# release, uploads the zip to the mod portal, and then sends the long
-# description to the portal.
+# A tag starts these steps:
+#
+#   1. every check in check.yml
+#   2. the zip, and the GitHub release
+#   3. the upload of the zip to the mod portal
+#   4. the long description, sent to the portal
 on:
   push:
     tags: ["v*"]

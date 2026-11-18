@@ -9,8 +9,8 @@
 #
 # The key needs the "ModPortal: Edit Mods" permission, in addition to the
 # "ModPortal: Upload Mods" permission that tools/publish_mod.sh needs. You
-# set the permissions at https://factorio.com/profile. The API is described
-# at https://wiki.factorio.com/Mod_details_API.
+# set the permissions at https://factorio.com/profile. The Factorio wiki
+# describes the API at https://wiki.factorio.com/Mod_details_API.
 set -e
 
 [ -n "$FACTORIO_API_KEY" ] || { echo "FACTORIO_API_KEY is not set" >&2; exit 2; }

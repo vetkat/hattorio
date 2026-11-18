@@ -2,13 +2,13 @@
 
 CHANGELOG.md uses the Keep a Changelog 1.0.0 format, and it is the only
 changelog that people edit. Factorio reads changelog.txt from the mod zip,
-so package.py renders it at build time. The file is never committed.
+so package.py renders it at build time. Git never tracks the file.
 
 The in-game mod browser needs the strict format in Factorio's auxiliary
 docs (lua-api.factorio.com/latest/auxiliary/changelog-format.html). The mod
-portal shows the same file as plain text. factorio_problems() checks the
-rendered text against the strict format, and render() wraps long entries,
-so the plain text stays readable on the portal.
+portal shows the same file as plain text. The function `factorio_problems()`
+checks the rendered text against the strict format. The function `render()`
+wraps long entries, so the plain text stays readable on the portal.
 
     python3 -m tools.changelog              # print changelog.txt
     python3 -m tools.changelog notes        # the release notes of info.json's version
@@ -59,7 +59,7 @@ class Parsed(NamedTuple):
 
 
 def parse(text: str) -> Parsed:
-    # These lists are created here, so filling them in place is safe.
+    # This function creates these lists, so it can safely fill them in place.
     releases: list[tuple[str, str | None, list]] = []
     problems: list[str] = []
     group: tuple[str, list[str]] | None = None

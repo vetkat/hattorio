@@ -1,18 +1,21 @@
 """Compare the pinned Factorio version with the newest releases.
 
-Factorio 2.1 refused to load Hattorio 1.0.0, and the players found out
-first. watch.yml runs this tool every three hours, so CI finds a new
-Factorio release before the players do.
+Factorio 2.1 refused to load Hattorio 1.0.0, and the players saw it first.
+`watch.yml` runs this tool every three hours. So CI finds a new Factorio
+release before the players do.
 
     python3 -m tools.factorio_version                       # fail if a newer stable exists
     python3 -m tools.factorio_version plan SHA KEYS_FILE    # lines for GITHUB_OUTPUT
     python3 -m tools.factorio_version retarget X.Y.Z
 
-`plan` decides what watch.yml still has to do at commit SHA. KEYS_FILE
+`plan` decides what `watch.yml` still has to do at commit SHA. KEYS_FILE
 lists the cache keys of earlier runs, one per line. The output has three
-lines: `matrix`, the releases and modes to test in game, `remind`, true
-when the stable release is newer than the pin and nobody has been told at
-this commit, and `stable`, the stable release.
+lines:
+
+    matrix   the releases and modes to test in the game
+    remind   true when the stable release is newer than the pin, and no
+             earlier run at this commit sent the reminder
+    stable   the stable release
 
 `retarget` rewrites factorio_version and the base dependency in info.json
 for X.Y.Z. CI uses it only in a throwaway checkout, so that the in-game

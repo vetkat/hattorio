@@ -1,0 +1,40 @@
+# Accepted text-check findings. One entry per line:
+#   rule | file pattern | word (optional) | reason
+# The rule is required and cannot be *. tools/text_check.py has the rules.
+
+# Words that the checker reads as an -ing verb or a passive, but that are
+# nouns, names or adjectives here.
+ing-form | hat/*.lua | pruning | a noun: the pruning of the descent
+ing-form | * | rounding | a noun: correct rounding in IEEE-754
+ing-form | mod/surface.lua | assembling | the name of the assembling machine
+ing-form | * | tiling | a noun: the hat tiling
+passive | * | are exempt | an adjective: rails are exempt from the band rule
+passive | * | are permanent | an adjective: the bands are permanent
+passive | * | is red | an adjective: the build preview is red
+passive | * | is intended | an adjective: a game-design choice that is intended
+ing-form | * | mining | the name of the mining drill
+ing-form | docs/design/hattorio-design.md | starting | the name of the starting area
+
+# The plans follow the writing-plans format ("Modify:" and "Verify" in the
+# steps).
+word | docs/plans/*.md | modify | the writing-plans file-list format
+word | docs/plans/*.md | verify | the writing-plans step format
+
+# The released entries of the changelog stay as they were published.
+semicolon | CHANGELOG.md | | released entries, kept as published
+passive | CHANGELOG.md | | released entries, kept as published
+
+# A heading that names a topic, not an action.
+ing-form | CLAUDE.md | writing | a heading that names the topic
+ing-form | wiki/The-mathematics.md | floating | the term floating point
+ing-form | wiki/_Sidebar.md | playing | a heading that names the topic
+ing-form | wiki/Building-in-hats.md | crossing | a heading that names the topic
+ing-form | tools/README.md | previewing | a heading that names the topic
+
+# mod-description-long.md is in the author's first-person voice, which
+# CLAUDE.md says to keep. These findings are voice, not AI tells.
+passive | mod-description-long.md | | the author's voice
+perfect-tense | mod-description-long.md | | the author's voice
+sentence-length | mod-description-long.md | | the author's voice
+paragraph-length | mod-description-long.md | | the author's voice
+ing-form | docs/portal-description.md | working | "stops working" is the plain phrase

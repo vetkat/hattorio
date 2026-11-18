@@ -36,7 +36,7 @@ def test_pr_checks_run_again_when_title_or_labels_change():
 def test_ci_runs_every_make_target_of_make_check():
     text = read("check.yml")
     for target in ["make version", "make pytest", "make test", "make lint",
-                   "make markdown", "make links", "make ingame"]:
+                   "make markdown", "make links", "make text", "make ingame"]:
         assert target in text, target
 
 

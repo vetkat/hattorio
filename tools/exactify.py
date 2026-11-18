@@ -10,10 +10,10 @@ at every depth.
 
 We recovered the constants below with integer-relation recognition against a
 level-22 normalisation. The results agree independently at level 14 (to 1e-8)
-and at level 22 (to 1e-14). Then we VERIFIED them: if you substitute them, you
-get the same shapes scaled by phi^2, exactly, as ring elements.
-verify_fixed_point() runs that check again, and rederive_outlines() runs the
-recognition again from the start.
+and at level 22 (to 1e-14). Then we VERIFIED them. Substitute them, and you get
+the same shapes scaled by phi^2, exactly, as ring elements.
+`verify_fixed_point()` runs that check again, and `rederive_outlines()` runs
+the recognition again from the start.
 
 Each coordinate is (a, b, q), which means (a + b*phi)/q. The y values are that
 value times sqrt(3).
@@ -127,7 +127,8 @@ def _recognise(v, tol, maxq=400, maxab=3000):
 
 
 def rederive_outlines(level=DERIVE_LEVEL, tol=None):
-    """Run the recognition again from the substitution. Slow; the tests use it."""
+    """Run the recognition again from the substitution. It is slow. The tests
+    use it."""
     getcontext().prec = 120
     phi = (1 + D(5).sqrt()) / 2
     s3 = D(3).sqrt()

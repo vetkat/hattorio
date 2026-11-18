@@ -4,8 +4,8 @@
 --   lua5.2 tools/render.lua [depth] [unit] [half-extent] [out.svg]
 --
 -- The colours follow the usual presentation of this tiling. Reflected hats
--- (about 1 in 8, and necessary) are dark blue. The other hats are shaded by
--- orientation.
+-- (about 1 in 8, and necessary) are dark blue. The shade of each other hat
+-- shows its orientation.
 
 package.path = "./?.lua;" .. package.path
 

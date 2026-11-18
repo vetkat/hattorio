@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
-# Runs the in-game tests in the Factorio headless server.
+# Run the in-game tests in the Factorio headless server.
+#
 #   tools/ingame.sh             base game only, then with Space Age
 #   tools/ingame.sh base        base game only
 #   tools/ingame.sh space-age   with Space Age
-# The server and the factorio-test mod come in the pinned versions. No
-# login is needed: the server is a free download, and the factorio-test
-# zip is in tools/vendor/. FACTORIO_VERSION=X.Y.Z tests another release of
-# the server; watch.yml uses it for new releases.
+#
+# The server and the factorio-test mod come in the pinned versions. You need
+# no login. The server is a free download, and the factorio-test zip is in
+# `tools/vendor/`. `FACTORIO_VERSION=X.Y.Z` tests another release of the
+# server. `watch.yml` uses it for new releases.
 set -euo pipefail
 
 modes=${1:-base space-age}

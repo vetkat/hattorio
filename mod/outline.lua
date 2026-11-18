@@ -1,13 +1,13 @@
 -- Optional overlay for each player: a line down the centre of each band.
 --
 -- It is per player because it is only presentation. If one player turns it
--- on, the terrain does not change, and nobody else sees a difference. The
--- render objects are created with `players = {index}`, so they really are
+-- on, the terrain does not change, and nobody else sees a difference. The mod
+-- creates the render objects with `players = {index}`, so they really are
 -- private.
 --
 -- Render objects are game state, so `storage` tracks them, not a module
 -- local. A module local would be lost on save and load. The objects would
--- leak, and more would collect every time the save was loaded again.
+-- leak, and more would collect every time a player loaded the save again.
 
 local Ti = require("hat.tiling")
 local G = require("hat.geometry")

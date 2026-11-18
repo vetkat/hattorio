@@ -31,8 +31,8 @@ A wider band makes the cell smaller, and a narrower band makes it larger. At
 band 1, a size-41 cell holds 1,012 tiles and takes a 19×19 blueprint.
 
 For scale, a smelter block is about 20×20 and a mall is about 30×30. **Every
-size in this table breaks those blueprints.** So the choice is not whether
-blueprints survive. The choice is how much room you get to improvise.
+size in this table breaks those blueprints.** So the choice is how much room
+you get to improvise.
 
 - **15** is brutal. A cell holds one machine and some belt. It is new, and
   probably exhausting.
@@ -52,8 +52,8 @@ blueprints survive. The choice is how much room you get to improvise.
 Two settings control the look of the bands: the material and the colour. They
 are independent, and every combination works.
 
-**Style** sets the surface. *Dark liquid* is the default. It is animated, and
-it moves and oozes. *Void* is flat and still. It looks like a hole, not a
+**Style** sets the surface. *Dark liquid* is the default, and it moves and
+oozes. *Void* is flat and still. It looks like a hole, not a
 liquid.
 
 **Colour** sets the tint. Every option is nearly black on purpose, so the bands
@@ -62,8 +62,8 @@ is what makes the bands visible. *Deep violet* is the default and looks the
 most deliberate. *Near-black cold*, *oily green-black* and *ember black* are
 quieter. *Pure void black* is a flat hole with no sheen.
 
-About one cell in eight is reflected. Reflected cells are mathematically
-necessary in this tiling. The mod gives them a stronger tint so that you can
+About one cell in eight is a mirror image. The tiling needs these reflected
+cells, as a proof shows. The mod gives them a stronger tint so that you can
 find them.
 
 ## Band width

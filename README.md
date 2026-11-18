@@ -3,8 +3,8 @@
 **A Factorio mod that cuts every planet into cells of an aperiodic tiling.**
 
 The mod builds your factory on the "hat" monotile tiling. The hat is the
-aperiodic tile that was discovered in 2023. The cells never repeat, so your
-blueprints cannot repeat either.
+aperiodic tile that four mathematicians found in 2023. The cells never
+repeat, so your blueprints cannot repeat either.
 
 ![The hat tiling as Hattorio generates it](docs/preview/tiling.png)
 
@@ -12,7 +12,7 @@ blueprints cannot repeat either.
 > [the mod portal](https://mods.factorio.com/mod/hattorio) and as a
 > [GitHub release](https://github.com/vetkat/hattorio/releases).
 > **Multiplayer is not verified.** The argument for determinism is sound, but
-> nobody has tested it with two clients yet. Play single player for now.
+> no test with two clients exists yet. Play single player for now.
 
 ## What it does to your game
 
@@ -65,7 +65,7 @@ seams appear.
 
 ## Why this is harder than it sounds
 
-Factorio's grid is not only a way to draw the map. Tiles, collision, belt
+In Factorio, the square grid is part of the engine. Tiles, collision, belt
 lanes, pipes and the pathfinder are all C++ code, and they all expect 1×1
 tiles on the axes. No mod can give the unit of construction a hat shape. A mod
 *can* decide where you may build, and that is enough.
