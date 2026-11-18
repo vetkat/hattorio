@@ -169,6 +169,14 @@ experimental, before the players get it.
 files each Monday. Dependabot opens a pull request when a GitHub Action or
 an npm tool has a new version.
 
+GitHub turns off the schedules of a public repository after 60 days with no
+commit, and it sends a warning email first. Hattorio can go quiet for longer
+than that. So each run of `watch.yml` also calls the GitHub API to enable
+`watch.yml` and `weekly.yml` again, which resets the count. The
+[keepalive-workflow](https://github.com/gautamkrishnar/keepalive-workflow)
+action does the same in its API mode. GitHub does not document this effect.
+If the schedules stop anyway, enable them again on the Actions tab.
+
 ## Versions
 
 Hattorio uses [semantic versioning](https://semver.org/spec/v2.0.0.html).

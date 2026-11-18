@@ -8,6 +8,10 @@ name: watch
 # A failed scheduled run makes GitHub notify the maintainer. A cache entry
 # marks each test and each reminder as done for one commit on main, so each
 # result notifies once, and a run with nothing new starts no test runner.
+#
+# GitHub turns off the schedules of a public repository after 60 days with
+# no commit. On each run, the keepalive job enables the scheduled workflows
+# again, and that resets the count.
 on:
   schedule:
     - cron: "41 */3 * * *"
@@ -17,6 +21,18 @@ permissions:
   contents: read
 
 jobs:
+  keepalive:
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for workflow in watch.yml weekly.yml; do
+            gh api --method PUT "repos/$GITHUB_REPOSITORY/actions/workflows/$workflow/enable"
+          done
+
   plan:
     runs-on: ubuntu-24.04
     permissions:

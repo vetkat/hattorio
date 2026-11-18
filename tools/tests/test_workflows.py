@@ -84,3 +84,12 @@ def test_the_portal_description_uses_the_long_description():
     script = (ROOT / "tools/portal_details.sh").read_text(encoding="utf-8")
     assert '-F "description=<mod-description-long.md"' in script
     assert "sh tools/portal_details.sh" in job(read("release.yml"), "description")
+
+
+def test_watch_keeps_the_scheduled_workflows_enabled():
+    keepalive = job(read("watch.yml"), "keepalive")
+    assert "actions: write" in keepalive
+    scheduled = sorted(p.name for p in (ROOT / ".github/workflows").glob("*.yml")
+                       if "\n  schedule:\n" in p.read_text(encoding="utf-8"))
+    for name in scheduled:
+        assert name in keepalive, name
