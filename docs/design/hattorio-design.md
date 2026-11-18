@@ -443,7 +443,7 @@ Per planet, startup:
 | Setting | Default | Range |
 | --- | --- | --- |
 | `hattorio-hat-size-<planet>` | **41** (normal) | 15, 26, 41, 52 |
-| `hattorio-band-width-<planet>` | **3** (wide) | 1, 2, 3, 4 |
+| `hattorio-band-width-<planet>` | **3** (normal) | 1, 2, 3, 4 |
 | `hattorio-band-style` | liquid | liquid, void |
 | `hattorio-band-colour` | violet | violet, cold, oily, ember, ink |
 | `hattorio-richness-override` (map) | 0 = automatic | 0 - 10 |
@@ -452,7 +452,8 @@ Per planet, startup:
 Size and band are dropdowns, not sliders. You cannot read the difficulty
 of a size from the number, and the interesting range is four values, not
 seventy-six. Each choice has a label for its difficulty: 15 very hard, 26
-hard, 41 normal, 52 easy.
+hard, 41 normal, 52 easy. The band widths have labels too: 1 thin, 2 narrow,
+3 normal, 4 wide.
 
 **41/3 became the default after playtests.** The earlier default of 26/2
 was too cramped in practice. Size 41 with band 3 gives a cell of 858 tiles in

@@ -42,7 +42,7 @@ You set these per planet when you create the world.
 | Setting | Default | Choices |
 | --- | --- | --- |
 | Cell size (centre to vertex, tiles) | **41** (normal) | 15, 26, 41, 52 |
-| Band width (tiles) | **3** (wide) | 1, 2, 3, 4 |
+| Band width (tiles) | **3** (normal) | 1, 2, 3, 4 |
 | Band appearance | Dark liquid | liquid, void |
 | Band colour | Deep violet | violet, cold, oily, ember, void black |
 

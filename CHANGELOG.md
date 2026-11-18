@@ -15,6 +15,8 @@ This is the only changelog that people edit. The build makes Factorio's
 
 - Clearer descriptions for the band appearance, band colour, ore richness
   and band width settings.
+- The band width labels now call the default width of 3 "normal", like the
+  default cell size. The labels are 1 thin, 2 narrow, 3 normal and 4 wide.
 
 ## [1.0.1] - 2026-11-17
 
