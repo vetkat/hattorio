@@ -1,0 +1,89 @@
+name: watch
+
+# Factorio 2.1 refused to load Hattorio 1.0.0, and the players found out
+# first. This workflow looks for a new Factorio release every three hours.
+# When the stable or the experimental release differs from the pin, it runs
+# the in-game tests in that release, with and without Space Age.
+#
+# A failed scheduled run makes GitHub notify the maintainer. A cache entry
+# marks each test and each reminder as done for one commit on main, so each
+# result notifies once, and a run with nothing new starts no test runner.
+on:
+  schedule:
+    - cron: "41 */3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      remind: ${{ steps.plan.outputs.remind }}
+      stable: ${{ steps.plan.outputs.stable }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: List the markers of earlier runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh cache list --repo "$GITHUB_REPOSITORY" --key watch- --limit 1000
+          --json key --jq '.[].key' > "$RUNNER_TEMP/keys"
+      - id: plan
+        run: python3 -m tools.factorio_version plan "$GITHUB_SHA" "$RUNNER_TEMP/keys" >> "$GITHUB_OUTPUT"
+
+  # A newer stable release than the pin needs a PR that moves the pin. The
+  # marker comes first, so the reminder fails only once.
+  pin:
+    needs: plan
+    if: needs.plan.outputs.remind == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - run: touch .watch-done
+      - uses: actions/cache/save@v6
+        with:
+          path: .watch-done
+          key: watch-pin-${{ needs.plan.outputs.stable }}-${{ github.sha }}
+      - run: python3 -m tools.factorio_version
+
+  ingame:
+    name: in-game on ${{ matrix.version }} (${{ matrix.mode }})
+    needs: plan
+    if: needs.plan.outputs.matrix != '[]'
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # A new minor version needs another factorio_version in info.json, or
+      # the game does not load the mod. This changes only this checkout.
+      - run: python3 -m tools.factorio_version retarget ${{ matrix.version }}
+      - uses: actions/cache@v6
+        with:
+          path: ${{ runner.temp }}/factorio-cache
+          key: factorio-headless-${{ matrix.version }}
+      - run: make ingame MODE=${{ matrix.mode }}
+        env:
+          FACTORIO_VERSION: ${{ matrix.version }}
+          FACTORIO_CACHE: ${{ runner.temp }}/factorio-cache
+      # Pass or fail, this release is tested at this commit.
+      - if: always()
+        run: touch .watch-done
+      - if: always()
+        uses: actions/cache/save@v6
+        with:
+          path: .watch-done
+          key: watch-${{ matrix.version }}-${{ matrix.mode }}-${{ github.sha }}

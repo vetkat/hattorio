@@ -1,9 +1,13 @@
 name: release
 
-# To make a release, push a tag. info.json is the only source of truth for the
-# version. The tag and the changelog must agree with it, or nothing is built.
-# This is the purpose of the workflow: it prevents a mod portal page that
-# describes a build that nobody has.
+# To make a release, push a tag v<version> on main. info.json is the only
+# source of truth for the version. The tag and the changelog must agree with
+# it, or nothing is built. So the mod portal can never describe a build that
+# nobody has.
+#
+# A tag runs every check in check.yml, builds the zip, makes the GitHub
+# release, uploads the zip to the mod portal, and then sends the long
+# description to the portal.
 on:
   push:
     tags: ["v*"]
@@ -14,95 +18,105 @@ on:
         type: choice
         default: dry-run
         options:
-          - dry-run             # build and test only; never uses the portal
+          - dry-run             # check and build only; never uses the portal
           - check-credentials   # validate the API key, publish nothing
-          - publish             # build, test and upload to the portal
+          - publish             # check, build and upload to the portal
+          - description         # send mod-description-long.md to the portal
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
+  checks:
+    if: github.event_name == 'push' || inputs.mode == 'dry-run' || inputs.mode == 'publish'
+    uses: ./.github/workflows/check.yml
+
   build:
     name: verify and build
-    runs-on: ubuntu-latest
+    needs: checks
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
         with:
-          python-version: "3.12"
-      - run: pip install pytest
-
-      # Before anything is built, and long before anything is published.
-      - name: check version consistency
-        run: python3 tools/check_version.py ${{ github.ref_type == 'tag' && github.ref_name || '' }}
-
-      - name: offline pipeline tests
-        run: python -m pytest tools/tests -q
-
-      # Factorio embeds Lua 5.2.1. A test on a newer version would hide the
-      # all-doubles behaviour that the tiling core depends on.
-      - uses: leafo/gh-actions-lua@v10
-        with:
-          luaVersion: "5.2"
-      - uses: leafo/gh-actions-luarocks@v4
-      - run: luarocks install busted
-      - run: luarocks install luacheck
-      - run: busted
-      - run: luacheck hat mod prototypes spec
-
-      - name: build the mod zip
-        run: python3 tools/package.py
-
-      - name: name the artefact
-        id: zip
-        run: |
-          python3 - <<'PY' >> "$GITHUB_OUTPUT"
-          import json
-          i = json.load(open("info.json"))
-          print(f"path=build/{i['name']}_{i['version']}.zip")
-          print(f"version={i['version']}")
-          PY
-
-      - uses: actions/upload-artifact@v4
+          fetch-depth: 0
+      - name: Fail unless the tagged commit is on main
+        if: github.event_name == 'push'
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+      - name: Check the version
+        run: python3 -m tools.check_version ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+      - run: python3 -m tools.package
+      - name: Write the release notes from CHANGELOG.md
+        run: python3 -m tools.changelog notes > build/notes.md
+      - uses: actions/upload-artifact@v7
         with:
           name: mod-zip
-          path: ${{ steps.zip.outputs.path }}
+          path: |
+            build/*.zip
+            build/notes.md
           if-no-files-found: error
 
-      - name: attach to the GitHub release
-        if: github.ref_type == 'tag'
-        uses: softprops/action-gh-release@v2
+  github-release:
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
         with:
-          files: ${{ steps.zip.outputs.path }}
-          generate_release_notes: true
+          name: mod-zip
+          path: build
+      - name: Make the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "$GITHUB_REF_NAME" build/*.zip
+          --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME"
+          --notes-file build/notes.md
 
   publish:
-    name: mod portal
+    name: mod portal upload
     needs: build
-    runs-on: ubuntu-latest
-    # Only on a tag, or on a manual dispatch that asks for it explicitly. You
+    # Only on a tag, or on a manual run that asks for it explicitly. You
     # cannot withdraw a portal release, so this must never run by accident.
-    if: github.ref_type == 'tag' || inputs.mode == 'publish' || inputs.mode == 'check-credentials'
+    if: github.event_name == 'push' || inputs.mode == 'publish'
+    runs-on: ubuntu-24.04
     # Give this environment a required reviewer if you want a person to
     # approve before anything reaches the portal.
     environment: mod-portal
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
           name: mod-zip
           path: build
       - name: upload
         env:
           FACTORIO_API_KEY: ${{ secrets.FACTORIO_API_KEY }}
-        run: |
-          if [ -z "$FACTORIO_API_KEY" ]; then
-            echo "::error::FACTORIO_API_KEY is not set; add it as a repository secret"
-            exit 1
-          fi
-          if [ "${{ inputs.mode }}" = "check-credentials" ]; then
-            sh tools/publish_mod.sh --check
-          else
-            sh tools/publish_mod.sh build/*.zip
-          fi
+        run: sh tools/publish_mod.sh build/*.zip
+
+  credentials:
+    name: mod portal credentials
+    if: inputs.mode == 'check-credentials'
+    runs-on: ubuntu-24.04
+    environment: mod-portal
+    steps:
+      - uses: actions/checkout@v7
+      - env:
+          FACTORIO_API_KEY: ${{ secrets.FACTORIO_API_KEY }}
+        run: sh tools/publish_mod.sh --check
+
+  # After an upload, or alone in the mode "description".
+  description:
+    name: mod portal description
+    needs: publish
+    if: >-
+      always() &&
+      (needs.publish.result == 'success' || inputs.mode == 'description')
+    runs-on: ubuntu-24.04
+    environment: mod-portal
+    steps:
+      - uses: actions/checkout@v7
+      - env:
+          FACTORIO_API_KEY: ${{ secrets.FACTORIO_API_KEY }}
+        run: sh tools/portal_details.sh

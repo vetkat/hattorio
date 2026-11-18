@@ -1,0 +1,8 @@
+#!/bin/sh
+# Every commit runs the fast checks. CI runs them again, with the slow ones.
+# A commit from Claude Code also needs a current review stamp.
+set -e
+if [ -n "$CLAUDECODE" ]; then
+  python3 -m tools.review_stamp check
+fi
+exec make fast

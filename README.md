@@ -8,7 +8,7 @@ blueprints cannot repeat either.
 
 ![The hat tiling as Hattorio generates it](docs/preview/tiling.png)
 
-> **Status: released as 1.0.0**, on
+> **Status: released as 1.0.1**, on
 > [the mod portal](https://mods.factorio.com/mod/hattorio) and as a
 > [GitHub release](https://github.com/vetkat/hattorio/releases).
 > **Multiplayer is not verified.** The argument for determinism is sound, but
@@ -87,18 +87,26 @@ hat/         the tiling core, with no Factorio dependencies; runs under plain Lu
 tools/       offline pipeline (Python) that derives and verifies the rule data
 data/        generated Lua data; never edit by hand
 spec/        busted tests
+tests/       in-game tests, which run in the Factorio headless server
 docs/design/ the design spec, including everything that turned out wrong
 ```
 
-You need Lua 5.2 (the version that Factorio embeds), busted and luacheck:
+You need Lua 5.2 (the version that Factorio embeds), busted, luacheck,
+Node.js and lychee:
 
 ```bash
-sudo pacman -S --needed lua52 lua52-busted luacheck   # Arch
-make check          # Python + Lua tests + lint
+sudo pacman -S --needed lua52 lua52-busted luacheck nodejs npm lychee   # Arch
+make setup          # once: npm tools and the git hook
+make fast           # the quick checks; the git hook runs them
+make check          # everything, including the in-game tests
 make data           # regenerate data/ and test fixtures
 lua5.2 tools/render.lua 5 12 340 out.svg              # draw the tiling
 lua5.2 tools/render_bands.lua 26 2 260 bands.svg      # preview in-game look
 ```
+
+The first `make check` downloads the Factorio headless server, about 60 MB.
+[toolchain-decisions.md](docs/design/toolchain-decisions.md) describes the
+checks, CI and the release workflow.
 
 A golden fixture from the Python pipeline validates the Lua core. The pipeline
 checks the fixture itself: it has no overlaps or gaps, the density of

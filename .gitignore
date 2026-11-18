@@ -4,3 +4,5 @@ __pycache__/
 luacov.*
 .wiki-tmp/
 build/
+node_modules/
+changelog.txt

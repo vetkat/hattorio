@@ -1,2 +1,5 @@
 [tool.pytest.ini_options]
-markers = ["slow: re-derives constants from scratch"]
+markers = [
+  "slow: re-derives constants from scratch",
+  "pipeline: slow tests of the offline pipeline; make fast leaves them out",
+]

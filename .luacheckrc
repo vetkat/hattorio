@@ -28,3 +28,19 @@ files["spec"] = { std = "+busted" }
 -- hat/ deliberately has no Factorio dependencies. It must load under plain
 -- lua5.2, so that CI can test it. No Factorio globals here.
 files["hat"] = {}
+
+-- The stage entry points see the same Factorio globals as mod/.
+for _, path in ipairs({ "control.lua", "data.lua", "data-final-fixes.lua", "settings.lua" }) do
+  files[path] = { read_globals = factorio_globals, globals = factorio_writable }
+end
+
+-- The in-game tests see the game, plus the globals of factorio-test.
+local ingame = {
+  "test", "describe", "it", "before_each", "after_each", "before_all",
+  "after_all", "async", "done", "after_ticks", "on_tick", "ticks_between_tests",
+  "tags",
+}
+for _, name in ipairs(factorio_globals) do ingame[#ingame + 1] = name end
+-- A test may change game state, such as the map settings, so it can write to
+-- game.
+files["tests/ingame"] = { read_globals = ingame, globals = { "storage", "table", "game" } }

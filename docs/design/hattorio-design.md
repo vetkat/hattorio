@@ -583,9 +583,13 @@ We record these here so that nobody has to work them out again.
 - **Teal and Luau are both out.** Luau is the wrong runtime. Teal has no
   definitions for the Factorio API, so every API call would be an untyped
   escape hatch anyway.
-- **Factorio 2.1.19 exists but is experimental.** The stable version is
-  2.0.77. Develop against the stable version and declare
-  `factorio_version = "2.0"`, which loads on both.
+- **`factorio_version = "2.0"` does not load on Factorio 2.1.** When we
+  wrote this document, 2.1 was experimental and 2.0.77 was stable. The
+  document said that "2.0" loads on both. That was wrong. Factorio 2.1
+  refuses a mod that names another minor version, so 1.0.0 did not load on
+  2.1. Release 1.0.1 targets 2.1. `.factorio-version` now pins the release
+  that the tests use, and `watch.yml` tests each new release
+  (`toolchain-decisions.md`).
 - **`draw_polygon` is a triangle strip** and has no `draw_on_ground`.
 - **The rasterisation problem is real here.** For a short time we thought a
   line overlay could avoid it. But bands are terrain, so the stair steps come

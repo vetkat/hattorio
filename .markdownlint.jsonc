@@ -3,5 +3,7 @@
   // width.
   "MD013": { "code_blocks": false },
   // Makefile recipes must start with a tab.
-  "MD010": { "ignore_code_languages": ["makefile"] }
+  "MD010": { "ignore_code_languages": ["makefile"] },
+  // Keep a Changelog repeats headings such as "Fixed" under each release.
+  "MD024": { "siblings_only": true }
 }

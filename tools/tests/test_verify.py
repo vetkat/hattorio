@@ -1,8 +1,13 @@
 import math
 
+import pytest
+
 from tools.substitution import levels
 from tools.verify import (verify_all, flatten, reflected_density,
                           max_coefficient, check_no_overlaps, check_no_gaps)
+
+# These tests take seconds each. make fast leaves them out.
+pytestmark = pytest.mark.pipeline
 
 PHI = (1 + 5 ** 0.5) / 2
 

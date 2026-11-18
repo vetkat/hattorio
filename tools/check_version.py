@@ -1,65 +1,102 @@
 """Check that the version is the same everywhere it appears.
 
-info.json is the only source of truth, and everything else must agree with
-it. The changelog must document that version, and a release tag must name it.
-If they drift apart, the mod portal page can describe a build that nobody has.
+info.json is the only source of truth for the mod version, and everything
+else must agree with it. CHANGELOG.md must document that version, and a
+release tag must name it. If they drift apart, the mod portal page can
+describe a build that nobody has.
 
-    python3 tools/check_version.py            # info.json vs changelog
-    python3 tools/check_version.py v0.2.0     # also check a release tag
+Without a tag, the newest section of CHANGELOG.md is Unreleased or the
+version in info.json. With a tag, the tag names the version in info.json,
+the newest versioned section is that version and has a date, and
+Unreleased has no entries. In both cases, the changelog.txt that the build
+makes from CHANGELOG.md must follow Factorio's format.
+
+.factorio-version pins the Factorio release that the tests use. The
+factorio_version and the base dependency in info.json must name the same
+major and minor version. Factorio 2.1 refuses to load a mod that says
+"2.0", so a mismatch can make the mod unusable.
+
+    python3 -m tools.check_version            # every commit
+    python3 -m tools.check_version v1.0.1     # a release tag
 """
 from __future__ import annotations
 
-import json
-import pathlib
-import re
 import sys
 
-ROOT = pathlib.Path(__file__).resolve().parents[1]
-SEMVER = re.compile(r"^\d+\.\d+\.\d+$")
+from tools import changelog
+from tools.factorio_version import SEMVER, base_dependency, major_minor, read_info, read_pin
+
+REQUIRED_KEYS = ("name", "version", "title", "author", "factorio_version",
+                 "description", "dependencies")
 
 
-def changelog_versions(text: str) -> list[str]:
-    return re.findall(r"^Version:\s*(\S+)\s*$", text, re.MULTILINE)
+def manifest_problems(info: dict, pin: str) -> list[str]:
+    missing = [key for key in REQUIRED_KEYS if key not in info]
+    if missing:
+        return [f"info.json has no {key!r}" for key in missing]
+    if not SEMVER.match(pin):
+        return [f".factorio-version holds {pin!r}, not X.Y.Z"]
+    problems = []
+    if not SEMVER.match(str(info["version"])):
+        problems.append(f"info.json version {info['version']!r} is not X.Y.Z")
+    if info["factorio_version"] != major_minor(pin):
+        problems.append(
+            f"info.json factorio_version is {info['factorio_version']!r}, but "
+            f".factorio-version pins {pin}, so it must be {major_minor(pin)!r}")
+    base = base_dependency(pin)
+    if base not in info["dependencies"]:
+        problems.append(f"info.json dependencies must contain {base!r}")
+    return problems
+
+
+def _has_entries(release: changelog.Release) -> bool:
+    return any(items for _, items in release.groups)
+
+
+def changelog_problems(version: str, releases: tuple[changelog.Release, ...],
+                       tag: str | None) -> list[str]:
+    if not releases:
+        return ["CHANGELOG.md has no release sections"]
+    if tag is None:
+        newest = releases[0].version
+        if newest in ("Unreleased", version):
+            return []
+        return [f"the newest section of CHANGELOG.md is {newest}, but info.json says {version}"]
+    problems = []
+    if tag != f"v{version}":
+        problems.append(f"tag {tag} does not match info.json (v{version})")
+    if any(r.version == "Unreleased" and _has_entries(r) for r in releases):
+        problems.append("CHANGELOG.md still has entries under Unreleased; "
+                        "move them into the release section")
+    versioned = [r for r in releases if r.version != "Unreleased"]
+    if not versioned or versioned[0].version != version:
+        problems.append(f"CHANGELOG.md has no section for {version} at the top")
+    elif versioned[0].date is None:
+        problems.append(f"the {version} section of CHANGELOG.md has no date")
+    return problems
+
+
+def problems(info: dict, changelog_text: str, pin: str, tag: str | None) -> list[str]:
+    found = manifest_problems(info, pin)
+    if found:
+        return found
+    _, found = changelog.build(changelog_text, info["version"])
+    if found:
+        return found
+    return changelog_problems(info["version"], changelog.parse(changelog_text).releases, tag)
 
 
 def main(argv: list[str]) -> int:
-    info = json.loads((ROOT / "info.json").read_text())
-    version = info["version"]
-    problems = []
-
-    if not SEMVER.match(version):
-        problems.append(f"info.json version {version!r} is not X.Y.Z")
-
-    changelog = (ROOT / "changelog.txt").read_text()
-    versions = changelog_versions(changelog)
-    if version not in versions:
-        problems.append(
-            f"changelog.txt has no 'Version: {version}' entry "
-            f"(found: {', '.join(versions) or 'none'})")
-    elif versions[0] != version:
-        problems.append(
-            f"changelog.txt leads with {versions[0]}, but info.json says {version}; "
-            "the newest release must come first")
-
-    # Factorio does not load a mod if its changelog separator is malformed,
-    # and the error message does not make the cause clear.
-    first = changelog.splitlines()[0] if changelog else ""
-    if len(first) != 99 or set(first) != {"-"}:
-        problems.append("changelog.txt must start with exactly 99 dashes")
-
-    if len(argv) > 1:
-        tag = argv[1]
-        expected = f"v{version}"
-        if tag != expected:
-            problems.append(f"tag {tag} does not match info.json ({expected})")
-
-    if problems:
-        for p in problems:
-            print(f"version check: {p}", file=sys.stderr)
+    info, pin = read_info(), read_pin()
+    changelog_text = (changelog.ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    tag = argv[1] if len(argv) > 1 and argv[1] else None
+    found = problems(info, changelog_text, pin, tag)
+    for problem in found:
+        print(f"version check: {problem}", file=sys.stderr)
+    if found:
         return 1
-
-    print(f"version check: {info['name']} {version} consistent"
-          + (f", tag {argv[1]}" if len(argv) > 1 else ""))
+    print(f"version check: {info['name']} {info['version']} consistent, "
+          f"Factorio {pin}" + (f", tag {tag}" if tag else ""))
     return 0
 
 

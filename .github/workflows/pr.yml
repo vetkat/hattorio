@@ -1,0 +1,21 @@
+name: pr
+
+# The checks of the PR title and labels. They are in a workflow of their
+# own, so an edit of the title or a label runs only this small job, and not
+# the in-game tests of check.yml.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+jobs:
+  pr:
+    name: PR title and changelog
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - run: python3 -m tools.pr_checks

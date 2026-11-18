@@ -1,0 +1,7 @@
+# lychee settings. make links checks the links inside the repository
+# (--offline). weekly.yml checks every link, external ones included.
+exclude_path = ["node_modules", "build"]
+# GitHub wiki pages link to each other without the .md extension.
+fallback_extensions = ["md"]
+# On GitHub, ../../wiki in README.md opens the wiki tab of the repository.
+exclude = ['^file://.*/wiki$']

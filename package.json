@@ -1,0 +1,9 @@
+{
+  "name": "hattorio-dev",
+  "private": true,
+  "description": "Development tools for the Hattorio mod. The mod has no npm dependencies.",
+  "devDependencies": {
+    "factorio-test-cli": "3.9.0",
+    "markdownlint-cli2": "0.24.0"
+  }
+}

@@ -24,7 +24,9 @@ from plan 1.
 ## Global constraints
 
 - **Factorio 2.0.77** stable. `info.json` declares
-  `factorio_version = "2.0"`, which loads on 2.0 and 2.1.
+  `factorio_version = "2.0"`, which loads on 2.0 and 2.1. (This was wrong.
+  Factorio 2.1 does not load a mod that says "2.0". See the design document,
+  section 14.)
 - **Lua 5.2.1.** There is no integer subtype. All numbers are doubles.
 - **Never use `math.sin`, `math.cos`, `math.random` or `^` in shipped Lua.**
   They do not give identical bits on all platforms, and a difference is a

@@ -11,17 +11,37 @@ else
   RUN_BUSTED := $(BUSTED)
 endif
 
-.PHONY: all test pytest lint data check preview wiki package version
+.PHONY: all setup fast check test pytest pytest-fast lint markdown links ingame stamp \
+        data preview wiki package version
+
+LUA_FILES := hat mod prototypes spec tests control.lua data.lua \
+             data-final-fixes.lua settings.lua
+MARKDOWN   = $(shell git ls-files '*.md')
 
 all: check
+
+## once, after a clone: install the npm tools and turn on the git hook
+setup:
+	npm ci
+	git config core.hooksPath .githooks
+
+## every commit (the git hook). It must stay under about 10 seconds.
+fast: version pytest-fast test lint markdown links
+
+## before a PR: everything, including the in-game tests
+check: version pytest test lint markdown links ingame
 
 ## Lua test suite, under the Lua version that Factorio embeds
 test:
 	$(RUN_BUSTED)
 
-## offline pipeline tests
+## all the Python tests, the slow offline pipeline tests included
 pytest:
 	python3 -m pytest tools/tests -q
+
+## the Python tests without the slow offline pipeline tests
+pytest-fast:
+	python3 -m pytest tools/tests -q -m "not slow and not pipeline"
 
 ## regenerate data/ and the test fixtures
 data:
@@ -38,17 +58,31 @@ preview:
 	done
 
 lint:
-	luacheck hat mod prototypes spec
+	luacheck $(LUA_FILES)
 
-check: version pytest test lint
+markdown:
+	npx --no-install markdownlint-cli2 $(MARKDOWN)
+
+## the links inside the repository; weekly.yml checks the external ones
+links:
+	lychee --offline --no-progress $(MARKDOWN)
+
+## the in-game tests in the Factorio headless server.
+## MODE=base or MODE=space-age runs one mode. An empty MODE runs both.
+ingame:
+	tools/ingame.sh $(MODE)
+
+## after /ste80-humanizer and /simplify: lets an agent commit pass the hook
+stamp:
+	python3 -m tools.review_stamp stamp
 
 ## check that info.json, the changelog and the tag agree
 version:
-	python3 tools/check_version.py
+	python3 -m tools.check_version
 
 ## build the distributable mod zip
 package:
-	python3 tools/package.py
+	python3 -m tools.package
 
 ## publish wiki/ to the GitHub wiki (first create one page in the web UI)
 wiki:

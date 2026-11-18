@@ -1,48 +1,103 @@
 name: check
 
+# Each job calls a make target, so a check works the same way on the
+# maintainer's machine and in CI. Branch protection needs all-checks, and
+# the job of pr.yml.
 on:
+  # PR branches run through pull_request, and main runs after each merge.
   push:
-    branches: ["**"]
+    branches: [main]
   pull_request:
+  # The release workflow runs these checks before it builds anything.
+  workflow_call:
+
+permissions:
+  contents: read
+
+# A new push to a PR cancels the run that it replaces. Runs on main never
+# cancel each other: each one checks a different commit.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  pipeline:
-    name: offline pipeline (Python)
-    runs-on: ubuntu-latest
+  python:
+    name: offline pipeline and tools (Python)
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install pytest
-      - name: verify the tiling and regenerate data
-        run: python -m pytest tools/tests -q
-      - name: validate the mod manifest
-        run: |
-          python3 -c "
-          import json
-          d = json.load(open('info.json'))
-          assert d['factorio_version'] == '2.1', d['factorio_version']
-          for k in ('name','version','title','author','description','dependencies'):
-              assert k in d, k
-          print('manifest ok:', d['name'], d['version'])
-          "
-      # Find version drift on every push, not only when we make a release.
-      - name: check version consistency
-        run: python3 tools/check_version.py
+      - run: make version
+      - run: make pytest
 
-  core:
-    name: tiling core (Lua 5.2)
-    runs-on: ubuntu-latest
+  lua:
+    name: tiling core and lint (Lua 5.2)
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # Factorio embeds Lua 5.2.1. A test on a newer version would hide the
-      # all-doubles behaviour that the core depends on.
-      - uses: leafo/gh-actions-lua@v10
+      # all-doubles behaviour that the tiling core depends on.
+      - uses: leafo/gh-actions-lua@v13
         with:
           luaVersion: "5.2"
-      - uses: leafo/gh-actions-luarocks@v4
-      - run: luarocks install busted
-      - run: luarocks install luacheck
-      - run: busted
-      - run: luacheck hat mod prototypes spec
+      - uses: leafo/gh-actions-luarocks@v6
+      - run: luarocks install busted && luarocks install luacheck
+      - run: make test
+      - run: make lint
+
+  text:
+    name: Markdown and links
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install lychee
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSL https://github.com/lycheeverse/lychee/releases/download/lychee-v0.24.2/lychee-x86_64-unknown-linux-gnu.tar.gz \
+            | tar -xz -C "$HOME/.local/bin" --strip-components=1 lychee-x86_64-unknown-linux-gnu/lychee
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - run: make markdown
+      - run: make links
+
+  ingame:
+    name: in-game (${{ matrix.mode }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [base, space-age]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - id: factorio
+        run: echo "version=$(cat .factorio-version)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v6
+        with:
+          path: ${{ runner.temp }}/factorio-cache
+          key: factorio-headless-${{ steps.factorio.outputs.version }}
+      - run: make ingame MODE=${{ matrix.mode }}
+        env:
+          FACTORIO_CACHE: ${{ runner.temp }}/factorio-cache
+
+  # Branch protection requires this job only, so the matrix entries do not
+  # each need a rule.
+  all-checks:
+    if: always()
+    needs: [python, lua, text, ingame]
+    runs-on: ubuntu-24.04
+    steps:
+      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
+      - run: echo "all checks passed"
