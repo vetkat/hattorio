@@ -12,13 +12,14 @@ local function chunk_area(cx, cy)
   return { left = cx * 32, top = cy * 32, right = cx * 32 + 32, bottom = cy * 32 + 32 }
 end
 
--- The factorio-test scenario generates lab tiles, which replace the tiles
--- that the mod paints. So the test turns them off.
-local function generate(surface, cx, cy)
+-- Generate one new chunk, with lab tiles or without. The mod paints only
+-- when a chunk generates, so a chunk that already exists proves nothing.
+local function generate(surface, cx, cy, lab)
   assert(not surface.is_chunk_generated({ cx, cy }), "the chunk already exists")
-  surface.generate_with_lab_tiles = false
+  surface.generate_with_lab_tiles = lab or false
   surface.request_to_generate_chunks({ cx * 32 + 16, cy * 32 + 16 }, 0)
   surface.force_generate_chunk_requests()
+  surface.generate_with_lab_tiles = false
 end
 
 -- Every band position holds the band tile of the right variant, or water,
@@ -63,5 +64,21 @@ test("a new chunk on Vulcanus gets the calculated bands", function()
   generate(vulcanus, 0, 0)
   after_ticks(1, function()
     assert(check_chunk(vulcanus, 0, 0) > 0, "the chunk has no band tiles")
+  end)
+end)
+
+-- A surface in the map editor can generate lab tiles. Its new chunks get
+-- bands like any other.
+test("a new chunk with lab tiles gets the bands", function()
+  local nauvis = game.surfaces["nauvis"]
+  generate(nauvis, 90, -70, true)
+  after_ticks(1, function()
+    local area = chunk_area(90, -70)
+    local lab = nauvis.count_tiles_filtered({
+      area = { { area.left, area.top }, { area.right, area.bottom } },
+      name = { "lab-dark-1", "lab-dark-2" },
+    })
+    assert(lab > 0, "the chunk has no lab tiles")
+    assert(check_chunk(nauvis, 90, -70) > 0, "the chunk has no band tiles")
   end)
 end)

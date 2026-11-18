@@ -55,10 +55,11 @@ pinned release. The server is a free download and needs no login. The
 factorio-test zip is in `tools/vendor/`.
 
 The tests compare the tiles that the game paints with the bands that
-`mod/bands.lua` calculates. Each band position must hold the band tile. The
-factorio-test map uses lab tiles, which replace the painted bands, so the
-tests turn lab tiles off. The mod never paves water, so the test on nauvis
-turns water off in the map generator before it makes a new chunk.
+`mod/bands.lua` calculates. Each band position must hold the band tile. Each
+test makes a new chunk, because the mod paints only when a chunk generates.
+The mod never paves water, so the tests on nauvis turn water off in the map
+generator first. Another test makes a chunk with lab tiles: the mod paints
+bands on lab tiles too.
 
 ## Static analysis: luacheck
 
