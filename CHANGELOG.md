@@ -11,6 +11,8 @@ This is the only changelog that people edit. The build makes Factorio's
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-11-18
+
 ### Fixed
 
 - You could pave a band with a floor tile and then build on it. Stone brick,
@@ -57,7 +59,8 @@ This is the only changelog that people edit. The build makes Factorio's
 - Cells are separated by narrow unbuildable bands. Undergrounds tunnel
   beneath them; rails cross them; bots and power ignore them.
 
-[Unreleased]: https://github.com/vetkat/hattorio/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/vetkat/hattorio/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/vetkat/hattorio/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/vetkat/hattorio/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/vetkat/hattorio/compare/v0.1.1...v1.0.0
 [0.1.1]: https://github.com/vetkat/hattorio/compare/v0.1.0...v0.1.1

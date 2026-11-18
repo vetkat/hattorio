@@ -1,6 +1,6 @@
 # Hattorio design
 
-Status: describes version 1.0.1
+Status: describes version 1.0.2
 Date: 2026-11-18 (first draft 2026-09-19)
 
 Hattorio is a Factorio mod. It divides the buildable area of each planet into
@@ -379,6 +379,13 @@ It would also need `on_built_entity`, `on_robot_built_entity`,
 `script_raised_built`, `on_pre_build` and ghost cleanup to get close to what
 one prototype field does for free.
 
+Floor tiles need a second patch. An item such as stone brick, concrete or
+landfill cannot place its tile on a tile that has a layer of its
+`place_as_tile.condition`. The band tile has only the band layer, so no
+condition matched it. Up to 1.0.1 you could pave a band and then build on
+the new tile. Since 1.0.2, `data-final-fixes` adds the band layer to the
+condition of every item that places a tile.
+
 The cost is that `data-final-fixes` must list the entity types to patch. The
 list is explicit and not a heuristic. So a modded entity that is not patched
 fails open (it is buildable on bands) and does not break.
@@ -541,11 +548,6 @@ without changes to the core.
 
 ## 16. Risks and limits
 
-- **Floor tiles and cargo bays.** Release 1.0.1 lets you place stone brick,
-  concrete, landfill and, in Space Age, foundation, ice platform and the
-  Gleba soils on a band. The new tile has no band layer, so you can then
-  build on it. A cargo bay can also stand on a band, because `cargo-bay` is
-  not in the patch list. The next patch release fixes both.
 - **Width 4 and the basic underground belt.** Some crossings at width 4 need
   the fast underground belt (section 4).
 - **A seam when the mod joins an existing save.** The mod paints only new
