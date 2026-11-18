@@ -1,0 +1,24 @@
+name: description
+
+# Send mod-description-long.md to the mod portal page. This runs when the
+# file changes on main, and release.yml calls it after each upload. So the
+# portal page always shows the text on main.
+on:
+  push:
+    branches: [main]
+    paths: [mod-description-long.md]
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  description:
+    name: mod portal description
+    runs-on: ubuntu-24.04
+    environment: mod-portal
+    steps:
+      - uses: actions/checkout@v7
+      - env:
+          FACTORIO_API_KEY: ${{ secrets.FACTORIO_API_KEY }}
+        run: sh tools/portal_details.sh

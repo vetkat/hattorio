@@ -278,6 +278,10 @@ A manual run of the release workflow has four modes. `dry-run` checks and
 builds. `check-credentials` tests the key. `publish` checks, builds and
 uploads. `description` only sends the long description.
 
+The long description also has a workflow of its own, `description.yml`. It
+runs when `mod-description-long.md` changes on `main`, so a merged text edit
+reaches the portal page without a release. Step 6 calls the same workflow.
+
 **You cannot withdraw a release from the portal.** For this reason every check
 runs before the upload step and not after it. Also, a branch push never
 starts the upload. Only a tag starts it, or a manual run that asks for it

@@ -3,9 +3,8 @@
 #
 #   FACTORIO_API_KEY=... sh tools/portal_details.sh
 #
-# The release workflow runs this after each upload, so the portal page
-# describes the newest release. A manual run of the workflow in the mode
-# "description" runs it alone.
+# description.yml runs this when the file changes on main. release.yml runs
+# it after each upload, and alone in the mode "description".
 #
 # The key needs the "ModPortal: Edit Mods" permission, in addition to the
 # "ModPortal: Upload Mods" permission that tools/publish_mod.sh needs. You

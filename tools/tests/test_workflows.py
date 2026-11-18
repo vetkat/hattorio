@@ -83,7 +83,21 @@ def test_watch_tests_new_releases_often_and_in_game():
 def test_the_portal_description_uses_the_long_description():
     script = (ROOT / "tools/portal_details.sh").read_text(encoding="utf-8")
     assert '-F "description=<mod-description-long.md"' in script
-    assert "sh tools/portal_details.sh" in job(read("release.yml"), "description")
+    assert "sh tools/portal_details.sh" in read("description.yml")
+
+
+def test_a_change_to_the_description_on_main_reaches_the_portal():
+    text = read("description.yml")
+    assert "branches: [main]" in text
+    assert "paths: [mod-description-long.md]" in text
+    assert "environment: mod-portal" in text
+
+
+def test_a_release_sends_the_description_after_the_upload():
+    description = job(read("release.yml"), "description")
+    assert "uses: ./.github/workflows/description.yml" in description
+    assert "secrets: inherit" in description
+    assert "needs.publish.result == 'success'" in description
 
 
 def test_watch_keeps_the_scheduled_workflows_enabled():

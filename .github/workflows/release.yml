@@ -109,17 +109,12 @@ jobs:
           FACTORIO_API_KEY: ${{ secrets.FACTORIO_API_KEY }}
         run: sh tools/publish_mod.sh --check
 
-  # After an upload, or alone in the mode "description".
+  # After an upload, or alone in the mode "description". description.yml
+  # also runs on its own when mod-description-long.md changes on main.
   description:
-    name: mod portal description
     needs: publish
     if: >-
       always() &&
       (needs.publish.result == 'success' || inputs.mode == 'description')
-    runs-on: ubuntu-24.04
-    environment: mod-portal
-    steps:
-      - uses: actions/checkout@v7
-      - env:
-          FACTORIO_API_KEY: ${{ secrets.FACTORIO_API_KEY }}
-        run: sh tools/portal_details.sh
+    uses: ./.github/workflows/description.yml
+    secrets: inherit
