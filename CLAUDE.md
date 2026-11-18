@@ -53,6 +53,9 @@ Use these skills on this repository:
 2. Add each change that a player can see to `CHANGELOG.md`, under
    Unreleased. Update `ROADMAP.md` when a change affects it. Never edit
    `changelog.txt`: the build makes it from `CHANGELOG.md`.
+   `description.yml` sends `mod-description-long.md` to the mod portal as
+   soon as a change to it reaches `main`. So describe a new feature there
+   only in the PR for its release. A fix to the text can go in any PR.
 3. Commit in this order. Run each command as a Bash call of its own:
    1. Run `/ste80-humanizer` in British English on changed prose and
       comments.
