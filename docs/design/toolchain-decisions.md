@@ -183,12 +183,21 @@ The job `all-checks` passes only when every other job passes. Branch
 protection needs this job, and the `pr` job of `.github/workflows/pr.yml`.
 
 The `pr` job runs `tools/pr_checks.py`. It has a workflow of its own, so an
-edit of the PR title or a label runs only this small job. It checks two
-rules. The PR title must be a Conventional Commit of at most 72 characters,
-because a squash merge makes the title the commit message on `main`. The type
-must be one of `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`,
-`build`, `ci`, `chore` and `revert`. A PR that changes a file in the mod zip
-must also change `CHANGELOG.md`, unless it has the label `no-changelog`.
+edit of the PR title, the description or a label runs only this small job. It
+checks three rules. The PR title must be a Conventional Commit of at most 72
+characters, because a squash merge makes the title the commit message on
+`main`. The type must be one of `feat`, `fix`, `docs`, `style`, `refactor`,
+`perf`, `test`, `build`, `ci`, `chore` and `revert`. A PR that changes a file
+in the mod zip must also change `CHANGELOG.md`, unless it has the label
+`no-changelog`.
+
+The PR description must have a section `## Review angles` with one verdict for
+each of six angles: multiplayer safety, save compatibility, mod compatibility,
+performance (UPS), test quality and security. A verdict is `pass`, `n/a`,
+`fixed: <what>` or `minor: <what>`. Any other verdict, such as `Important:
+<what>`, is an open finding, and the job fails. The label `no-review` skips
+this rule, and Dependabot PRs skip it too. `CLAUDE.md` names the angles that
+apply to each path.
 
 `make fast` runs the checks that take seconds. The git hook in `.githooks/`
 runs it before each commit. `make setup` turns the hook on. A commit from

@@ -47,6 +47,40 @@ Use these skills on this repository:
 - **/ste80-humanizer**: write and rewrite prose.
 - **/simplify**: clean up changed code before a commit.
 
+## Review angles
+
+Code review checks the angles that match the paths a PR changes.
+
+- **`control.lua`, `mod/`, or code that reads or writes `storage`:**
+  multiplayer safety (no desync), save compatibility
+  (`on_configuration_changed`, new `storage` keys), and compatibility with
+  other mods.
+- **`mod/interface.lua`:** the remote interface is a public contract. Do
+  not rename or remove a call. Raise `interface_version` for each change
+  that a caller can see.
+- **`prototypes/`, `data*.lua`, `settings.lua`:** compatibility with other
+  mods and with Space Age.
+- **Event handlers, `on_nth_tick`, `hat/`:** performance (UPS).
+- **`spec/`, `tests/`:** test quality. Each test fails for the right
+  reason.
+- **`.github/`, `tools/`, `Makefile`:** security, with `/security-review`.
+
+A PR merges only with no open Critical or Important finding. Review in
+rounds:
+
+1. The reviewers check the PR: EGM for a design document or a plan, the
+   angles above for code.
+2. Fix every Critical and Important finding, and each minor one that is
+   cheap to fix. A code fix gets a test that fails first.
+3. The same reviewers check the changed text or diff again.
+4. Stop when a round finds no new Critical or Important finding. After 5
+   rounds, stop and give the open findings to the owner.
+
+The PR description gives one verdict for each angle: `pass`, `n/a`,
+`fixed: <what>` or `minor: <what>`. The CI job `pr` refuses any other
+verdict, a blank one, or a missing section. The label `no-review` skips
+this check, and Dependabot PRs skip it too.
+
 ## Workflow
 
 1. Create a branch from `main`.
