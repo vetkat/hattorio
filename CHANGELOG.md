@@ -26,6 +26,11 @@ This is the only changelog that people edit. The build makes Factorio's
 - A new surface could get the geometry of a deleted surface. The game gives
   the index of a deleted surface to a new one, and the mod kept the geometry
   for the index.
+- On Aquilo, a few band tiles near a chunk border turned into snow or ice.
+  Crude oil, lithium brine and fluorine vents stamp snow and ice around
+  themselves. A stamp from a new chunk reached the bands of the chunk next
+  to it. No set-tile effect replaces a band tile now. The crater of a
+  nuke also leaves the bands in place.
 
 ## [1.0.2] - 2026-11-18
 
