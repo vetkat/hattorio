@@ -22,19 +22,39 @@ local function generate(surface, cx, cy, lab)
   surface.generate_with_lab_tiles = false
 end
 
--- Every band position holds the band tile of the right variant, or water,
--- which the mod never paves. Returns the number of band tiles.
-local function check_chunk(surface, cx, cy)
+-- The band positions of a chunk, each with the name of the band tile that
+-- it must hold.
+local function band_positions(surface, cx, cy)
   local g = Surface.get(surface)
   local tiling = Ti.new({ unit = g.unit, depth = g.depth })
-  local painted = 0
-  for _, p in ipairs(Bands.for_area(tiling, g, chunk_area(cx, cy))) do
-    local tile = surface.get_tile(p.x, p.y)
-    local want = p.mirror and g.mirror_tile or g.tile
-    assert(tile.name == want, string.format(
-      "%s (%d, %d) is %s, not %s", surface.name, p.x, p.y, tile.name, want))
-    painted = painted + 1
+  local band = Bands.for_area(tiling, g, chunk_area(cx, cy))
+  for _, p in ipairs(band) do
+    p.want = p.mirror and g.mirror_tile or g.tile
   end
+  return band
+end
+
+-- The band positions of a chunk that hold neither the band tile of the right
+-- variant nor water, which the mod never paves. Also returns the number of
+-- band tiles.
+local function wrong_tiles(surface, cx, cy)
+  local wrong, painted = {}, 0
+  for _, p in ipairs(band_positions(surface, cx, cy)) do
+    local tile = surface.get_tile(p.x, p.y)
+    if tile.name == p.want then
+      painted = painted + 1
+    elseif not tile.collides_with("water_tile") then
+      wrong[#wrong + 1] = string.format("(%d, %d) is %s, not %s", p.x, p.y, tile.name, p.want)
+    end
+  end
+  return wrong, painted
+end
+
+-- Every band position holds its band tile or water. Returns the number of
+-- band tiles.
+local function check_chunk(surface, cx, cy)
+  local wrong, painted = wrong_tiles(surface, cx, cy)
+  assert(#wrong == 0, surface.name .. ": " .. table.concat(wrong, "; "))
   return painted
 end
 
@@ -80,5 +100,50 @@ test("a new chunk with lab tiles gets the bands", function()
     })
     assert(lab > 0, "the chunk has no lab tiles")
     assert(check_chunk(nauvis, 90, -70) > 0, "the chunk has no band tiles")
+  end)
+end)
+
+-- Issue #19. On Aquilo, a few band positions at the edge of the ammonia
+-- ocean stayed land. Each band position must hold a band tile or water.
+tags("space-age")
+test("every band position on Aquilo is a band tile or water", function()
+  -- The stamps reach across chunk borders, so the test needs many chunks
+  -- side by side. Seed 1 had 15 wrong tiles in this area. The chunks generate
+  -- one by one, as when a player explores. A band position that is water at
+  -- paint time is issue #21 and is not part of this test.
+  local aquilo = game.planets["aquilo"].create_surface()
+  for cy = -4, 4 do
+    for cx = -4, 4 do
+      generate(aquilo, cx, cy)
+    end
+  end
+  after_ticks(1, function()
+    local wrong = {}
+    for cy = -4, 4 do
+      for cx = -4, 4 do
+        for _, w in ipairs((wrong_tiles(aquilo, cx, cy))) do wrong[#wrong + 1] = w end
+      end
+    end
+    assert(#wrong == 0, #wrong .. " band positions are land: " .. table.concat(wrong, "; "))
+  end)
+end)
+
+-- A set-tile trigger effect must not replace a band tile. The crater of a
+-- nuke is one in the base game. The land next to the band must still get the
+-- crater, or the test would pass for the wrong reason.
+test("a set-tile effect does not replace a band tile", function()
+  local nauvis = game.surfaces["nauvis"]
+  generate(nauvis, 110, -90)
+  after_ticks(1, function()
+    local band = band_positions(nauvis, 110, -90)
+    local p = band[math.ceil(#band / 2)]
+    nauvis.create_entity({ name = "nuke-effects-nauvis", position = { p.x + 0.5, p.y + 0.5 } })
+    after_ticks(1, function()
+      local wrong = wrong_tiles(nauvis, 110, -90)
+      assert(#wrong == 0, #wrong .. " band tiles were replaced: " .. table.concat(wrong, "; "))
+      local crater = nauvis.count_tiles_filtered({ position = { p.x, p.y }, radius = 12,
+        name = "nuclear-ground" })
+      assert(crater > 0, "the effect placed no crater, so the test proves nothing")
+    end)
   end)
 end)

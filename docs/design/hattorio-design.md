@@ -307,6 +307,7 @@ The attribution and the BSD-3-Clause notice ship with the mod.
 | `prototypes/collision.lua` | the `hattorio_band` layer | data stage |
 | `prototypes/tiles.lua` | the band tiles | data stage, settings |
 | `prototypes/patch.lua` | band layer on buildable entities | data stage |
+| `prototypes/set_tile.lua` | band layer on `set-tile` effects | data stage |
 
 The modules with no Factorio dependencies run under plain Lua in CI. The risk
 is in those modules, and the tests cover them. The collision layer blocks
@@ -354,6 +355,15 @@ the descent changes it.
 - **The bands are continuous across chunk boundaries** by construction. Each
   chunk derives its bands from the tiling, never from the tiles of its
   neighbours.
+- **No set-tile effect replaces a band tile.** In Space Age, crude oil,
+  lithium brine and fluorine vents stamp snow and ice up to about 8 tiles
+  around themselves when the map generator places them. A stamp in a new
+  chunk can reach the bands of an older chunk next to it. A nuke places a
+  crater, ocean or lava.
+- **`prototypes/set_tile.lua` protects the bands from these stamps.** It
+  adds the band layer to the `tile_collision_mask` of every `set-tile`
+  trigger effect. The game does not replace a tile that collides with that
+  mask, so the bands stay. The land around a band still gets the stamp.
 - **Only the five vanilla planets get bands.** `mod/planets.lua` lists
   nauvis, vulcanus, fulgora, gleba and aquilo. Space platforms and planets
   from other mods keep vanilla terrain. Another mod can give a surface the
