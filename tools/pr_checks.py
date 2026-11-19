@@ -4,6 +4,9 @@
    title becomes the commit message on main.
 2. A PR that changes a file that ships in the mod zip also changes
    CHANGELOG.md, unless it has the label no-changelog.
+3. The PR description has a "Review angles" section with a verdict for
+   each angle, and no open Critical or Important finding. Dependabot PRs
+   and PRs with the label no-review skip this rule.
 
 CI runs this on pull_request events. It reads the event from
 GITHUB_EVENT_PATH.
@@ -26,6 +29,13 @@ TYPES = ("feat", "fix", "docs", "style", "refactor", "perf", "test",
 TITLE = re.compile(r"^(?P<type>[a-z]+)(?:\([\w./-]+\))?!?: \S")
 MAX_TITLE = 72
 LABEL = "no-changelog"
+REVIEW_LABEL = "no-review"
+BOTS = ("dependabot[bot]",)
+ANGLES = ("Multiplayer safety", "Save compatibility", "Mod compatibility",
+          "Performance (UPS)", "Test quality", "Security")
+# pass, n/a, fixed: <what>, or minor: <what>. Anything else, such as
+# "Important: <what>", is an open finding that blocks the merge.
+VERDICT = re.compile(r"^(pass|n/a|(fixed|minor):\s*\S.*)$", re.IGNORECASE)
 
 
 def title_problems(title: str) -> list[str]:
@@ -53,6 +63,35 @@ def changelog_problems(changed: list[str], labels: list[str]) -> list[str]:
             f"Add an entry under Unreleased, or add the label {LABEL}."]
 
 
+def review_section(body: str) -> str | None:
+    match = re.search(r"^## Review angles[ \t]*$(.*?)(?=^## |\Z)", body,
+                      re.MULTILINE | re.DOTALL)
+    return match[1] if match else None
+
+
+def review_problems(body: str | None, labels: list[str], author: str) -> list[str]:
+    if REVIEW_LABEL in labels or author in BOTS:
+        return []
+    section = review_section(body or "")
+    if section is None:
+        return ["the PR description has no '## Review angles' section. "
+                "Copy it from .github/pull_request_template.md."]
+    verdicts = {}
+    for line in section.splitlines():
+        match = re.match(r"^- ([^:]+):(.*)$", line.strip())
+        if match:
+            verdicts[match[1].strip()] = match[2].strip()
+    problems = []
+    for angle in ANGLES:
+        verdict = verdicts.get(angle)
+        if verdict is None:
+            problems.append(f"the review section has no line for {angle}")
+        elif not VERDICT.match(verdict):
+            problems.append(f"{angle}: {verdict!r} is not pass, n/a, fixed: or minor:. "
+                            "Fix an open Critical or Important finding before merge.")
+    return problems
+
+
 def main(env: dict[str, str]) -> int:
     event = json.loads(pathlib.Path(env["GITHUB_EVENT_PATH"]).read_text(encoding="utf-8"))
     pull = event["pull_request"]
@@ -60,11 +99,13 @@ def main(env: dict[str, str]) -> int:
     diff = subprocess.run(
         ["git", "diff", "--name-only", f"{pull['base']['sha']}...{pull['head']['sha']}"],
         capture_output=True, text=True, check=True)
-    found = title_problems(pull["title"]) + changelog_problems(diff.stdout.splitlines(), labels)
+    found = (title_problems(pull["title"])
+             + changelog_problems(diff.stdout.splitlines(), labels)
+             + review_problems(pull.get("body"), labels, pull["user"]["login"]))
     for problem in found:
         print(f"pr check: {problem}", file=sys.stderr)
     if not found:
-        print("pr check: the title and the changelog are fine")
+        print("pr check: the title, the changelog and the review angles are fine")
     return 1 if found else 0
 
 
