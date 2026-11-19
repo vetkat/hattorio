@@ -546,6 +546,9 @@ band removal and any territory layer. The design of `hat/tiling.lua` and the
 descent-path hierarchy lets a later version add these features
 without changes to the core.
 
+Cells of different areas, for example Voronoi cells from noise, are also out
+of scope. They need a second tiling next to the hat (section 17).
+
 ## 16. Risks and limits
 
 - **Width 4 and the basic underground belt.** Some crossings at width 4 need
