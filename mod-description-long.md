@@ -126,6 +126,12 @@ multiplayer and have problems, report them in the comments below or in an
 
 **Factorio 2.1 or later.** The mod works with and without Space Age.
 
+**Other mods can use the cells.** A mod that gives each team its own copy
+of a planet can tell Hattorio which planet a surface copies. All teams then
+build on the same cells. The remote interface `hattorio` does this, and
+[the design document](https://github.com/vetkat/hattorio/blob/main/docs/design/hattorio-design.md#8-terrain-generation)
+describes it.
+
 ## Credits
 
 David Smith, Joseph Samuel Myers, Craig S. Kaplan and Chaim Goodman-Strauss
