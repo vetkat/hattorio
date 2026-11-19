@@ -8,6 +8,7 @@ local Ti = require("hat.tiling")
 local Surface = require("mod.surface")
 local Bands = require("mod.bands")
 local Outline = require("mod.outline")
+local Water = require("mod.water_band")
 
 -- Derived state, keyed by the geometry table. It is deliberately NOT in
 -- storage. The mod can build it again from the stored geometry, and a tiling
@@ -34,6 +35,29 @@ local function area_of(event_area)
   }
 end
 
+-- What a band position gets, for each tile name. Land gets the band tile
+-- (true). Water gets its band copy (the copy's name, issue #21). A tile such
+-- as out-of-map stays as it is (false). Prototypes do not change while the
+-- game runs, so the answer is the same for the whole session.
+local band_target = {}
+
+local function target_for(name)
+  local target = band_target[name]
+  if target == nil then
+    local layers = prototypes.tile[name].collision_mask.layers
+    local copy = Water.copy_name(name)
+    if not layers.water_tile then
+      target = true
+    elseif Water.is_water(layers) and prototypes.tile[copy] then
+      target = copy
+    else
+      target = false
+    end
+    band_target[name] = target
+  end
+  return target
+end
+
 --- Paint the band tiles of one chunk.
 local function paint_chunk(surface, area)
   local t, g = tiling_for(surface)
@@ -46,16 +70,19 @@ local function paint_chunk(surface, area)
   for i = 1, #band do
     local p = band[i]
     -- Never pave water. A band across a lake would fill it, and the vanilla
-    -- shore transitions would be lost.
+    -- shore transitions would be lost. Water gets its band copy instead,
+    -- which looks the same and has the band layer (issue #21). A tile with
+    -- no copy, such as out-of-map, stays as it is.
     --
     -- Factorio's LuaObject methods use dot notation and take no self. So this
     -- is surface.get_tile(x, y). If you cache the function and pass
     -- `surface`, the surface goes where x belongs, and no error appears.
-    if not surface.get_tile(p.x, p.y).collides_with("water_tile") then
-      tiles[#tiles + 1] = {
-        name = p.mirror and g.mirror_tile or g.tile,
-        position = { p.x, p.y },
-      }
+    local target = target_for(surface.get_tile(p.x, p.y).name)
+    if target == true then
+      target = p.mirror and g.mirror_tile or g.tile
+    end
+    if target then
+      tiles[#tiles + 1] = { name = target, position = { p.x, p.y } }
     end
   end
   if #tiles == 0 then return end

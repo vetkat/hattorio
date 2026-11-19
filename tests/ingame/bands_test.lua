@@ -6,6 +6,7 @@
 local Ti = require("hat.tiling")
 local Bands = require("mod.bands")
 local Surface = require("mod.surface")
+local Water = require("mod.water_band")
 
 -- The chunk at chunk position (cx, cy), as an area in tile coordinates.
 local function chunk_area(cx, cy)
@@ -34,24 +35,24 @@ local function band_positions(surface, cx, cy)
   return band
 end
 
--- The band positions of a chunk that hold neither the band tile of the right
--- variant nor water, which the mod never paves. Also returns the number of
--- band tiles.
+-- The band positions of a chunk that hold the wrong tile. A band position
+-- holds the band tile of the right variant, or the band copy of a water tile
+-- (issue #21), or out-of-map. Also returns the number of band tiles.
 local function wrong_tiles(surface, cx, cy)
   local wrong, painted = {}, 0
   for _, p in ipairs(band_positions(surface, cx, cy)) do
     local tile = surface.get_tile(p.x, p.y)
     if tile.name == p.want then
       painted = painted + 1
-    elseif not tile.collides_with("water_tile") then
+    elseif not Water.original(tile.name) and not tile.collides_with("out_of_map") then
       wrong[#wrong + 1] = string.format("(%d, %d) is %s, not %s", p.x, p.y, tile.name, p.want)
     end
   end
   return wrong, painted
 end
 
--- Every band position holds its band tile or water. Returns the number of
--- band tiles.
+-- Every band position holds its band tile, or the band copy of water.
+-- Returns the number of band tiles.
 local function check_chunk(surface, cx, cy)
   local wrong, painted = wrong_tiles(surface, cx, cy)
   assert(#wrong == 0, surface.name .. ": " .. table.concat(wrong, "; "))
@@ -104,13 +105,13 @@ test("a new chunk with lab tiles gets the bands", function()
 end)
 
 -- Issue #19. On Aquilo, a few band positions at the edge of the ammonia
--- ocean stayed land. Each band position must hold a band tile or water.
+-- ocean stayed land. Each band position must hold a band tile, or the band
+-- copy of the ocean (issue #21).
 tags("space-age")
-test("every band position on Aquilo is a band tile or water", function()
+test("every band position on Aquilo holds a band tile or a band copy", function()
   -- The stamps reach across chunk borders, so the test needs many chunks
   -- side by side. Seed 1 had 15 wrong tiles in this area. The chunks generate
-  -- one by one, as when a player explores. A band position that is water at
-  -- paint time is issue #21 and is not part of this test.
+  -- one by one, as when a player explores.
   local aquilo = game.planets["aquilo"].create_surface()
   for cy = -4, 4 do
     for cx = -4, 4 do
@@ -124,7 +125,8 @@ test("every band position on Aquilo is a band tile or water", function()
         for _, w in ipairs((wrong_tiles(aquilo, cx, cy))) do wrong[#wrong + 1] = w end
       end
     end
-    assert(#wrong == 0, #wrong .. " band positions are land: " .. table.concat(wrong, "; "))
+    assert(#wrong == 0,
+      #wrong .. " band positions hold the wrong tile: " .. table.concat(wrong, "; "))
   end)
 end)
 
@@ -145,5 +147,58 @@ test("a set-tile effect does not replace a band tile", function()
         name = "nuclear-ground" })
       assert(crater > 0, "the effect placed no crater, so the test proves nothing")
     end)
+  end)
+end)
+
+-- Issue #21. A band position over water holds the band copy of the water, so
+-- that landfill cannot open a gap. The test makes lakes common, and looks
+-- for a chunk where a band crosses water.
+test("a band position over water holds the band copy of the water", function()
+  local nauvis = game.surfaces["nauvis"]
+  local settings = nauvis.map_gen_settings
+  local before = settings.autoplace_controls["water"]
+  settings.autoplace_controls["water"] = { frequency = 6, size = 6, richness = 1 }
+  nauvis.map_gen_settings = settings
+  local found
+  for i = 0, 19 do
+    local cx, cy = 130 + i, -110
+    generate(nauvis, cx, cy)
+    for _, p in ipairs(band_positions(nauvis, cx, cy)) do
+      local tile = nauvis.get_tile(p.x, p.y)
+      if Water.is_water(tile.prototype.collision_mask.layers) then
+        found = { cx = cx, cy = cy }
+        break
+      end
+    end
+    if found then break end
+  end
+  settings.autoplace_controls["water"] = before
+  nauvis.map_gen_settings = settings
+  assert(found, "no band crosses water in 20 chunks, so the test proves nothing")
+  local wrong = wrong_tiles(nauvis, found.cx, found.cy)
+  assert(#wrong == 0, table.concat(wrong, "; "))
+end)
+
+-- A set-tile stamp must not replace the band copy of the ammonia ocean. The
+-- same stamp on plain ocean shows that the stamp works. Runs after the
+-- Aquilo test above, which generates the surface.
+tags("space-age")
+test("a stamp does not replace the band copy of the ammonia ocean", function()
+  local aquilo = game.surfaces["aquilo"]
+  local area = { { -128, -128 }, { 160, 160 } }
+  local copy = aquilo.find_tiles_filtered({
+    area = area, name = Water.copy_name("ammoniacal-ocean"), limit = 1 })[1]
+  local plain = aquilo.find_tiles_filtered({ area = area, name = "ammoniacal-ocean", limit = 1 })[1]
+  assert(plain, "no plain ammonia ocean in the area, so the test proves nothing")
+  assert(copy, "no band copy of the ammonia ocean in the area")
+  for _, t in ipairs({ copy, plain }) do
+    aquilo.create_entity({ name = "aquilo-tiles-inner-explosion",
+      position = { t.position.x + 0.5, t.position.y + 0.5 } })
+  end
+  after_ticks(1, function()
+    local kept = aquilo.get_tile(copy.position.x, copy.position.y).name
+    local stamped = aquilo.get_tile(plain.position.x, plain.position.y).name
+    assert(stamped ~= "ammoniacal-ocean", "the stamp did not change plain ocean either")
+    assert(kept == Water.copy_name("ammoniacal-ocean"), "the stamp made the band copy " .. kept)
   end)
 end)
