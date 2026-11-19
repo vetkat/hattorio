@@ -2,6 +2,8 @@
 -- the final prototypes, so they also catch a type that a new Factorio
 -- release adds. watch.yml runs them on each new release.
 
+local Water = require("mod.water_band")
+
 local LAYER = "hattorio_band"
 
 -- The types that may stand on a band, each for a reason:
@@ -43,4 +45,43 @@ test("every structure that a player builds collides with the band", function()
   end
   table.sort(open)
   assert(#open == 0, "these can stand on a band: " .. table.concat(open, ", "))
+end)
+
+-- Issue #21: a band position over water needs the band layer too, or
+-- landfill opens a gap.
+test("every water tile has a band copy", function()
+  local missing = {}
+  for name, tile in pairs(prototypes.tile) do
+    if Water.is_water(tile.collision_mask.layers) and not name:find("^hattorio%-")
+      and not prototypes.tile[Water.copy_name(name)] then
+      missing[#missing + 1] = name
+    end
+  end
+  table.sort(missing)
+  assert(#missing == 0, "no band copy for: " .. table.concat(missing, ", "))
+end)
+
+test("a band copy keeps its water and adds the band layer", function()
+  local copies = 0
+  for name, copy in pairs(prototypes.tile) do
+    local original = Water.original(name)
+    if original then
+      copies = copies + 1
+      local src = prototypes.tile[original]
+      assert(copy.collision_mask.layers[LAYER], name .. " has no band layer")
+      for layer in pairs(src.collision_mask.layers) do
+        assert(copy.collision_mask.layers[layer], name .. " lost " .. layer)
+      end
+      assert((copy.fluid and copy.fluid.name) == (src.fluid and src.fluid.name),
+        name .. " has another fluid")
+      assert(copy.map_color.r == src.map_color.r and copy.map_color.g == src.map_color.g
+        and copy.map_color.b == src.map_color.b, name .. " has another map colour")
+      assert(not copy.autoplace_specification, name .. " autoplaces")
+      assert(copy.localised_name[1] == src.localised_name[1], name .. " has no name of its own")
+      assert(not copy.mineable_properties.minable, name .. " is mineable")
+      assert(copy.factoriopedia_alternative and copy.factoriopedia_alternative.name == original,
+        name .. " has its own Factoriopedia entry")
+    end
+  end
+  assert(copies > 0, "no band copies exist")
 end)
