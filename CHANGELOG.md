@@ -11,6 +11,22 @@ This is the only changelog that people edit. The build makes Factorio's
 
 ## [Unreleased]
 
+### Added
+
+- Another mod can give a surface the cells of a planet, through the remote
+  interface `hattorio`. A mod that gives each team its own copy of a planet
+  can use it, so that all teams build on the same floor plan.
+  [The design document](docs/design/hattorio-design.md#8-terrain-generation) describes
+  the interface.
+
+### Fixed
+
+- A chunk that another mod filled with a copy of a tiled chunk got its ore
+  richness raised a second time, when the game called that mod first.
+- A new surface could get the geometry of a deleted surface. The game gives
+  the index of a deleted surface to a new one, and the mod kept the geometry
+  for the index.
+
 ## [1.0.2] - 2026-11-18
 
 ### Fixed

@@ -302,6 +302,7 @@ The attribution and the BSD-3-Clause notice ship with the mod.
 | `mod/terrain.lua` | paint bands, raise richness, warn | events, surfaces |
 | `mod/outline.lua` | optional line overlay per player | rendering, storage |
 | `mod/commands.lua` | `/hattorio-info` | commands |
+| `mod/interface.lua` | the remote interface for other mods | remote |
 | `prototypes/settings.lua` | the settings | settings stage |
 | `prototypes/collision.lua` | the `hattorio_band` layer | data stage |
 | `prototypes/tiles.lua` | the band tiles | data stage, settings |
@@ -355,7 +356,40 @@ the descent changes it.
   neighbours.
 - **Only the five vanilla planets get bands.** `mod/planets.lua` lists
   nauvis, vulcanus, fulgora, gleba and aquilo. Space platforms and planets
-  from other mods keep vanilla terrain.
+  from other mods keep vanilla terrain. Another mod can give a surface the
+  cells of one of the five planets (see below).
+- **Another mod can give a surface the cells of a planet.** A mod that
+  makes more than one surface for a planet, such as one surface for each
+  team, calls the remote interface when it creates the surface:
+  `remote.call("hattorio", "set_surface_planet", surface.index, "nauvis")`.
+  Chunks that exist already keep their ground, as on a real planet when a
+  player adds the mod to a save.
+- **The call returns true if the surface has the tiling of that planet.** It
+  returns false for a space platform, an unknown planet or surface, and a
+  surface that has another planet already. The planet of a surface does not
+  change. A second call with the same planet returns true.
+- **The first surface of a planet reads the startup settings.** A later
+  surface of that planet takes the stored geometry of the real planet, or of
+  another surface of the planet. So all its copies have the same cells. One
+  gap stays. In Space Age, a copy of Vulcanus can exist before the real
+  Vulcanus. If a startup setting changes before the game creates the real
+  planet, the two get different cells.
+- **The interface is a public contract.** `mod/interface.lua` also has
+  `get_surface_planet`, which returns the planet of a surface or nil, and
+  `interface_version`, which returns 1. A call keeps its name and its
+  arguments. Each change that a caller can see raises the version.
+- **The mod forgets a deleted surface.** The game can give the index of a
+  deleted surface to a new one. So `on_surface_deleted` removes the planet
+  and the geometry of that index.
+- **A copied chunk keeps its ore.** A mod can fill a chunk with a copy of
+  the same chunk of another tiled surface. The game reports each copy in
+  `on_area_cloned`. The copy must have the same area, its tiles and its
+  entities, and a source with the same planet, cell size and band width.
+  The mod then records each chunk that the copy covers.
+- **The order of the two mods does not matter.** If the chunk event
+  of that tick comes after the copy, the mod leaves the chunk alone. If it
+  comes first, the copy replaces the work of the mod. Either way, the ore
+  richness goes up only once.
 
 ## 9. Build enforcement
 

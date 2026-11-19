@@ -21,15 +21,16 @@ local Outline = {}
 local RADIUS = 64
 local MOVE_BEFORE_REDRAW = 24
 
-local tilings = {}
+-- Keyed by the geometry table, as in mod/terrain.lua.
+local tilings = setmetatable({}, { __mode = "k" })
 
 local function tiling_for(surface)
   local g = Surface.get(surface)
   if not g then return nil, nil end
-  local t = tilings[surface.index]
+  local t = tilings[g]
   if not t then
     t = Ti.new({ unit = g.unit, depth = g.depth })
-    tilings[surface.index] = t
+    tilings[g] = t
   end
   return t, g
 end
@@ -107,7 +108,7 @@ function Outline.refresh(player)
 end
 
 function Outline.reset()
-  tilings = {}
+  tilings = setmetatable({}, { __mode = "k" })
 end
 
 return Outline

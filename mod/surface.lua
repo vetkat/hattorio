@@ -20,6 +20,30 @@ local function planet_of(surface)
   -- vanilla terrain.
   if surface.platform then return nil end
   if planets[surface.name] then return surface.name end
+  -- Another mod can give a surface the palette of a planet. See
+  -- Surface.assign.
+  local assigned = storage.assigned
+  return assigned and assigned[surface.index] or nil
+end
+
+--- The geometry that another surface of the same planet already has, or nil.
+--
+-- Every surface with the palette of a planet must have the same cells as the
+-- planet. A startup setting can change between the creation of two such
+-- surfaces, so a later one takes the stored geometry and does not read the
+-- settings again.
+--
+-- One gap stays. In Space Age, a copy of Vulcanus can exist before the real
+-- Vulcanus. The copy then reads the settings, and the real planet reads them
+-- again when the game creates it. If a startup setting changes between these
+-- two sessions, the two surfaces get different cells.
+local function shared_geometry(surface, planet)
+  if surface.name == planet then return nil end
+  local original = game.surfaces[planet]
+  if original then return Surface.get(original) end
+  for index, g in pairs(storage.surfaces) do
+    if g.planet == planet and game.surfaces[index] then return g end
+  end
   return nil
 end
 
@@ -44,6 +68,14 @@ function Surface.init(surface)
   storage.surfaces = storage.surfaces or {}
   local existing = storage.surfaces[surface.index]
   if existing then return existing end
+
+  local shared = shared_geometry(surface, planet)
+  if shared then
+    storage.surfaces[surface.index] = shared
+    log(string.format("hattorio: %s initialised with the geometry of %s",
+      surface.name, planet))
+    return shared
+  end
 
   local g = Config.geometry(
     read_number_setting("hattorio-hat-size-" .. planet, Config.DEFAULT_SIZE),
@@ -99,6 +131,41 @@ function Surface.richness(g)
   end
   return Config.richness_multiplier(g.size, g.band), "automatic"
 end
+
+--- Give a surface the tiling of a planet.
+--
+-- Other mods call this through the remote interface (`mod/interface.lua`). A
+-- mod that makes more than one surface for a planet, such as one surface for
+-- each team, calls it when it creates the surface. Chunks that exist already
+-- keep their ground. The real planets act the same way when a player adds
+-- the mod to a save: new chunks get bands, and old chunks stay vanilla.
+--
+-- @return true if the surface has the tiling of this planet after the call
+function Surface.assign(surface, planet)
+  if surface.platform or not planets[planet] then return false end
+  local current = planet_of(surface)
+  if current then return current == planet end
+  if surface.is_chunk_generated({ 0, 0 }) then
+    log(string.format("hattorio: %s gets the cells of %s, but it has chunks " ..
+      "already. Those chunks keep their ground.", surface.name, planet))
+  end
+  storage.assigned = storage.assigned or {}
+  storage.assigned[surface.index] = planet
+  Surface.init(surface)
+  return true
+end
+
+--- Forget a surface that the game deleted.
+--
+-- The game can give the index of a deleted surface to a new one. Without
+-- this, the new surface would get the planet and the geometry of the old one.
+function Surface.forget(index)
+  if storage.surfaces then storage.surfaces[index] = nil end
+  if storage.assigned then storage.assigned[index] = nil end
+end
+
+--- The planet whose tiling this surface has, or nil.
+Surface.planet_of = planet_of
 
 function Surface.get(surface)
   storage.surfaces = storage.surfaces or {}
