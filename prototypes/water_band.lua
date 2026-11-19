@@ -18,6 +18,24 @@ local Water = require("mod.water_band")
 
 local LAYER = "hattorio_band"
 
+-- The lists that land tiles use to draw their transitions. Vulcanus draws a
+-- lava edge from its own list, so a copy joins each list that has its
+-- original.
+local TRANSITION_LISTS = { "water_tile_type_names", "lava_tile_type_names" }
+
+local function lists_with(name)
+  local found = {}
+  for _, list_name in ipairs(TRANSITION_LISTS) do
+    local list = _G[list_name]
+    if list then
+      for _, entry in ipairs(list) do
+        if entry == name then found[#found + 1] = list break end
+      end
+    end
+  end
+  return found
+end
+
 local copies = {}
 for name, tile in pairs(data.raw.tile) do
   local layers = tile.collision_mask and tile.collision_mask.layers or {}
@@ -29,9 +47,18 @@ for name, tile in pairs(data.raw.tile) do
     copy.transition_merges_with_tile = name
     copy.autoplace = nil
     copy.can_be_part_of_blueprint = false
+    -- The name of the original, and no entry of its own in Factoriopedia.
+    copy.localised_name = tile.localised_name or { "tile-name." .. name }
+    copy.localised_description = tile.localised_description or { "tile-description." .. name }
+    copy.factoriopedia_alternative = name
+    -- Not mineable. Mining would bring back the plain water under it.
+    copy.minable = nil
+    copy.mined_sound = nil
+    copy.placeable_by = nil
     copies[#copies + 1] = copy
-    -- Land tiles draw their shore transitions to the tiles in this list.
-    table.insert(water_tile_type_names, copy.name)
+    for _, list in ipairs(lists_with(name)) do
+      table.insert(list, copy.name)
+    end
   end
 end
 

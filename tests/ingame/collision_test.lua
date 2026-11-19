@@ -77,6 +77,10 @@ test("a band copy keeps its water and adds the band layer", function()
       assert(copy.map_color.r == src.map_color.r and copy.map_color.g == src.map_color.g
         and copy.map_color.b == src.map_color.b, name .. " has another map colour")
       assert(not copy.autoplace_specification, name .. " autoplaces")
+      assert(copy.localised_name[1] == src.localised_name[1], name .. " has no name of its own")
+      assert(not copy.mineable_properties.minable, name .. " is mineable")
+      assert(copy.factoriopedia_alternative and copy.factoriopedia_alternative.name == original,
+        name .. " has its own Factoriopedia entry")
     end
   end
   assert(copies > 0, "no band copies exist")

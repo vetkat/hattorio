@@ -13,9 +13,7 @@ local factorio_globals = {
 local factorio_writable = { "storage", "table" }
 
 files["prototypes"] = {
-  -- The base game fills water_tile_type_names in the data stage. Land tiles
-  -- draw their shore transitions to the tiles in it.
-  read_globals = { "water_tile_type_names", (table.unpack or unpack)(factorio_globals) },
+  read_globals = factorio_globals,
   -- Factorio adds `table.deepcopy`.
   globals = factorio_writable,
 }

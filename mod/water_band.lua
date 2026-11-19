@@ -10,10 +10,11 @@ local Water = {}
 
 local PREFIX = "hattorio-band-water-"
 
---- True for the collision layers of a water tile. Out-of-map also collides
--- with water_tile, but it is not water.
+--- True for the collision layers of a water tile. Out-of-map and the empty
+-- space under a space platform also collide with water_tile, but they are
+-- not water.
 function Water.is_water(layers)
-  return layers.water_tile == true and not layers.out_of_map
+  return layers.water_tile == true and not layers.out_of_map and not layers.empty_space
 end
 
 --- The name of the band copy of a water tile.

@@ -5,8 +5,9 @@ describe("water band", function()
     assert.is_true(Water.is_water({ water_tile = true, item = true }))
   end)
 
-  it("does not treat out-of-map or land as water", function()
+  it("does not treat out-of-map, empty space or land as water", function()
     assert.is_false(Water.is_water({ water_tile = true, out_of_map = true }))
+    assert.is_false(Water.is_water({ water_tile = true, empty_space = true }))
     assert.is_false(Water.is_water({ ground_tile = true }))
   end)
 
