@@ -308,6 +308,7 @@ The attribution and the BSD-3-Clause notice ship with the mod.
 | `prototypes/tiles.lua` | the band tiles | data stage, settings |
 | `prototypes/patch.lua` | band layer on buildable entities | data stage |
 | `prototypes/set_tile.lua` | band layer on `set-tile` effects | data stage |
+| `prototypes/water_band.lua` | band copies of the water tiles | data stage |
 
 The modules with no Factorio dependencies run under plain Lua in CI. The risk
 is in those modules, and the tests cover them. The collision layer blocks
