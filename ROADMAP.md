@@ -32,6 +32,11 @@ and the descent-path hierarchy can take them without changes to the core.
 - Ore gating by cell.
 - Impassable band variants, and band removal.
 - A territory layer.
+- A remote call that gives the cell at a position. With it, another mod
+  can lock or hide cells. A player suggested a dimensions mod with a lower
+  surface that you can use only in pieces. The interface can give that
+  surface the cells of a planet, but it has no call that finds a cell
+  ([remote interface](mod/interface.lua)).
 
 The next idea needs a second tiling next to the hat:
 
