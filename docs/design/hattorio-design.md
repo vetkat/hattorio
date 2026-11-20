@@ -612,6 +612,13 @@ of scope. They need a second tiling next to the hat (section 17).
 - **Modded entity types fail open.** A type that is not in the patch list is
   buildable on bands (section 9).
 - **Planets from other mods get no bands** (section 8).
+- **Modded water can fail open.** The band copies come from the water tiles
+  that exist when Hattorio's `data-final-fixes` runs. A mod that adds a
+  water tile later in that stage gets no copy, so a band over that water
+  stays open to landfill. A mod that finds water by the tile name sees the
+  name of the copy at band positions. The copy keeps every collision layer of
+  the water and adds the band layer, so a check of the collision mask still
+  works (section 8).
 - **A band over water does not show on Nauvis, Vulcanus and Gleba.** There
   the band copy looks the same as the water. You see the band only from the
   red preview when you try to place landfill, foundation or an offshore
