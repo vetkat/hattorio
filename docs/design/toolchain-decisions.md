@@ -349,7 +349,10 @@ git tag v1.0.2 && git push origin v1.0.2
 4. It makes a GitHub release with the zip. The notes are the section of
    `CHANGELOG.md` for the version.
 5. It uploads the zip to the Factorio mod portal.
-6. It sends `mod-description-long.md` to the portal as the long description.
+6. It sends `mod-description-long.md` to the portal as the long
+   description, and the description in `info.json` as the summary. The
+   version check keeps that description within the 500 characters of a
+   summary.
 
 The portal steps need a repository secret called `FACTORIO_API_KEY`. Get the
 key from <https://factorio.com/profile>. It needs the *ModPortal: Upload Mods*

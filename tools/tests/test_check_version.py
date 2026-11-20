@@ -76,3 +76,9 @@ def test_an_empty_changelog_is_a_problem():
 
 def test_the_tag_must_name_the_version():
     assert "v1.0.0" in problems(tag="v1.0.0")[0]
+
+
+def test_the_description_fits_the_portal_summary():
+    assert problems(info(description="x" * 500), tag="v1.0.1") == []
+    found = problems(info(description="x" * 501), tag="v1.0.1")
+    assert found and "500" in found[0]
