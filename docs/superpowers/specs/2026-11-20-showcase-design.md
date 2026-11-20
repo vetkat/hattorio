@@ -146,7 +146,8 @@ adapts each layout to the cells, which is what the mod is about.
 - **The mod page.** `mod-description-long.md` gets a "Screenshots"
   section with one or two images per planet from the repository, and a
   line that says a script built the bases. A new script,
-  `tools/portal_images.py`, uploads a selection to the portal gallery. It
+  `tools/portal_images.py`, uploads all 30 to the portal gallery, which
+  shows them as a strip of thumbnails at the top of the mod page. It
   keeps the images that are in the gallery now and adds the new ones after
   them. The stage 5 wide shot of Nauvis goes first, so that it becomes the
   thumbnail (owner's choice). The owner runs it, because it changes the
