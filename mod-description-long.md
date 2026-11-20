@@ -31,6 +31,10 @@ Each hat is a buildable cell. A narrow band runs between the cells, and you
 cannot build on it. You can walk and drive across a band. Underground belts
 and pipes go under it, rails cross it, and power and bots ignore it.
 
+A band also runs under water. You cannot fill it with landfill, foundation
+or ice platform. On Aquilo and Fulgora it shows as a dark line over the
+ocean. On the other planets it looks the same as the water.
+
 ![Cells and bands at the default settings](https://raw.githubusercontent.com/vetkat/hattorio/main/docs/preview/bands-41-3.png)
 
 The mod adds no items, recipes or technologies, so your ratios do not
