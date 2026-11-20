@@ -38,6 +38,48 @@ local function centre(name, x, y, direction)
   return { x = x + w / 2, y = y + h / 2 }
 end
 
+-- Trees, rocks and plants that a player would clear to build. Bands, water,
+-- cliffs and buildings are never cleared.
+local OBSTACLES = { tree = true, ["simple-entity"] = true, plant = true }
+
+-- The area of a building whose top left tile is (x, y).
+local function footprint(name, x, y, direction)
+  local proto = prototypes.entity[name]
+  local w, h = proto.tile_width, proto.tile_height
+  if direction == "east" or direction == "west" then w, h = h, w end
+  return { { x + 0.05, y + 0.05 }, { x + w - 0.05, y + h - 0.05 } }, w, h
+end
+
+-- True if only obstacles stand in the way, so that clearing them would let
+-- the building stand.
+function Build:only_obstacles(name, x, y, direction)
+  local area, w, h = footprint(name, x, y, direction)
+  for tx = x, x + w - 1 do
+    for ty = y, y + h - 1 do
+      local tile = self.surface.get_tile(tx, ty)
+      if tile.collides_with("hattorio_band") or tile.collides_with("water_tile") then
+        return false
+      end
+    end
+  end
+  local blocking = false
+  for _, e in ipairs(self.surface.find_entities_filtered({ area = area })) do
+    if OBSTACLES[e.type] then
+      blocking = true
+    elseif e.type ~= "resource" and e.type ~= "corpse" then
+      return false
+    end
+  end
+  return blocking
+end
+
+function Build:clear(name, x, y, direction)
+  local area = footprint(name, x, y, direction)
+  for _, e in ipairs(self.surface.find_entities_filtered({ area = area })) do
+    if OBSTACLES[e.type] then e.destroy() end
+  end
+end
+
 function Build:can_place(name, x, y, direction)
   if prototypes.entity[name].type == "mining-drill" then
     -- A drill only goes where there is something to mine.
@@ -46,11 +88,12 @@ function Build:can_place(name, x, y, direction)
       area = { { c.x - 1.4, c.y - 1.4 }, { c.x + 1.4, c.y + 1.4 } } })
     if n == 0 then return false end
   end
-  return self.surface.can_place_entity({
+  local ok = self.surface.can_place_entity({
     name = name, position = centre(name, x, y, direction),
     direction = DIR[direction or "north"], force = self.force,
     build_check_type = defines.build_check_type.manual,
   })
+  return ok or self:only_obstacles(name, x, y, direction)
 end
 
 function Build:checker()
@@ -84,6 +127,7 @@ function Build:put(name, x, y, direction, extra)
     self.refused = self.refused + 1
     return nil
   end
+  self:clear(name, x, y, direction)
   local e = self.surface.create_entity({
     name = name, position = centre(name, x, y, direction),
     direction = DIR[direction or "north"], force = self.force,
@@ -272,15 +316,23 @@ function Build:rails(x1, x2, y)
   return laid
 end
 
---- The centre of the nearest patch of a resource, as a tile.
+--- The densest spot of a resource near a tile. Of up to 100 samples, it takes
+-- the one with the most of the resource within 5 tiles. Of those, it takes
+-- the nearest. A lone tile of ore is no place for a mine.
 function Build:ore(name, near, radius)
   local found = self.surface.find_entities_filtered({
-    name = name, position = near, radius = radius or 200, limit = 400 })
+    name = name, position = near, radius = radius or 200 })
   if #found == 0 then return nil end
-  local best, best_d
-  for _, e in ipairs(found) do
+  local best, best_n, best_d
+  local step = math.max(1, math.floor(#found / 100))
+  for i = 1, #found, step do
+    local e = found[i]
+    local n = self.surface.count_entities_filtered({
+      name = name, position = e.position, radius = 5 })
     local d = (e.position.x - near[1]) ^ 2 + (e.position.y - near[2]) ^ 2
-    if not best_d or d < best_d then best, best_d = e, d end
+    if not best_n or n > best_n or (n == best_n and d < best_d) then
+      best, best_n, best_d = e, n, d
+    end
   end
   return { math.floor(best.position.x), math.floor(best.position.y) }
 end
@@ -301,6 +353,18 @@ function Build:working()
     end
   end
   return n, total, by_status
+end
+
+--- A count of each status of the inserters, for finding a dead sink.
+function Build:inserters()
+  local by_status = {}
+  for _, e in ipairs(self.built) do
+    if e.valid and e.type == "inserter" then
+      local name = STATUS_NAME[e.status] or tostring(e.status)
+      by_status[name] = (by_status[name] or 0) + 1
+    end
+  end
+  return by_status
 end
 
 --- Log where a line stands, and if a building and a pole share an

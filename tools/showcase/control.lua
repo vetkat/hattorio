@@ -88,6 +88,17 @@ local function plan_planet(name)
       table.sort(parts)
       say(string.format("WORKING %s %d working=%d total=%d %s", name, stage, n, total,
         table.concat(parts, " ")))
+      local ins = {}
+      for status, count in pairs(b:inserters()) do ins[#ins + 1] = status .. "=" .. count end
+      table.sort(ins)
+      log("showcase: inserters " .. name .. " " .. stage .. " " .. table.concat(ins, " "))
+      for _, e in ipairs(b.built) do
+        if e.valid and e.type == "underground-belt" then
+          log(string.format("showcase: underground %s %d,%d %s dir=%d items=%d", e.name,
+            e.position.x, e.position.y, e.belt_to_ground_type, e.direction,
+            e.get_transport_line(1).get_item_count() + e.get_transport_line(2).get_item_count()))
+        end
+      end
       if total > 0 and n / total < MIN_WORKING then
         say(string.format("ERROR %s stage %d: %d of %d machines work", name, stage, n, total))
       end

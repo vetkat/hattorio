@@ -86,4 +86,40 @@ function M.labs(rows, packs)
   return l, { pole = { 3, 3 } }
 end
 
+--- Big mining drills on both sides of a belt that runs south. They mine
+-- what an electric drill cannot, such as tungsten.
+function M.big_mining(rows)
+  local l = {}
+  for i = 0, rows - 1 do
+    l[#l + 1] = { "big-mining-drill", 0, 5 * i, "east" }
+    l[#l + 1] = { "big-mining-drill", 6, 5 * i, "west" }
+    for k = 0, 4 do l[#l + 1] = { "transport-belt", 5, 5 * i + k, "south" } end
+    l[#l + 1] = { "medium-electric-pole", -1, 5 * i + 2 }
+    l[#l + 1] = { "medium-electric-pole", 11, 5 * i + 2 }
+  end
+  return l, { out = { 5, 5 * rows }, pole = { -1, 2 } }
+end
+
+--- A column of machines of any size. Items come in on a belt at the origin
+-- that runs south. An inserter feeds each machine, and another puts its
+-- products into a chest. The sizes come from the game.
+function M.machines(rows, name, extra)
+  local proto = prototypes.entity[name]
+  local w, h = proto.tile_width, proto.tile_height
+  local step = math.max(h, 2) + 1
+  local l = {}
+  for i = 0, rows - 1 do
+    local y = step * i
+    for k = 0, step - 1 do l[#l + 1] = { "transport-belt", 0, y + k, "south" } end
+    l[#l + 1] = { "inserter", 1, y, "east", { from = "west" } }
+    l[#l + 1] = { name, 2, y, nil, extra }
+    l[#l + 1] = { "inserter", 2 + w, y, "east", { from = "west" } }
+    l[#l + 1] = { "iron-chest", 3 + w, y }
+    -- Two tiles from the inserters, inside the supply area of the pole.
+    l[#l + 1] = { "medium-electric-pole", 1, y + 2 }
+    l[#l + 1] = { "medium-electric-pole", 2 + w, y + 2 }
+  end
+  return l, { out = { 0, step * rows }, pole = { 1, 2 } }
+end
+
 return M
