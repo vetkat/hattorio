@@ -56,6 +56,13 @@ preview:
 	  $(LUA) tools/render_bands.lua $$s 2 320 docs/preview/bands-$$s-2.svg && \
 	  rsvg-convert -w 900 docs/preview/bands-$$s-2.svg -o docs/preview/bands-$$s-2.png; \
 	done
+	@# The mod portal wraps its text at about 540 px. The images in
+	@# mod-description-long.md are copies at that width, so they line up with
+	@# the text.
+	mkdir -p docs/preview/portal
+	for n in tiling bands-41-3; do \
+	  rsvg-convert -w 540 docs/preview/$$n.svg -o docs/preview/portal/$$n.png; \
+	done
 
 lint:
 	luacheck $(LUA_FILES)
