@@ -14,8 +14,8 @@ endif
 .PHONY: all setup fast check test pytest pytest-fast lint markdown links text ingame stamp \
         data preview wiki package version
 
-LUA_FILES := hat mod prototypes spec tests control.lua data.lua \
-             data-final-fixes.lua settings.lua
+LUA_FILES := hat mod prototypes spec tests tools/showcase control.lua \
+             data.lua data-final-fixes.lua settings.lua
 MARKDOWN   = $(shell git ls-files '*.md')
 
 all: check

@@ -29,6 +29,10 @@ files["spec"] = { std = "+busted" }
 -- lua5.2, so that CI can test it. No Factorio globals here.
 files["hat"] = {}
 
+-- The showcase tool runs in the game as a mod of its own, so it sees the
+-- Factorio globals. place.lua and camera.lua use none of them.
+files["tools/showcase"] = { read_globals = factorio_globals, globals = factorio_writable }
+
 -- The stage entry points see the same Factorio globals as mod/.
 for _, path in ipairs({ "control.lua", "data.lua", "data-final-fixes.lua", "settings.lua" }) do
   files[path] = { read_globals = factorio_globals, globals = factorio_writable }
