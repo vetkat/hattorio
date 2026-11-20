@@ -4,7 +4,7 @@ A Factorio mod. It cuts every planet into cells of the hat tiling, the
 aperiodic monotile found in 2023. The tiling never repeats, so no two cells
 have the same shape, and your blueprint library stops fitting.
 
-![The hat tiling, as Hattorio generates it](https://raw.githubusercontent.com/vetkat/hattorio/main/docs/preview/tiling.png)
+![The hat tiling, as Hattorio generates it](https://raw.githubusercontent.com/vetkat/hattorio/main/docs/preview/portal/tiling.png)
 
 ## Why this mod exists
 
@@ -35,7 +35,7 @@ A band also runs under water. You cannot fill it with landfill, foundation
 or ice platform. On Aquilo and Fulgora it shows as a dark line over the
 ocean. On the other planets it looks the same as the water.
 
-![Cells and bands at the default settings](https://raw.githubusercontent.com/vetkat/hattorio/main/docs/preview/bands-41-3.png)
+![Cells and bands at the default settings](https://raw.githubusercontent.com/vetkat/hattorio/main/docs/preview/portal/bands-41-3.png)
 
 The mod adds no items, recipes or technologies, so your ratios do not
 change. It only limits where you can build.
