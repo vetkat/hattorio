@@ -34,3 +34,4 @@ ing-form | tools/README.md | previewing | a heading that names the topic
 # The showcase tool in tools/showcase/ (2026-11-20).
 word | docs/superpowers/*showcase* | showcase | the name of the tool in tools/showcase/
 ing-form | * | heating | the name of the heating tower on Aquilo
+ing-form | docs/superpowers/*showcase* | working | the entity status working in Factorio

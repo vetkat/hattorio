@@ -22,6 +22,8 @@ script builds the bases in the game, and the game renders the screenshots.
   Hattorio 1.1.1 at the default settings (cell size 41, band width 3).
 - Every building stands inside a cell. The script places a building only
   where the game allows it, so no building stands on a band.
+- Most buildings visibly work in every shot. Belts carry items, furnaces
+  burn, machines craft, and smoke rises (owner's choice).
 - The bases show what the mod changes:
   - buildings that fit the cell shapes
   - underground belts and pipes across bands, and rails across bands
@@ -34,8 +36,8 @@ script builds the bases in the game, and the game renders the screenshots.
 ## Non-goals
 
 - A played game. The mod page says that a script built the bases.
-- A working economy. Buildings can be idle. The screenshots do not claim
-  that the base produces anything.
+- A balanced economy. The base must look busy in the shots. It does not
+  need to run for hours.
 - A mega-base.
 - The finished video: narration, music, titles and the edit. The owner
   makes it later from the clips, or edits the video by the author of
@@ -124,10 +126,17 @@ adapts each layout to the cells, which is what the mod is about.
   building on a band, because buildings collide with the band layer. So
   each layout ends up inside a cell. This needs no change to the remote
   interface and no new release (builder's call).
-- **Power and fuel.** Buildings get power from solar panels and
-  accumulators, or from steam on Nauvis. Burner buildings get coal. The
-  script can insert items into buildings, so that some of them work and
-  show smoke and light. It does not need to.
+- **Busy buildings.** Each stage builds real chains. Miners on an ore
+  patch feed belts, belts feed furnaces through inserters, and assemblers
+  have their recipes set. Power is real: steam, or solar panels and
+  accumulators.
+
+  The script starts the chains as a player does. It puts
+  fuel and the first raw items into buildings and onto belts. It uses no
+  hidden or editor-only entities.
+- **Warm-up.** The base runs for 5 minutes of game time before the
+  screenshots of a stage. The game speed is high for this. Then the belts
+  are full and the machines are busy.
 - **Files.** The script writes PNG. `tools/showcase.sh` converts each to
   JPEG at quality 85, about 200 to 400 kB, into
   `docs/preview/showcase/<planet>-<stage>.jpg`. 30 of them are about
@@ -176,4 +185,7 @@ The showcase is a tool, not mod code. It has no in-game test. Its checks:
   screenshots appear, or if fewer than 25 clips appear.
 - The script logs how many buildings it placed and refused for each stage.
   A stage with no buildings placed is an error.
+- Before each screenshot, the script counts the crafting machines,
+  furnaces and miners of the base. It also counts how many of them have
+  the status `working`. If fewer than 60% work, the run fails.
 - A person looks at every screenshot before it goes on the mod page.
