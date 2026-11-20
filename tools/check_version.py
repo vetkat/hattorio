@@ -28,6 +28,9 @@ from tools.factorio_version import SEMVER, base_dependency, major_minor, read_in
 
 REQUIRED_KEYS = ("name", "version", "title", "author", "factorio_version",
                  "description", "dependencies")
+# tools/portal_details.sh sends the description as the portal summary, and
+# the portal refuses a summary longer than this.
+MAX_SUMMARY = 500
 
 
 def manifest_problems(info: dict, pin: str) -> list[str]:
@@ -43,6 +46,10 @@ def manifest_problems(info: dict, pin: str) -> list[str]:
         problems.append(
             f"info.json factorio_version is {info['factorio_version']!r}, but "
             f".factorio-version pins {pin}, so it must be {major_minor(pin)!r}")
+    if len(info["description"]) > MAX_SUMMARY:
+        problems.append(
+            f"info.json description has {len(info['description'])} characters; "
+            f"the portal summary allows {MAX_SUMMARY}")
     base = base_dependency(pin)
     if base not in info["dependencies"]:
         problems.append(f"info.json dependencies must contain {base!r}")

@@ -1,6 +1,6 @@
 # Hattorio design
 
-Status: describes version 1.1.0
+Status: describes version 1.1.1
 Date: 2026-11-18 (first draft 2026-09-19)
 
 Hattorio is a Factorio mod. It divides the buildable area of each planet into

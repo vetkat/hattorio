@@ -1,10 +1,10 @@
 {
   "name": "hattorio",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "title": "Hattorio",
   "author": "vetkat",
   "factorio_version": "2.1",
-  "description": "Divides every planet into cells of the aperiodic hat monotile tiling, separated by unbuildable bands. No two cells are the same shape, so imported blueprints stop fitting.",
+  "description": "Divides each vanilla planet into cells of the hat, an aperiodic monotile. You cannot build on the bands between the cells, also where they cross water. You can walk and drive across a band, rails cross it, and belts and pipes go under it. The tiling never repeats, so a layout that fills one cell fits no other. You set the cell size and the band width for each planet. Ore richness goes up to make up for the ore under the bands.",
   "dependencies": [
     "base >= 2.1.0",
     "? space-age"

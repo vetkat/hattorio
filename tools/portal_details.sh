@@ -1,5 +1,7 @@
 #!/bin/sh
-# Send the long description in mod-description-long.md to the mod portal.
+# Send the long description in mod-description-long.md to the mod portal,
+# and the description in info.json as the summary. Factorio shows the
+# summary in the list of mods that you can download.
 #
 #   FACTORIO_API_KEY=... sh tools/portal_details.sh
 #
@@ -14,12 +16,14 @@ set -e
 
 [ -n "$FACTORIO_API_KEY" ] || { echo "FACTORIO_API_KEY is not set" >&2; exit 2; }
 MOD=$(python3 -c "import json;print(json.load(open('info.json'))['name'])")
+SUMMARY=$(python3 -c "import json;print(json.load(open('info.json'))['description'])")
 echo "sending mod-description-long.md to the portal page of $MOD"
 
 # curl reads the field value from the file when it starts with <.
 RESULT=$(curl -sS -X POST \
   -H "Authorization: Bearer $FACTORIO_API_KEY" \
   -F "mod=$MOD" \
+  --form-string "summary=$SUMMARY" \
   -F "description=<mod-description-long.md" \
   https://mods.factorio.com/api/v2/mods/edit_details)
 
