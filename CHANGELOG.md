@@ -16,9 +16,10 @@ This is the only changelog that people edit. The build makes Factorio's
 - You could landfill a lake where a band crosses it, and then build across
   the band. The same was true for foundation on lava and the oil ocean,
   and for ice platform on the ammonia ocean. The band now continues under
-  the water. It looks the same as the water, so you see it only from the
-  red preview when you try to build there. Chunks that exist already keep
-  plain water.
+  the water. On Aquilo and Fulgora it shows as a dark line over the ocean.
+  On the other planets it looks the same as the water, so you see it only
+  from the red preview when you try to build there. Chunks that exist
+  already keep plain water.
 
 ## [1.1.0] - 2026-11-19
 

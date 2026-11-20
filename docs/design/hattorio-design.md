@@ -348,10 +348,13 @@ the descent changes it.
   about 1.3 ms.
 - **Do not fill water.** Lakes and their vanilla shore transitions stay. At
   a band position over water, the painter places the band copy of that
-  water tile instead (`prototypes/water_band.lua`). The copy looks the same
-  as the water, and it has the band layer. So landfill, foundation and ice
+  water tile instead (`prototypes/water_band.lua`). The copy has the band
+  layer. So landfill, foundation and ice
   platform cannot go there, and no set-tile stamp turns it into land. A
   tile without a copy, such as out-of-map, stays as it is.
+- **The look of the copy depends on the planet.** On Aquilo and Fulgora it
+  is darker, so the band shows as a dark line over the ocean. On the other
+  planets it looks the same as the water.
 - **Ore is already in place** when the event fires. Leave it. The mod raises
   resource richness during map generation to compensate for the cuts. At the
   default settings (41/3) a 3x3 drill can reach about 61% of a patch, so the
@@ -609,10 +612,13 @@ of scope. They need a second tiling next to the hat (section 17).
 - **Modded entity types fail open.** A type that is not in the patch list is
   buildable on bands (section 9).
 - **Planets from other mods get no bands** (section 8).
-- **A band over water does not show.** The band copy of a water tile looks
-  the same as the water. You see the band only from the red preview when
-  you try to place landfill, foundation, ice platform or an offshore pump
-  there. Chunks from before 1.1.1 keep plain water at band positions.
+- **A band over water does not show on Nauvis, Vulcanus and Gleba.** There
+  the band copy looks the same as the water. You see the band only from the
+  red preview when you try to place landfill, foundation or an offshore
+  pump there. On Aquilo and Fulgora, where most building is on the ocean,
+  the copy is darker. Its edges are hard, because the copy merges with the
+  water and draws no transition. Chunks from before 1.1.1 keep plain water
+  at band positions.
 - **Spawn is on the centre of the H metatile** (section 5).
 
 ## 17. Alternatives

@@ -160,20 +160,25 @@ test("a band position over water holds the band copy of the water", function()
   settings.autoplace_controls["water"] = { frequency = 6, size = 6, richness = 1 }
   nauvis.map_gen_settings = settings
   local found
-  for i = 0, 19 do
-    local cx, cy = 130 + i, -110
-    generate(nauvis, cx, cy)
-    for _, p in ipairs(band_positions(nauvis, cx, cy)) do
-      local tile = nauvis.get_tile(p.x, p.y)
-      if Water.is_water(tile.prototype.collision_mask.layers) then
-        found = { cx = cx, cy = cy }
-        break
+  -- Restore the water setting even after an error, so that later tests do
+  -- not run with frequent lakes.
+  local ok, err = pcall(function()
+    for i = 0, 19 do
+      local cx, cy = 130 + i, -110
+      generate(nauvis, cx, cy)
+      for _, p in ipairs(band_positions(nauvis, cx, cy)) do
+        local tile = nauvis.get_tile(p.x, p.y)
+        if Water.is_water(tile.prototype.collision_mask.layers) then
+          found = { cx = cx, cy = cy }
+          break
+        end
       end
+      if found then break end
     end
-    if found then break end
-  end
+  end)
   settings.autoplace_controls["water"] = before
   nauvis.map_gen_settings = settings
+  assert(ok, err)
   assert(found, "no band crosses water in 20 chunks, so the test proves nothing")
   local wrong = wrong_tiles(nauvis, found.cx, found.cy)
   assert(#wrong == 0, table.concat(wrong, "; "))
@@ -185,6 +190,7 @@ end)
 tags("space-age")
 test("a stamp does not replace the band copy of the ammonia ocean", function()
   local aquilo = game.surfaces["aquilo"]
+  assert(aquilo, "no Aquilo surface: run this after the Aquilo test above")
   local area = { { -128, -128 }, { 160, 160 } }
   local copy = aquilo.find_tiles_filtered({
     area = area, name = Water.copy_name("ammoniacal-ocean"), limit = 1 })[1]
