@@ -30,8 +30,13 @@ files["spec"] = { std = "+busted" }
 files["hat"] = {}
 
 -- The showcase tool runs in the game as a mod of its own, so it sees the
--- Factorio globals. place.lua and camera.lua use none of them.
-files["tools/showcase"] = { read_globals = factorio_globals, globals = factorio_writable }
+-- Factorio globals. place.lua and camera.lua use none of them. It sets
+-- game.speed for the warm-up.
+local showcase_read = {}
+for _, name in ipairs(factorio_globals) do
+  if name ~= "game" then showcase_read[#showcase_read + 1] = name end
+end
+files["tools/showcase"] = { read_globals = showcase_read, globals = { "storage", "table", "game" } }
 
 -- The stage entry points see the same Factorio globals as mod/.
 for _, path in ipairs({ "control.lua", "data.lua", "data-final-fixes.lua", "settings.lua" }) do

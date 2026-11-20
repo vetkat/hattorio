@@ -28,6 +28,30 @@ describe("showcase placement", function()
     assert.is_nil(Place.find(layout, { 0, 0 }, 4, 25, function() return false end))
   end)
 
+  it("finds the first place along a line where a layout fits", function()
+    local layout = { { "stone-furnace", 0, 0 }, { "stone-furnace", 0, 1 } }
+    local blocked = { ["10,0"] = true, ["11,1"] = true }
+    local origin, k = Place.find_along(layout, { 0, 0 }, "east", 10, 20, grid(blocked))
+    assert.are.same({ 12, 0 }, origin)
+    assert.are.equal(12, k)
+    assert.is_nil(Place.find_along(layout, { 0, 0 }, "east", 10, 20, function() return false end))
+  end)
+
+  it("bends once when nothing fits on the straight line", function()
+    local layout = { { "stone-furnace", 0, 0 } }
+    -- Only (6, 5) is free for the furnace. The line x = 0 is all blocked for it.
+    local function can_place(name, x, y)
+      if name == "stone-furnace" then return x == 6 and y == 5 end
+      return true
+    end
+    local origin, k, side, j = Place.find_bent(layout, { 0, 0 }, "south", 10, 10, can_place)
+    assert.are.same({ 6, 5 }, origin)
+    assert.are.equal(5, k)
+    assert.are.equal("east", side)
+    assert.are.equal(6, j)
+    assert.is_nil(Place.find_bent(layout, { 0, 0 }, "south", 10, 10, function() return false end))
+  end)
+
   it("routes a belt under a band with the cheapest underground", function()
     local band = { ["5,0"] = true, ["6,0"] = true, ["7,0"] = true }
     local route = Place.route({ 0, 0 }, "east", 12, grid(band),
@@ -47,6 +71,24 @@ describe("showcase placement", function()
     local nine = {}
     for x = 5, 13 do nine[x .. ",0"] = true end
     assert.is_nil(Place.route({ 0, 0 }, "east", 18, grid(nine), tiers))
+  end)
+end)
+
+describe("showcase routes stay inside their length", function()
+  local tiers = { { "underground-belt", 4 } }
+
+  it("refuses a route whose gap runs to its last tile", function()
+    local band = { ["0,8"] = true, ["0,9"] = true }
+    assert.is_nil(Place.route({ 0, 0 }, "south", 10, grid(band), tiers))
+    assert.is_not_nil(Place.route({ 0, 0 }, "south", 12, grid(band), tiers))
+  end)
+
+  it("skips a place that no route can reach", function()
+    local layout = { { "stone-furnace", 0, 0 } }
+    -- A band just before x = 10 leaves no room for the exit of the route.
+    local band = { ["8,0"] = true, ["9,0"] = true }
+    local origin = Place.find_along(layout, { 0, 0 }, "east", 8, 20, grid(band), tiers)
+    assert.are.same({ 11, 0 }, origin)
   end)
 end)
 

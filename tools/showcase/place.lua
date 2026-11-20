@@ -48,6 +48,50 @@ function Place.find(layout, centre, step, tries, can_place)
   return nil
 end
 
+--- The first origin on the line from `start` towards `dir`, between
+-- `from` and `to` tiles away, where the layout fits. Also returns the
+-- distance. A belt can then run straight from `start` to that origin.
+--
+-- With `tiers`, an origin counts only if the belt to it has a route.
+function Place.find_along(layout, start, dir, from, to, can_place, tiers)
+  local d = DIRECTIONS[dir]
+  for k = from, to do
+    local origin = { start[1] + d[1] * k, start[2] + d[2] * k }
+    if Place.fit(layout, origin, can_place)
+      and (not tiers or Place.route(start, dir, k, can_place, tiers)) then
+      return origin, k
+    end
+  end
+  return nil
+end
+
+local SIDES = {
+  north = { "east", "west" }, south = { "east", "west" },
+  east = { "south", "north" }, west = { "south", "north" },
+}
+
+--- Like find_along, but the belt may bend once: `k` tiles from `start`
+-- towards `dir`, then `j` tiles to one side, to the origin. Returns the
+-- origin, k, the side and j, or nil.
+function Place.find_bent(layout, start, dir, max_k, max_j, can_place, tiers)
+  local d = DIRECTIONS[dir]
+  for k = 2, max_k do
+    local px, py = start[1] + d[1] * k, start[2] + d[2] * k
+    local first = not tiers or Place.route(start, dir, k, can_place, tiers)
+    for _, side in ipairs(first and SIDES[dir] or {}) do
+      local s = DIRECTIONS[side]
+      for j = 2, max_j do
+        local origin = { px + s[1] * j, py + s[2] * j }
+        if Place.fit(layout, origin, can_place)
+          and (not tiers or Place.route({ px, py }, side, j, can_place, tiers)) then
+          return origin, k, side, j
+        end
+      end
+    end
+  end
+  return nil
+end
+
 --- A straight belt of `length` tiles from `start` towards `dir`.
 --
 -- Where the game refuses a tile, an underground pair spans the gap. The
@@ -70,6 +114,8 @@ function Place.route(start, dir, length, can_place, tiers)
         gap = gap + 1
         if gap > tiers[#tiers][2] then return nil end
       end
+      -- The exit must stay inside the route, before the place it leads to.
+      if i + gap > length - 1 then return nil end
       local tier
       for _, t in ipairs(tiers) do
         if gap <= t[2] then tier = t[1] break end
