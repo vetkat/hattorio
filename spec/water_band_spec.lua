@@ -20,4 +20,20 @@ describe("water band", function()
     assert.is_nil(Water.original("deepwater"))
     assert.is_nil(Water.original("hattorio-band-nauvis"))
   end)
+
+  it("finds the tiles that the dark planets place", function()
+    local gens = {
+      aquilo = { autoplace_settings = { tile = { settings = { ["ammoniacal-ocean"] = {} } } } },
+      fulgora = { autoplace_settings = { tile = { settings = { ["oil-ocean-deep"] = {} } } } },
+      nauvis = { autoplace_settings = { tile = { settings = { water = {} } } } },
+    }
+    local dark = Water.dark_tiles(function(planet) return gens[planet] end)
+    assert.is_true(dark["ammoniacal-ocean"])
+    assert.is_true(dark["oil-ocean-deep"])
+    assert.is_nil(dark.water)
+  end)
+
+  it("finds no dark tiles without Space Age", function()
+    assert.are.same({}, Water.dark_tiles(function() return nil end))
+  end)
 end)

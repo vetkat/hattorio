@@ -61,6 +61,13 @@ test("every water tile has a band copy", function()
   assert(#missing == 0, "no band copy for: " .. table.concat(missing, ", "))
 end)
 
+-- The tiles that Aquilo and Fulgora place. Most building there is on the
+-- ocean, so the band copies of their water are darker and show the band.
+local DARK = Water.dark_tiles(function(planet)
+  local location = prototypes.space_location[planet]
+  return location and location.map_gen_settings
+end)
+
 test("a band copy keeps its water and adds the band layer", function()
   local copies = 0
   for name, copy in pairs(prototypes.tile) do
@@ -74,8 +81,10 @@ test("a band copy keeps its water and adds the band layer", function()
       end
       assert((copy.fluid and copy.fluid.name) == (src.fluid and src.fluid.name),
         name .. " has another fluid")
-      assert(copy.map_color.r == src.map_color.r and copy.map_color.g == src.map_color.g
-        and copy.map_color.b == src.map_color.b, name .. " has another map colour")
+      if not DARK[original] then
+        assert(copy.map_color.r == src.map_color.r and copy.map_color.g == src.map_color.g
+          and copy.map_color.b == src.map_color.b, name .. " has another map colour")
+      end
       assert(not copy.autoplace_specification, name .. " autoplaces")
       assert(copy.localised_name[1] == src.localised_name[1], name .. " has no name of its own")
       assert(not copy.mineable_properties.minable, name .. " is mineable")
@@ -84,4 +93,21 @@ test("a band copy keeps its water and adds the band layer", function()
     end
   end
   assert(copies > 0, "no band copies exist")
+end)
+
+tags("space-age")
+test("the band copies of the Aquilo and Fulgora oceans are darker", function()
+  for _, original in ipairs({ "ammoniacal-ocean", "brash-ice", "oil-ocean-deep" }) do
+    assert(DARK[original], original .. " is not a tile of Aquilo or Fulgora")
+  end
+  local checked = 0
+  for original in pairs(DARK) do
+    local copy = prototypes.tile[Water.copy_name(original)]
+    if copy then
+      local a, b = prototypes.tile[original].map_color, copy.map_color
+      assert(b.r + b.g + b.b < a.r + a.g + a.b, copy.name .. " is not darker than " .. original)
+      checked = checked + 1
+    end
+  end
+  assert(checked >= 3, "only " .. checked .. " dark copies")
 end)

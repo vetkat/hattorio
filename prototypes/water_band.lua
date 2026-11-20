@@ -23,6 +23,29 @@ local LAYER = "hattorio_band"
 -- original.
 local TRANSITION_LISTS = { "water_tile_type_names", "lava_tile_type_names" }
 
+-- Most building on Aquilo and Fulgora happens on the ocean. There, a band
+-- that does not show would refuse ice platform and foundation with no hint.
+-- So the copies of the tiles that these planets place are darker, and the
+-- band shows as a dark line. On the other planets the copy looks the same as
+-- the water. The owner chose both looks after a spike.
+local DARKNESS = 0.35
+
+local dark = Water.dark_tiles(function(planet)
+  return data.raw.planet[planet] and data.raw.planet[planet].map_gen_settings
+end)
+
+-- A colour can be a table with r, g, b and a, or an array. Its values are
+-- 0 to 1, or 0 to 255. The result keeps that form, and alpha stays as it
+-- is.
+local function darker(colour)
+  if not colour then return nil end
+  local out = {}
+  for k, v in pairs(colour) do
+    out[k] = (k == "a" or k == 4) and v or v * DARKNESS
+  end
+  return out
+end
+
 local function lists_with(name)
   local found = {}
   for _, list_name in ipairs(TRANSITION_LISTS) do
@@ -51,6 +74,16 @@ for name, tile in pairs(data.raw.tile) do
     copy.localised_name = tile.localised_name or { "tile-name." .. name }
     copy.localised_description = tile.localised_description or { "tile-description." .. name }
     copy.factoriopedia_alternative = name
+    if dark[name] then
+      -- The effect colours darken a tile that a shader draws, such as the
+      -- ammonia ocean. The tint darkens a tile that a texture draws, such as
+      -- the oil ocean. Screenshots of both planets show the band as a dark
+      -- line over the ocean.
+      copy.effect_color = darker(copy.effect_color)
+      copy.effect_color_secondary = darker(copy.effect_color_secondary)
+      copy.map_color = darker(copy.map_color)
+      copy.tint = { r = DARKNESS, g = DARKNESS, b = DARKNESS, a = 1 }
+    end
     -- Not mineable. Mining would bring back the plain water under it.
     copy.minable = nil
     copy.mined_sound = nil
