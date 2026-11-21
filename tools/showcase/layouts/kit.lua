@@ -100,19 +100,9 @@ local function mine(b, cfg, line, near)
   local origin = b:place_near(layout, patch, 800)
   if not origin then
     log(string.format("showcase: no place for a %s mine near %d,%d", line.ore, patch[1], patch[2]))
-    local types = {}
-    for _, e in ipairs(b.surface.find_entities_filtered({ position = patch, radius = 12 })) do
-      types[e.type .. ":" .. e.name] = (types[e.type .. ":" .. e.name] or 0) + 1
-    end
-    local parts = {}
-    for k, v in pairs(types) do parts[#parts + 1] = k .. "=" .. v end
-    log("showcase: around the patch: " .. table.concat(parts, " "))
-    log("showcase: drill fits at patch: " .. tostring(b:can_place("electric-mining-drill",
-      patch[1], patch[2], "east")))
     return nil
   end
-  local power = cfg.power == "lightning" and Kit.lightning or Kit.power
-  power(b, abs(origin, { 16, 0 }), line.load or cfg.load or 900, abs(origin, at.pole))
+  cfg.power_fn(b, abs(origin, { 16, 0 }), line.load or cfg.load or 900, abs(origin, at.pole))
   return origin, abs(origin, at.out)
 end
 
@@ -160,6 +150,7 @@ end
 Kit.unlock = unlock
 
 function Kit.stages(cfg)
+  cfg.power_fn = cfg.power == "lightning" and Kit.lightning or Kit.power
   local s = {}
   local lines = cfg.lines
 
@@ -169,7 +160,6 @@ function Kit.stages(cfg)
     local origin, out = mine(b, cfg, lines[1], { 0, 0 })
     b:sink("first-sink", out, "south")
     b.anchor.first = origin
-    b.anchor.power = origin and abs(origin, { -1, 1 })
     b.focus = abs(origin, { 4, 6 })
   end
 
@@ -217,8 +207,7 @@ function Kit.stages(cfg)
     for _, near in ipairs({ b.anchor.first or mid, b.anchor.second or mid }) do
       local port = { { "roboport", 0, 0, nil, { items = robots } } }
       local rp = b:place_near(port, abs(near, { 8, -6 }))
-      local power = cfg.power == "lightning" and Kit.lightning or Kit.power
-      if rp then power(b, abs(rp, { 8, 0 }), 200, { rp[1] + 2, rp[2] + 4 }) end
+      if rp then cfg.power_fn(b, abs(rp, { 8, 0 }), 200, { rp[1] + 2, rp[2] + 4 }) end
     end
     b.focus = { mid[1], mid[2] + 12 }
   end

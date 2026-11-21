@@ -4,11 +4,7 @@
 
 local M = require("modules")
 
--- A tile relative to an origin, or nil when the block found no place.
-local function abs(origin, rel)
-  if not origin then return nil end
-  return { origin[1] + rel[1], origin[2] + rel[2] }
-end
+local abs = require("layouts.kit").abs
 
 -- A mine on the nearest patch of `ore`, furnaces in a cell next to it, and a
 -- sink for the plates. The line has its own solar field next to the mine, as
@@ -23,7 +19,6 @@ local function ore_line(b, ore, near, key)
   local solar, sat = M.solar(5)
   local power = b:place_near(solar, abs(mine, { 12, 0 }))
   if power then b:poles(abs(power, sat.pole), abs(mine, at.pole)) end
-  b:report(key, mine, power, abs(mine, { 1, 1 }), power and abs(power, sat.pole))
   layout, at = M.smelting(8)
   local smelt = b:place_along(layout, abs(mine, { 3, 9 }), "south", nil, nil, "south")
   if not smelt then return mine end

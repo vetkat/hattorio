@@ -31,10 +31,15 @@ end
 
 -- The centre of a building whose top left tile is (x, y). A building that
 -- that turns by a quarter swaps its width and height.
-local function centre(name, x, y, direction)
+local function size(name, direction)
   local proto = prototypes.entity[name]
   local w, h = proto.tile_width, proto.tile_height
-  if direction == "east" or direction == "west" then w, h = h, w end
+  if direction == "east" or direction == "west" then return h, w end
+  return w, h
+end
+
+local function centre(name, x, y, direction)
+  local w, h = size(name, direction)
   return { x = x + w / 2, y = y + h / 2 }
 end
 
@@ -44,9 +49,7 @@ local OBSTACLES = { tree = true, ["simple-entity"] = true, plant = true }
 
 -- The area of a building whose top left tile is (x, y).
 local function footprint(name, x, y, direction)
-  local proto = prototypes.entity[name]
-  local w, h = proto.tile_width, proto.tile_height
-  if direction == "east" or direction == "west" then w, h = h, w end
+  local w, h = size(name, direction)
   return { { x + 0.05, y + 0.05 }, { x + w - 0.05, y + h - 0.05 } }, w, h
 end
 
@@ -104,21 +107,6 @@ function Build:can_place(name, x, y, direction)
   return ok or self:only_obstacles(name, x, y, direction)
 end
 
---- What stands under a building: its tile names and entity names, for the
--- log when the game refuses it.
-function Build:why(name, x, y, direction)
-  local area, w, h = footprint(name, x, y, direction)
-  local tiles, out = {}, {}
-  for tx = x, x + w - 1 do
-    for ty = y, y + h - 1 do tiles[self.surface.get_tile(tx, ty).name] = true end
-  end
-  for n in pairs(tiles) do out[#out + 1] = n end
-  for _, e in ipairs(self.surface.find_entities_filtered({ area = area })) do
-    out[#out + 1] = e.type .. ":" .. e.name
-  end
-  return table.concat(out, " ")
-end
-
 function Build:checker()
   return function(name, x, y, direction) return self:can_place(name, x, y, direction) end
 end
@@ -161,13 +149,12 @@ local function setup(entity, extra)
   if extra.fuel then entity.insert({ name = extra.fuel, count = extra.fuel_count or 50 }) end
   for _, stack in ipairs(extra.items or {}) do entity.insert(stack) end
   if extra.fluid then entity.insert_fluid(extra.fluid) end
+  if extra.temperature then entity.temperature = extra.temperature end
 end
 
 --- Place one building. Returns the entity, or nil if the game refuses.
 function Build:put(name, x, y, direction, extra)
   if not self:can_place(name, x, y, direction) then
-    log(string.format("showcase: refused %s at %d,%d: %s", name, x, y,
-      self:why(name, x, y, direction)))
     self.refused = self.refused + 1
     return nil
   end
@@ -192,9 +179,7 @@ end
 function Build.covers(layout, origin)
   local tiles = {}
   for _, e in ipairs(layout) do
-    local proto = prototypes.entity[e[1]]
-    local w, h = proto.tile_width, proto.tile_height
-    if e[4] == "east" or e[4] == "west" then w, h = h, w end
+    local w, h = size(e[1], e[4])
     for dx = 0, w - 1 do
       for dy = 0, h - 1 do
         tiles[(origin[1] + e[2] + dx) .. "," .. (origin[2] + e[3] + dy)] = true
@@ -213,9 +198,7 @@ function Build:pave(layout, origin, from, to)
   for _, n in ipairs(from) do names[n] = true end
   local tiles = {}
   for _, e in ipairs(layout) do
-    local proto = prototypes.entity[e[1]]
-    local w, h = proto.tile_width, proto.tile_height
-    if e[4] == "east" or e[4] == "west" then w, h = h, w end
+    local w, h = size(e[1], e[4])
     for dx = 0, w - 1 do
       for dy = 0, h - 1 do
         local x, y = origin[1] + e[2] + dx, origin[2] + e[3] + dy
@@ -296,21 +279,11 @@ function Build:belt(start, dir, length, turned)
   local placed = {}
   for _, e in ipairs(route) do
     local ent = self:put(e[1], e[2], e[3], e[4], e[5] and { type = e[5] })
-    placed[#placed + 1] = ent
     if not ent and e[5] == "output" then
+      -- Some exits go in only when they face back.
       ent = self:put(e[1], e[2], e[3], back[e[4]], { type = "output" })
-      log(string.format("showcase: exit at %d,%d took direction %s: %s", e[2], e[3],
-        back[e[4]], ent and "placed" or "refused"))
     end
-    if not ent then
-      local here = {}
-      for _, f in ipairs(self.surface.find_entities_filtered({
-        area = { { e[2] - 0.5, e[3] - 0.5 }, { e[2] + 1.5, e[3] + 1.5 } } })) do
-        here[#here + 1] = f.name .. "@" .. f.position.x .. "," .. f.position.y
-      end
-      log(string.format("showcase: refused %s at %d,%d %s %s; tile %s; near %s", e[1], e[2], e[3],
-        e[4], e[5] or "", self.surface.get_tile(e[2], e[3]).name, table.concat(here, " ")))
-    end
+    placed[#placed + 1] = ent
   end
   return placed
 end
@@ -379,8 +352,12 @@ function Build:poles(a, b)
     local pole
     for _, off in ipairs({ { 0, 0 }, { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 }, { 2, 0 },
       { -2, 0 }, { 0, 2 }, { 0, -2 }, { 3, 0 }, { -3, 0 }, { 0, 3 }, { 0, -3 } }) do
-      pole = self:put("medium-electric-pole", x + off[1], y + off[2])
-      if pole then break end
+      -- A probe with can_place, so that a spot that does not fit does not
+      -- count as a refused building.
+      if self:can_place("medium-electric-pole", x + off[1], y + off[2]) then
+        pole = self:put("medium-electric-pole", x + off[1], y + off[2])
+        if pole then break end
+      end
     end
     pole = pole or self:pole_near({ x, y }, 2)
     if pole and prev then
@@ -560,35 +537,6 @@ function Build:working()
     end
   end
   return n, total, by_status
-end
-
---- A count of each status of the inserters, for finding a dead sink.
-function Build:inserters()
-  local by_status = {}
-  for _, e in ipairs(self.built) do
-    if e.valid and e.type == "inserter" then
-      local name = STATUS_NAME[e.status] or tostring(e.status)
-      by_status[name] = (by_status[name] or 0) + 1
-    end
-  end
-  return by_status
-end
-
---- Log where a line stands, and if a building and a pole share an
--- electric network. For finding faults in a layout.
-function Build:report(key, a, c, building_tile, pole_tile)
-  local function net(tile)
-    if not tile then return "none" end
-    local found = self.surface.find_entities_filtered({
-      position = { tile[1] + 0.5, tile[2] + 0.5 }, radius = 1.5 })
-    for _, e in ipairs(found) do
-      if e.electric_network_id then return e.name .. "#" .. e.electric_network_id end
-    end
-    return "no-network"
-  end
-  log(string.format("showcase: line %s mine=%s power=%s building=%s pole=%s", key,
-    a and (a[1] .. "," .. a[2]) or "nil", c and (c[1] .. "," .. c[2]) or "nil",
-    net(building_tile), net(pole_tile)))
 end
 
 --- The middle of everything built so far: the median of the positions, so

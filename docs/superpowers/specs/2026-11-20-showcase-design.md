@@ -117,8 +117,20 @@ adapts each layout to the cells, which is what the mod is about.
      Nauvis.
   5. Large base: more cells filled, a rail line across several bands, and
      a roboport network.
+- **As built.** Nauvis follows the stages above. The other planets differ
+  where the planet did not allow them:
+  - Vulcanus has no assemblers. Its coal, calcite and tungsten lines end in
+    chests, and stage 4 adds foundries that make iron from lava.
+  - Fulgora has recyclers from stage 2. Lightning collectors and
+    accumulators give its power, because its light is too weak for solar
+    panels on its small islands.
+  - Gleba has lines of stone furnaces, and agricultural towers in stage 4.
+    It has no biochambers.
+  - Aquilo has its own stages: a heated power plant, a cryogenic plant at
+    the shore on ice platform, a second power plant, an oil well, and the
+    rails. It has no roboports. Bands leave little room on its islands.
 - **Screenshots.** Each stage gets one screenshot at the zoom of a player
-  (zoom 1). The last stage also gets a wide one (zoom 0.4). That is 6 for
+  (zoom 1). The last stage also gets a wide one (zoom 0.3). That is 6 for
   each planet, 30 in all. Size 1600 by 900, with no GUI, at midday.
 - **Placement.** The script does not need to know where the cells are.
   For each layout it tries positions in a spiral around the base, and it
@@ -138,9 +150,10 @@ adapts each layout to the cells, which is what the mod is about.
   screenshots of a stage. The game speed is high for this. Then the belts
   are full and the machines are busy.
 - **Files.** The script writes PNG. `tools/showcase.sh` converts each to
-  JPEG at quality 85, about 200 to 400 kB, into
-  `docs/preview/showcase/<planet>-<stage>.jpg`. 30 of them are about
-  10 MB.
+  JPEG at quality 85, about 200 to 400 kB. Stage 5 and the wide shot of
+  each planet go into `docs/preview/showcase/`, 10 files of about 4 MB.
+  The other 20 go to `~/Videos/hattorio-showcase/stills/` for the video
+  (owner's choice).
 - **Video material.** After the screenshots of a stage, the camera pans
   slowly across the base for about 10 seconds. The script takes a
   screenshot each tick at 1920 by 1080, with no GUI.
@@ -155,7 +168,7 @@ adapts each layout to the cells, which is what the mod is about.
 - **The mod page.** `mod-description-long.md` gets a "Screenshots"
   section with one or two images per planet from the repository, and a
   line that says a script built the bases. A new script,
-  `tools/portal_images.py`, uploads all 30 to the portal gallery, which
+  `tools/portal_images.py`, uploads the 10 to the portal gallery, which
   shows them as a strip of thumbnails at the top of the mod page. It
   keeps the images that are in the gallery now and adds the new ones after
   them. The stage 5 wide shot of Nauvis goes first, so that it becomes the
@@ -165,9 +178,9 @@ adapts each layout to the cells, which is what the mod is about.
   images. The owner then looks at the screenshots. The second PR adds the
   JPEGs and the "Screenshots" section of `mod-description-long.md`, which
   `description.yml` sends to the portal when it merges.
-- **Re-runs.** All 30 JPEGs go in the repository, about 10 MB. A re-run
+- **Re-runs.** The 10 JPEGs go in the repository, about 4 MB. A re-run
   overwrites them in place. It happens only when the look of the mod
-  changes, because each commit of new images adds about 10 MB to the
+  changes, because each commit of new images adds about 4 MB to the
   history for good (owner's choice).
 
 ## Left to the builder

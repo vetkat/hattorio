@@ -6,6 +6,7 @@
 
 local Build = require("build")
 local Camera = require("camera")
+local Kit = require("layouts.kit")
 local planets = require("planets")
 
 -- require works only while control.lua loads, so the layouts load here.
@@ -20,18 +21,11 @@ local SAMPLE_TICKS = 60
 local CLIP_FRAMES = 600
 local MIN_WORKING = 0.6
 
+-- A queue of steps. `head` is the next one, so that a step leaves the queue
+-- without moving the others.
 local steps = {}
+local head = 1
 local wait = 0
-
--- Buildings whose status, fluids and heat the log shows after each stage.
-local DEBUG_NAMES = {}
-for _, n in ipairs({ "foundry", "heating-tower", "heat-exchanger", "steam-turbine",
-  "storage-tank", "pumpjack", "cryogenic-plant", "offshore-pump" }) do
-  DEBUG_NAMES[n] = true
-end
-
-local STATUS = {}
-for k, v in pairs(defines.entity_status) do STATUS[v] = k end
 
 local function say(text) log("SHOWCASE " .. text) end
 
@@ -55,13 +49,7 @@ end
 -- Mark the prerequisites of a technology as researched, and queue it, so
 -- that labs have something to work on.
 local function research(force, name)
-  local function done(tech)
-    for _, pre in pairs(tech.prerequisites) do
-      done(pre)
-      pre.researched = true
-    end
-  end
-  done(force.technologies[name])
+  for _, pre in pairs(force.technologies[name].prerequisites) do Kit.unlock(force, pre.name) end
   force.add_research(name)
 end
 
@@ -105,50 +93,6 @@ local function plan_planet(name)
       table.sort(parts)
       say(string.format("WORKING %s %d working=%d total=%d %s", name, stage, n, total,
         table.concat(parts, " ")))
-      local ins = {}
-      for status, count in pairs(b:inserters()) do ins[#ins + 1] = status .. "=" .. count end
-      table.sort(ins)
-      log("showcase: inserters " .. name .. " " .. stage .. " " .. table.concat(ins, " "))
-      for _, e in ipairs(b.built) do
-        if e.valid and e.type == "inserter"
-          and e.status == defines.entity_status.waiting_for_source_items then
-          local pt, dt = e.pickup_target, e.drop_target
-          log(string.format("showcase: idle inserter %s at %.1f,%.1f pickup %.1f,%.1f %s to %s",
-            e.name, e.position.x, e.position.y, e.pickup_position.x, e.pickup_position.y,
-            pt and pt.name or "nothing", dt and dt.name or "nothing"))
-        end
-      end
-      for _, e in ipairs(b.built) do
-        if e.valid and DEBUG_NAMES[e.name] then
-          local fluids = {}
-          for fluid, amount in pairs(e.get_fluid_contents()) do
-            fluids[#fluids + 1] = fluid .. "=" .. math.floor(amount)
-          end
-          local recipe = e.type == "assembling-machine" and e.get_recipe()
-          local ok, temp = pcall(function() return e.temperature end)
-          log(string.format("showcase: %s %.1f,%.1f %s %s %s T=%s frozen=%s", e.name, e.position.x,
-            e.position.y, STATUS[e.status] or tostring(e.status), recipe and recipe.name or "-",
-            table.concat(fluids, " "), ok and tostring(temp) or "-", tostring(e.frozen)))
-        end
-      end
-      for _, e in ipairs(b.built) do
-        if e.valid and (e.status == defines.entity_status.no_ingredients
-          or e.status == defines.entity_status.fluid_ingredient_shortage) then
-          game.take_screenshot({ surface = b.surface, position = e.position, zoom = 3,
-            resolution = { 900, 900 }, show_gui = false, daytime = 0,
-            path = string.format("showcase/debug/%s-%d-starved.png", name, stage) })
-          break
-        end
-      end
-      for _, e in ipairs(b.built) do
-        if e.valid and e.type == "mining-drill"
-          and e.status == defines.entity_status.waiting_for_space_in_destination then
-          game.take_screenshot({ surface = b.surface, position = e.position, zoom = 1,
-            resolution = { 1400, 1400 }, show_gui = false, daytime = 0,
-            path = string.format("showcase/debug/%s-%d-blocked.png", name, stage) })
-          break
-        end
-      end
       if total > 0 and n / total < MIN_WORKING then
         say(string.format("ERROR %s stage %d: %d of %d machines work", name, stage, n, total))
       end
@@ -207,8 +151,10 @@ script.on_event(defines.events.on_tick, function()
   -- Run the steps that need no wait in the same tick. A step with a wait
   -- ends the tick: each frame of a clip waits one tick, so that it shows a
   -- tick of its own.
-  while #steps > 0 do
-    local step = table.remove(steps, 1)
+  while steps[head] do
+    local step = steps[head]
+    steps[head] = nil
+    head = head + 1
     step.fn()
     if step.ticks > 0 then
       wait = step.ticks - 1

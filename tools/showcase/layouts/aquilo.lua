@@ -23,19 +23,27 @@ local WET = { "ammoniacal-ocean", "ammoniacal-ocean-2", "brash-ice" }
 
 local FUEL = { { name = "rocket-fuel", count = 960 } }
 
+-- A heat pipe holds 1 MJ for each degree. The first fuel of a tower does
+-- not warm a cold network to 500 degrees, and the heat exchanger needs
+-- that. Without power, the inserter brings no more fuel. So each new heat
+-- building starts warm, as a player warms it up by hand. The towers keep it
+-- warm from then on.
+local WARM = 600
+local TOWER = { fuel = "rocket-fuel", fuel_count = 40, temperature = WARM }
+
 -- A heating tower at (x, y), with an inserter that feeds it from a chest
 -- below it. The tower starts with fuel, so that it heats before the power
 -- comes. Its south side takes heat to (x + 1, y + 3), where the inserter
 -- stands, so a heat pipe at (x, y + 3) keeps the inserter warm.
 local function heater(l, x, y)
-  l[#l + 1] = { "heating-tower", x, y, nil, { fuel = "rocket-fuel", fuel_count = 40 } }
+  l[#l + 1] = { "heating-tower", x, y, nil, TOWER }
   l[#l + 1] = { "inserter", x + 1, y + 3, "north", { from = "south" } }
   l[#l + 1] = { "steel-chest", x + 1, y + 4, nil, { items = FUEL } }
 end
 
 local function pipes(l, x1, y1, x2, y2)
   for x = x1, x2 do
-    for y = y1, y2 do l[#l + 1] = { "heat-pipe", x, y } end
+    for y = y1, y2 do l[#l + 1] = { "heat-pipe", x, y, nil, { temperature = WARM } } end
   end
 end
 
@@ -46,13 +54,11 @@ end
 local function plant()
   local l = {
     { "steam-turbine", 0, -2 },
-    { "heat-exchanger", 0, 3 },
+    { "heat-exchanger", 0, 3, nil, { temperature = WARM } },
     { "storage-tank", -3, 2, nil, { fluid = { name = "water", amount = 25000 } } },
     { "storage-tank", -5, -1, nil, { fluid = { name = "water", amount = 25000 } } },
     { "medium-electric-pole", 4, 0 },
     { "medium-electric-pole", 4, 8 },
-    -- A test: an inserter that touches the tower and no heat pipe.
-    { "inserter", 3, 7, "north", { from = "south" } },
   }
   heater(l, 0, 6)
   pipes(l, -3, 5, 3, 5)
@@ -107,7 +113,7 @@ local function well(side, tanks)
     local t = w.tanks[i]
     l[#l + 1] = { "storage-tank", t[1], t[2] }
     for _, h in ipairs(i == 1 and w.heat or w.more[i - 1]) do
-      l[#l + 1] = { "heat-pipe", h[1], h[2] }
+      l[#l + 1] = { "heat-pipe", h[1], h[2], nil, { temperature = WARM } }
     end
   end
   return l, w.pole
@@ -132,7 +138,7 @@ local function cryo()
     { "inserter", 5, 2, "east", { from = "west" } },
     { "steel-chest", 6, 2 },
     { "medium-electric-pole", 5, 5 },
-    { "heating-tower", 6, -2, nil, { fuel = "rocket-fuel", fuel_count = 40 } },
+    { "heating-tower", 6, -2, nil, TOWER },
     { "inserter", 9, -1, "west", { from = "east" } },
     { "steel-chest", 10, -1, nil, { items = FUEL } },
     { "medium-electric-pole", 9, 1 },
@@ -155,11 +161,6 @@ local function wells(b, near, count, tanks)
   -- fills a tank in well under an hour. The poorest wells come first, so
   -- that the tanks last the whole run.
   table.sort(found, function(p, q) return p.amount < q.amount end)
-  if found[1] then
-    game.take_screenshot({ surface = b.surface, position = found[1].position, zoom = 0.5,
-      resolution = { 1600, 1600 }, show_gui = false, daytime = 0,
-      path = "showcase/debug/aquilo-oil.png" })
-  end
   local placed, first = 0, nil
   for _, oil in ipairs(found) do
     if placed >= count then break end
@@ -221,19 +222,6 @@ local function shore(b, near)
   return nil
 end
 
--- A heat pipe holds 1 MJ for each degree. The first fuel of a tower does
--- not warm a cold network to 500 degrees, and the heat exchanger needs
--- that. Without power, the inserter brings no more fuel. So the new heat
--- buildings of each stage start warm, as a player warms them up by hand.
--- The towers keep them warm from then on.
-local HEAT = { ["heat-pipe"] = true, ["heating-tower"] = true, ["heat-exchanger"] = true }
-
-local function warm(b)
-  for _, e in ipairs(b.built) do
-    if e.valid and HEAT[e.name] and e.temperature < 500 then e.temperature = 600 end
-  end
-end
-
 local stages = {}
 
 stages[1] = function(b)
@@ -275,13 +263,6 @@ stages[5] = function(b)
   local box, mid = b:bounds(), b:middle()
   b:rails(math.floor(box.left) - 20, math.floor(box.right) + 20, math.floor(mid[2]) + 24)
   b.focus = { mid[1], mid[2] + 12 }
-end
-
-for i, stage in ipairs(stages) do
-  stages[i] = function(b)
-    stage(b)
-    warm(b)
-  end
 end
 
 return { stages = stages }

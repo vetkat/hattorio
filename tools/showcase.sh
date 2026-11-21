@@ -11,7 +11,8 @@
 # opens while the script runs.
 #
 # Output:
-#   docs/preview/showcase/<planet>-<stage>.jpg and <planet>-wide.jpg
+#   docs/preview/showcase/<planet>-5.jpg and <planet>-wide.jpg
+#   ~/Videos/hattorio-showcase/stills/<planet>-<1..4>.jpg
 #   ~/Videos/hattorio-showcase/<planet>-<stage>.mp4, silent
 set -euo pipefail
 
@@ -21,6 +22,7 @@ binary=${FACTORIO_BINARY:-$HOME/.local/share/Steam/steamapps/common/Factorio/bin
 work=${SHOWCASE_WORK:-${XDG_CACHE_HOME:-$HOME/.cache}/hattorio/showcase}
 videos=${SHOWCASE_VIDEOS:-$HOME/Videos/hattorio-showcase}
 shots_out=$root/docs/preview/showcase
+stills=$videos/stills
 limit=${SHOWCASE_TIMEOUT:-3600}
 # A stage takes well under a minute. Without a new SHOWCASE line for this
 # long, the run counts as stuck and stops.
@@ -33,7 +35,7 @@ done
 
 # A fresh work folder, so that old frames or shots cannot count.
 rm -rf "$work"
-mkdir -p "$work/write" "$work/mods" "$videos" "$shots_out"
+mkdir -p "$work/write" "$work/mods" "$videos" "$shots_out" "$stills"
 ln -s "$root" "$work/mods/hattorio"
 cp -r "$root/tools/showcase" "$work/mods/hattorio-showcase"
 {
@@ -133,12 +135,18 @@ stop_game
 wait "$game" 2>/dev/null || true
 [ "$status" = done ] || exit 1
 
+# Stage 5 and the wide shot of each planet go to the repository and the mod
+# page. The other stills go next to the clips, for the video.
 count=0
 for p in $planets; do
   for n in 1 2 3 4 5 wide; do
     png=$shots/$p-$n.png
     [ -f "$png" ] || { echo "showcase: missing $p-$n.png" >&2; exit 1; }
-    magick "$png" -quality 85 "$shots_out/$p-$n.jpg"
+    case $n in
+      5 | wide) out=$shots_out ;;
+      *) out=$stills ;;
+    esac
+    magick "$png" -quality 85 "$out/$p-$n.jpg"
     count=$((count + 1))
   done
   for n in 1 2 3 4 5; do
@@ -149,4 +157,4 @@ if [ -n "$(ls -A "$frames" 2>/dev/null)" ]; then
   echo "showcase: frames left in $frames" >&2
   exit 1
 fi
-echo "showcase: $count screenshots in $shots_out, clips in $videos"
+echo "showcase: $count screenshots, stage 5 and wide in $shots_out, the rest in $stills, clips in $videos"

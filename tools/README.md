@@ -42,5 +42,16 @@ game window opens while the script runs.
 
 The builder places a building only where the game allows it, so no building
 stands on a band. A stage fails if fewer than 60% of its miners, furnaces and
-assemblers work after 5 minutes of game time. The script also stops
-after 5 minutes without progress, and after an hour in all.
+assemblers work. A machine counts as working if it works at any of 30
+checks, one each second, at the end of 5 minutes of game time. The script
+also stops after 5 minutes without progress, and after an hour in all.
+
+```bash
+FACTORIO_API_KEY=... python3 -m tools.portal_images FIRST.jpg [MORE.jpg ...]
+```
+
+`portal_images.py` adds the images to the gallery of the mod page. The
+first file leads the gallery, then the images that the gallery has
+already, then the other new files. The key needs the *ModPortal: Edit
+Mods* permission. Each run uploads the files again, so run it once for
+each set of new images.
