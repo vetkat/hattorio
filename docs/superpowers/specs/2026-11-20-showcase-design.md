@@ -186,6 +186,15 @@ The showcase is a tool, not mod code. It has no in-game test. Its checks:
 - The script logs how many buildings it placed and refused for each stage.
   A stage with no buildings placed is an error.
 - Before each screenshot, the script counts the crafting machines,
-  furnaces and miners of the base. It also counts how many of them have
-  the status `working`. If fewer than 60% work, the run fails.
+  furnaces and miners of the base. In the last 30 seconds of the warm-up,
+  it checks the status of each of them once a second. A machine counts as
+  working if it has the status `working` in any of those 30 checks. So a
+  machine that waits for space or input part of the time still counts.
+  If fewer than 60% work, the run fails. The owner chose this rule, because
+  a cryogenic plant on Aquilo waits for its inserter most of the time.
+- On Aquilo, the cryogenic plant runs at about 8% on purpose. A basic
+  inserter takes its ice out at about 0.83 a second, so the plant makes
+  one batch of 0.5 seconds in about 6 seconds. At that rate, its chest
+  and its ammonia tank last to the end of the run. In the clips, the plant
+  stands still most of the time. The owner accepted this.
 - A person looks at every screenshot before it goes on the mod page.
