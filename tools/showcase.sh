@@ -55,11 +55,15 @@ cp -r "$root/tools/showcase" "$work/mods/hattorio-showcase"
   for p in $planets; do printf ' "%s",' "$p"; done
   printf ' }\n'
 } > "$work/mods/hattorio-showcase/planets.lua"
+# Since 2.1 the recycler is a mod of its own, and Fulgora needs it. The
+# game enables a built-in mod that the list leaves out, but the list names
+# it so that the run does not depend on that.
 cat > "$work/mods/mod-list.json" <<'EOF'
 {"mods": [
   {"name": "base", "enabled": true},
   {"name": "space-age", "enabled": true},
   {"name": "quality", "enabled": true},
+  {"name": "recycler", "enabled": true},
   {"name": "elevated-rails", "enabled": true},
   {"name": "hattorio", "enabled": true},
   {"name": "hattorio-showcase", "enabled": true}
