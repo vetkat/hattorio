@@ -639,10 +639,10 @@ of scope. They need a second tiling next to the hat (section 17).
 - **A texture ocean from another mod can look wrong.** On Aquilo and
   Fulgora, the copy of a water tile that a texture draws takes the whole
   look of a shader ocean of these planets. That ocean has the same fluid
-  and a lower layer. So the band over a modded texture ocean looks like
-  the vanilla ocean, not like a darker version of the modded tile. If no
-  such ocean exists, the copy gets a tint, and the tint stops at the edge
-  of each tile.
+  and a lower layer. So the band over a modded texture ocean looks like an
+  ocean of these planets, not like a darker version of the modded tile. If
+  no such ocean exists, the copy gets a tint, and the tint stops at the
+  edge of each tile.
 - **Spawn is on the centre of the H metatile** (section 5).
 
 ## 17. Alternatives
