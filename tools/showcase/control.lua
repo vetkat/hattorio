@@ -14,6 +14,9 @@ for _, name in ipairs(planets) do layouts[name] = require("layouts." .. name) en
 
 local WARM_TICKS = 18000
 local WARM_SPEED = 16
+-- The last 30 seconds of a warm-up: one sample of the machines each second.
+local SAMPLES = 30
+local SAMPLE_TICKS = 60
 local CLIP_FRAMES = 600
 local MIN_WORKING = 0.6
 
@@ -89,7 +92,11 @@ local function plan_planet(name)
       if placed == 0 then say("ERROR " .. name .. " stage " .. stage .. " placed nothing") end
       if b.research then research(b.force, b.research) b.research = nil end
       game.speed = WARM_SPEED
-    end, WARM_TICKS)
+      b.recent = {}
+    end, WARM_TICKS - SAMPLES * SAMPLE_TICKS)
+    for _ = 1, SAMPLES do
+      add(function() b:sample() end, SAMPLE_TICKS)
+    end
     add(function()
       game.speed = 1
       local n, total, by_status = b:working()

@@ -528,14 +528,33 @@ end
 local STATUS_NAME = {}
 for name, value in pairs(defines.entity_status) do STATUS_NAME[value] = name end
 
---- How many miners, furnaces and crafting machines work, out of all of them,
--- and a count of each status, such as no_power or full_output.
+--- Note each miner, furnace and crafting machine that works now. A machine
+-- that waits part of the time, for space or for input, still works if it
+-- finished something lately. So the showcase samples each machine during
+-- the last 30 seconds of a warm-up, and working() counts each machine that
+-- worked in any sample.
+function Build:sample()
+  self.recent = self.recent or {}
+  for _, e in ipairs(self.built) do
+    if e.valid and WORKING_TYPES[e.type] and e.status == defines.entity_status.working then
+      self.recent[e.unit_number] = true
+    end
+  end
+end
+
+--- How many miners, furnaces and crafting machines worked in the samples
+-- since the last call, out of all of them. Also a count of each status now,
+-- such as no_power or full_output.
 function Build:working()
   local n, total, by_status = 0, 0, {}
+  local recent = self.recent or {}
+  self.recent = {}
   for _, e in ipairs(self.built) do
     if e.valid and WORKING_TYPES[e.type] then
       total = total + 1
-      if e.status == defines.entity_status.working then n = n + 1 end
+      if recent[e.unit_number] or e.status == defines.entity_status.working then
+        n = n + 1
+      end
       local name = STATUS_NAME[e.status] or tostring(e.status)
       by_status[name] = (by_status[name] or 0) + 1
     end
