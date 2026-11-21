@@ -20,6 +20,13 @@ local MIN_WORKING = 0.6
 local steps = {}
 local wait = 0
 
+-- Buildings whose status, fluids and heat the log shows after each stage.
+local DEBUG_NAMES = {}
+for _, n in ipairs({ "foundry", "heating-tower", "heat-exchanger", "steam-turbine",
+  "storage-tank", "pumpjack", "cryogenic-plant", "offshore-pump" }) do
+  DEBUG_NAMES[n] = true
+end
+
 local STATUS = {}
 for k, v in pairs(defines.entity_status) do STATUS[v] = k end
 
@@ -105,15 +112,16 @@ local function plan_planet(name)
         end
       end
       for _, e in ipairs(b.built) do
-        if e.valid and e.name == "foundry" then
+        if e.valid and DEBUG_NAMES[e.name] then
           local fluids = {}
           for fluid, amount in pairs(e.get_fluid_contents()) do
             fluids[#fluids + 1] = fluid .. "=" .. math.floor(amount)
           end
-          local recipe = e.get_recipe()
-          log(string.format("showcase: foundry %.1f,%.1f %s %s %s", e.position.x, e.position.y,
-            STATUS[e.status] or e.status, recipe and recipe.name or "none",
-            table.concat(fluids, " ")))
+          local recipe = e.type == "assembling-machine" and e.get_recipe()
+          local ok, temp = pcall(function() return e.temperature end)
+          log(string.format("showcase: %s %.1f,%.1f %s %s %s T=%s frozen=%s", e.name, e.position.x,
+            e.position.y, STATUS[e.status] or tostring(e.status), recipe and recipe.name or "-",
+            table.concat(fluids, " "), ok and tostring(temp) or "-", tostring(e.frozen)))
         end
       end
       for _, e in ipairs(b.built) do

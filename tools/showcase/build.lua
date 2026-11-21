@@ -51,13 +51,15 @@ local function footprint(name, x, y, direction)
 end
 
 -- True if only obstacles stand in the way, so that clearing them would let
--- the building stand.
-function Build:only_obstacles(name, x, y, direction)
+-- the building stand. With `paved`, a set of tile names, those tiles count
+-- as land, and the building can stand with nothing to clear.
+function Build:only_obstacles(name, x, y, direction, paved)
   local area, w, h = footprint(name, x, y, direction)
   for tx = x, x + w - 1 do
     for ty = y, y + h - 1 do
       local tile = self.surface.get_tile(tx, ty)
-      if tile.collides_with("hattorio_band") or tile.collides_with("water_tile") then
+      if tile.collides_with("hattorio_band")
+        or (tile.collides_with("water_tile") and not (paved and paved[tile.name])) then
         return false
       end
     end
@@ -70,7 +72,7 @@ function Build:only_obstacles(name, x, y, direction)
       return false
     end
   end
-  return blocking
+  return blocking or paved ~= nil
 end
 
 function Build:clear(name, x, y, direction)
@@ -80,6 +82,8 @@ function Build:clear(name, x, y, direction)
   end
 end
 
+local SCRIPT_CHECK = { ["storage-tank"] = true, ["heat-pipe"] = true }
+
 function Build:can_place(name, x, y, direction)
   if prototypes.entity[name].type == "mining-drill" then
     -- A drill only goes where there is something to mine.
@@ -88,16 +92,53 @@ function Build:can_place(name, x, y, direction)
       area = { { c.x - 1.4, c.y - 1.4 }, { c.x + 1.4, c.y + 1.4 } } })
     if n == 0 then return false end
   end
+  -- The manual check refuses a tank at the output of a pumpjack, and a heat
+  -- pipe at the pipe connection of a tank. The script check allows both, and
+  -- it still keeps buildings off bands and each other.
+  local check = SCRIPT_CHECK[prototypes.entity[name].type] and "script" or "manual"
   local ok = self.surface.can_place_entity({
     name = name, position = centre(name, x, y, direction),
     direction = DIR[direction or "north"], force = self.force,
-    build_check_type = defines.build_check_type.manual,
+    build_check_type = defines.build_check_type[check],
   })
   return ok or self:only_obstacles(name, x, y, direction)
 end
 
+--- What stands under a building: its tile names and entity names, for the
+-- log when the game refuses it.
+function Build:why(name, x, y, direction)
+  local area, w, h = footprint(name, x, y, direction)
+  local tiles, out = {}, {}
+  for tx = x, x + w - 1 do
+    for ty = y, y + h - 1 do tiles[self.surface.get_tile(tx, ty).name] = true end
+  end
+  for n in pairs(tiles) do out[#out + 1] = n end
+  for _, e in ipairs(self.surface.find_entities_filtered({ area = area })) do
+    out[#out + 1] = e.type .. ":" .. e.name
+  end
+  return table.concat(out, " ")
+end
+
 function Build:checker()
   return function(name, x, y, direction) return self:can_place(name, x, y, direction) end
+end
+
+--- Like checker, but a tile of `from` counts as land, because pave will lay
+-- a platform there first. A band still blocks.
+function Build:pave_checker(from)
+  local names = {}
+  for _, n in ipairs(from) do names[n] = true end
+  return function(name, x, y, direction)
+    local _, w, h = footprint(name, x, y, direction)
+    for tx = x, x + w - 1 do
+      for ty = y, y + h - 1 do
+        if names[self.surface.get_tile(tx, ty).name] then
+          return self:only_obstacles(name, x, y, direction, names)
+        end
+      end
+    end
+    return self:can_place(name, x, y, direction)
+  end
 end
 
 -- An inserter takes from one side and drops on the other. Which side the
@@ -125,6 +166,8 @@ end
 --- Place one building. Returns the entity, or nil if the game refuses.
 function Build:put(name, x, y, direction, extra)
   if not self:can_place(name, x, y, direction) then
+    log(string.format("showcase: refused %s at %d,%d: %s", name, x, y,
+      self:why(name, x, y, direction)))
     self.refused = self.refused + 1
     return nil
   end
@@ -161,13 +204,45 @@ function Build.covers(layout, origin)
   return function(x, y) return tiles[x .. "," .. y] == true end
 end
 
+--- Lay the tile `to` under a layout at an origin, where the tile is one of
+-- `from`. On Aquilo, players build on ice platform over the ocean. The
+-- tiles go in with raise_event, so Hattorio sees them as it sees any new
+-- tiles, and a band on the way stays a band.
+function Build:pave(layout, origin, from, to)
+  local names = {}
+  for _, n in ipairs(from) do names[n] = true end
+  local tiles = {}
+  for _, e in ipairs(layout) do
+    local proto = prototypes.entity[e[1]]
+    local w, h = proto.tile_width, proto.tile_height
+    if e[4] == "east" or e[4] == "west" then w, h = h, w end
+    for dx = 0, w - 1 do
+      for dy = 0, h - 1 do
+        local x, y = origin[1] + e[2] + dx, origin[2] + e[3] + dy
+        if names[self.surface.get_tile(x, y).name] then
+          tiles[#tiles + 1] = { name = to, position = { x, y } }
+        end
+      end
+    end
+  end
+  if #tiles > 0 then self.surface.set_tiles(tiles, true, true, true, true) end
+  return #tiles
+end
+
 --- Place a whole layout at an origin, or nothing if the game refuses any
 -- part of it.
 function Build:place(layout, origin)
   if not Place.fit(layout, origin, self:checker()) then return nil end
   local out = {}
   for _, e in ipairs(layout) do
-    out[#out + 1] = self:put(e[1], origin[1] + e[2], origin[2] + e[3], e[4], e[5])
+    local ent = self:put(e[1], origin[1] + e[2], origin[2] + e[3], e[4], e[5])
+    if not ent then
+      -- A part that fits alone can still meet an earlier part. Take the
+      -- block away again, so that the next try finds the tiles free.
+      for _, done in ipairs(out) do done.destroy() end
+      return nil
+    end
+    out[#out + 1] = ent
   end
   return out
 end
@@ -260,9 +335,11 @@ local function wire(a, b)
 end
 
 --- Pipes from tile `a` to tile `b`, along one leg in x and one in y. The
--- builder tries both orders. Pipes go only where the game allows, so they never cross
--- a band. Returns true if a whole path was laid.
-function Build:pipe_path(a, b)
+-- builder tries both orders. Pipes go only where the game allows, so they
+-- never cross a band. `name` is "pipe" by default, or "heat-pipe". Returns
+-- true if a whole path was laid.
+function Build:pipe_path(a, b, name)
+  name = name or "pipe"
   local function path(x_first)
     local tiles, x, y = {}, a[1], a[2]
     local function go(tx, ty)
@@ -278,10 +355,10 @@ function Build:pipe_path(a, b)
   for _, x_first in ipairs({ true, false }) do
     local tiles, ok = path(x_first), true
     for _, p in ipairs(tiles) do
-      if not self:can_place("pipe", p[1], p[2]) then ok = false break end
+      if not self:can_place(name, p[1], p[2]) then ok = false break end
     end
     if ok then
-      for _, p in ipairs(tiles) do self:put("pipe", p[1], p[2]) end
+      for _, p in ipairs(tiles) do self:put(name, p[1], p[2]) end
       return true
     end
   end
