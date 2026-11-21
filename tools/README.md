@@ -32,8 +32,10 @@ tools/showcase.sh nauvis gleba    # some of them
 
 `showcase.sh` builds a base in five stages on each planet, with the mod in
 `tools/showcase/`. It takes a screenshot of each stage and a wide shot of the
-last one, and records a silent clip of each stage. The screenshots go to
-`docs/preview/showcase/` and the clips to `~/Videos/hattorio-showcase/`.
+last one, and records a silent clip of each stage. Stage 5 and the wide
+shot go to `docs/preview/showcase/`, the other screenshots to
+`~/Videos/hattorio-showcase/stills/`, and the clips to
+`~/Videos/hattorio-showcase/`.
 
 The script runs the Steam copy of Factorio with graphics, because a
 screenshot needs a renderer. The game gets its own config, mods and save

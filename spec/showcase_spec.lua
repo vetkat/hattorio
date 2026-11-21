@@ -14,7 +14,13 @@ describe("showcase placement", function()
     local p = Place.spiral(0, 0, 4, 9)
     assert.are.same({ 0, 0 }, p[1])
     assert.are.equal(9, #p)
-    for i = 2, 9 do assert.is_true(math.abs(p[i][1]) <= 4 and math.abs(p[i][2]) <= 4) end
+    local seen = {}
+    for i = 2, 9 do
+      assert.is_true(math.abs(p[i][1]) == 4 or math.abs(p[i][2]) == 4, "not on ring 1")
+      local key = p[i][1] .. "," .. p[i][2]
+      assert.is_nil(seen[key], "repeats " .. key)
+      seen[key] = true
+    end
   end)
 
   it("fits a layout only where every building can go", function()
@@ -125,6 +131,27 @@ describe("showcase routes stay inside their length", function()
     local band = { ["8,0"] = true, ["9,0"] = true }
     local origin = Place.find_along(layout, { 0, 0 }, "east", 8, 20, grid(band), tiers)
     assert.are.same({ 11, 0 }, origin)
+  end)
+end)
+
+describe("showcase routes with two gaps", function()
+  local tiers = { { "underground-belt", 4 } }
+
+  -- With one free tile between two gaps, that tile holds the exit of the
+  -- first pair. It cannot also be the entrance of the second pair.
+  it("refuses two gaps with one free tile between them", function()
+    local band = { ["4,0"] = true, ["5,0"] = true, ["7,0"] = true, ["8,0"] = true }
+    assert.is_nil(Place.route({ 0, 0 }, "east", 12, grid(band), tiers))
+  end)
+
+  it("routes two gaps with two free tiles between them", function()
+    local band = { ["4,0"] = true, ["5,0"] = true, ["8,0"] = true, ["9,0"] = true }
+    local route = Place.route({ 0, 0 }, "east", 14, grid(band), tiers)
+    local kinds = {}
+    for _, e in ipairs(route) do
+      if e[5] then kinds[#kinds + 1] = e[5] .. "@" .. e[2] end
+    end
+    assert.are.same({ "input@3", "output@6", "input@7", "output@10" }, kinds)
   end)
 end)
 

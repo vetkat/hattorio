@@ -146,6 +146,9 @@ function Place.route(start, dir, length, can_place, tiers, turned)
       end
       local last = out[#out]
       if not last or (turned and #out == 1) then return nil end
+      -- The tile before this gap holds the exit of the last gap. It cannot
+      -- be an entrance as well.
+      if last[5] == "output" then return nil end
       out[#out] = { tier, last[2], last[3], dir, "input" }
       out[#out + 1] = { tier, x + d[1] * gap, y + d[2] * gap, dir, "output" }
       i = i + gap + 1

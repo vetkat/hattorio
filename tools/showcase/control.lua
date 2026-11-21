@@ -115,7 +115,9 @@ local function plan_planet(name)
           { 1920, 1080 }, 90)
       end, 1)
     end
-    add(function() end, 2)
+    -- The game saves screenshots from a queue. Wait until the queue is
+    -- empty, so that ffmpeg finds every frame on disk.
+    add(function() game.set_wait_for_screenshots_to_finish() end, 2)
     add(function() say(string.format("CLIP %s %d frames=%d", name, stage, CLIP_FRAMES)) end)
   end
   add(function()

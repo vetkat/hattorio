@@ -29,6 +29,18 @@ limit=${SHOWCASE_TIMEOUT:-3600}
 idle_limit=${SHOWCASE_IDLE:-300}
 
 [ -x "$binary" ] || { echo "showcase: no Factorio at $binary" >&2; exit 2; }
+for p in $planets; do
+  case $p in
+    nauvis | vulcanus | fulgora | gleba | aquilo) ;;
+    *) echo "showcase: no planet $p" >&2; exit 2 ;;
+  esac
+done
+# The script deletes the work folder on each run, so it takes only a folder
+# named showcase.
+case $work in
+  */showcase) ;;
+  *) echo "showcase: SHOWCASE_WORK must end in /showcase, not $work" >&2; exit 2 ;;
+esac
 for tool in ffmpeg magick; do
   command -v "$tool" >/dev/null || { echo "showcase: $tool is missing" >&2; exit 2; }
 done
@@ -98,6 +110,8 @@ while [ "$status" = running ]; do
   fi
   # wc counts newlines, so a line that the game is still writing does not
   # count yet.
+  # The game can move the log aside while it starts.
+  [ -f "$log" ] || { sleep 2; continue; }
   lines=$(wc -l < "$log")
   if [ "$lines" -gt "$seen" ]; then
     while IFS= read -r line; do
@@ -106,8 +120,8 @@ while [ "$status" = running ]; do
         *"SHOWCASE CLIP "*)
           set -- ${line##*SHOWCASE CLIP }
           name=$1-$2
-          # take_screenshot writes the last frame at the end of its tick.
-          # The script logs the line one tick later.
+          # The script logs this line when the game saves no more frames
+          # (set_wait_for_screenshots_to_finish).
           # With this flag, ffmpeg does not read the lines of this loop.
           ffmpeg -nostdin -v error -y -framerate 60 -i "$frames/$name/%04d.jpg" \
             -c:v libx264 -pix_fmt yuv420p -an "$videos/$name.mp4"

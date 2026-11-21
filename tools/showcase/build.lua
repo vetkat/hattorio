@@ -223,6 +223,7 @@ function Build:place(layout, origin)
       -- A part that fits alone can still meet an earlier part. Take the
       -- block away again, so that the next try finds the tiles free.
       for _, done in ipairs(out) do done.destroy() end
+      self.placed = self.placed - #out
       return nil
     end
     out[#out + 1] = ent
@@ -234,8 +235,7 @@ end
 function Build:place_near(layout, centre_tile, tries)
   if not centre_tile then return nil end
   local origin = Place.find(layout, centre_tile, 3, tries or 400, self:checker())
-  if not origin then return nil end
-  self:place(layout, origin)
+  if not origin or not self:place(layout, origin) then return nil end
   return origin
 end
 
@@ -251,15 +251,14 @@ function Build:place_along(layout, start, dir, from, to, came)
   local origin, k = Place.find_along(layout, start, dir, from or 4, to or 60, check, TIERS, covers,
     turned)
   if origin then
-    self:place(layout, origin)
+    if not self:place(layout, origin) then return nil end
     self:belt(start, dir, k, turned)
     return origin
   end
   local side, j
   origin, k, side, j = Place.find_bent(layout, start, dir, to or 60, 40, check, TIERS, covers,
     turned)
-  if not origin then return nil end
-  self:place(layout, origin)
+  if not origin or not self:place(layout, origin) then return nil end
   local d = STEP[dir]
   self:belt(start, dir, k, turned)
   self:belt({ start[1] + d[1] * k, start[2] + d[2] * k }, side, j, true)

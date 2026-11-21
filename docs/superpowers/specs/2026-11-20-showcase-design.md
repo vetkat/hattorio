@@ -127,7 +127,8 @@ adapts each layout to the cells, which is what the mod is about.
   - Gleba has lines of stone furnaces, and agricultural towers in stage 4.
     It has no biochambers.
   - Aquilo has its own stages: a heated power plant, a cryogenic plant at
-    the shore on ice platform, a second power plant, an oil well, and the
+    the shore on ice platform, a second cryogenic plant or, where no shore
+    has room, a second power plant, an oil well, and a second well with the
     rails. It has no roboports. Bands leave little room on its islands.
 - **Screenshots.** Each stage gets one screenshot at the zoom of a player
   (zoom 1). The last stage also gets a wide one (zoom 0.3). That is 6 for

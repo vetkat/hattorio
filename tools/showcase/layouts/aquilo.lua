@@ -125,7 +125,7 @@ end
 --
 -- One inserter takes the ice out to a chest, about 0.83 a second. That holds
 -- the plant to one batch in about 6 seconds, and to about 8 ammonia a
--- second. From stage 3 to the end, that is about 770 ice and 7,700
+-- second. From stage 2 to the end, that is about 1,000 ice and 10,000
 -- ammonia.
 -- The tower at (6, -2) heats a ring of heat pipes round the inserter and
 -- its chest. It also heats a row along the top of the plant, next to the

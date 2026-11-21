@@ -18,6 +18,7 @@ images: a second run adds the same pictures again.
 import json
 import os
 import sys
+import urllib.error
 import urllib.request
 import uuid
 
@@ -37,6 +38,16 @@ def gallery_order(current, new, first):
     return out
 
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Refuse a redirect, so that the key never goes to another address."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise urllib.error.HTTPError(req.full_url, code, "redirect refused", headers, fp)
+
+
+_KEYED = urllib.request.build_opener(_NoRedirect)
+
+
 def _post(url, fields, key=None, files=None):
     """POST a multipart form, and return the JSON answer."""
     boundary = uuid.uuid4().hex
@@ -53,10 +64,19 @@ def _post(url, fields, key=None, files=None):
     body += ("--%s--\r\n" % boundary).encode()
     request = urllib.request.Request(url, data=body, method="POST")
     request.add_header("Content-Type", "multipart/form-data; boundary=%s" % boundary)
+    opener = urllib.request.build_opener()
     if key:
         request.add_header("Authorization", "Bearer %s" % key)
-    with urllib.request.urlopen(request) as answer:
-        return json.load(answer)
+        opener = _KEYED
+    try:
+        with opener.open(request) as answer:
+            return json.load(answer)
+    except urllib.error.HTTPError as err:
+        # The portal answers an error with JSON, such as InvalidApiKey.
+        try:
+            return json.load(err)
+        except ValueError:
+            return {"error": "HTTP %d" % err.code, "message": err.reason}
 
 
 def _check(answer, step):
@@ -89,7 +109,8 @@ def main(paths):
         # The upload URL carries its own token, so it needs no key.
         image = _check(_post(slot["upload_url"], {}, files={"image": path}), "upload")
         new.append(image["id"])
-        print("uploaded %s" % path)
+        # The id lets you set the order by hand if a later step fails.
+        print("uploaded %s as %s" % (path, image["id"]))
     order = gallery_order(current, new, new[0])
     _check(_post(API + "edit", {"mod": mod, "images": ",".join(order)}, key),
            "images/edit")
