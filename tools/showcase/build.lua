@@ -143,6 +143,23 @@ function Build:put(name, x, y, direction, extra)
   return e
 end
 
+--- A function(x, y) that is true for the tiles that a layout covers at an
+-- origin, with the sizes of the buildings from the game.
+function Build.covers(layout, origin)
+  local tiles = {}
+  for _, e in ipairs(layout) do
+    local proto = prototypes.entity[e[1]]
+    local w, h = proto.tile_width, proto.tile_height
+    if e[4] == "east" or e[4] == "west" then w, h = h, w end
+    for dx = 0, w - 1 do
+      for dy = 0, h - 1 do
+        tiles[(origin[1] + e[2] + dx) .. "," .. (origin[2] + e[3] + dy)] = true
+      end
+    end
+  end
+  return function(x, y) return tiles[x .. "," .. y] == true end
+end
+
 --- Place a whole layout at an origin, or nothing if the game refuses any
 -- part of it.
 function Build:place(layout, origin)
@@ -170,14 +187,15 @@ end
 function Build:place_along(layout, start, dir, from, to)
   if not start then return nil end
   local check = self:checker()
-  local origin, k = Place.find_along(layout, start, dir, from or 4, to or 60, check, TIERS)
+  local covers = function(o) return Build.covers(layout, o) end
+  local origin, k = Place.find_along(layout, start, dir, from or 4, to or 60, check, TIERS, covers)
   if origin then
     self:place(layout, origin)
     self:belt(start, dir, k)
     return origin
   end
   local side, j
-  origin, k, side, j = Place.find_bent(layout, start, dir, to or 60, 40, check, TIERS)
+  origin, k, side, j = Place.find_bent(layout, start, dir, to or 60, 40, check, TIERS, covers)
   if not origin then return nil end
   self:place(layout, origin)
   local d = STEP[dir]
@@ -195,8 +213,10 @@ function Build:belt(start, dir, length)
     return false
   end
   local back = { north = "south", south = "north", east = "west", west = "east" }
+  local placed = {}
   for _, e in ipairs(route) do
     local ent = self:put(e[1], e[2], e[3], e[4], e[5] and { type = e[5] })
+    placed[#placed + 1] = ent
     if not ent and e[5] == "output" then
       ent = self:put(e[1], e[2], e[3], back[e[4]], { type = "output" })
       log(string.format("showcase: exit at %d,%d took direction %s: %s", e[2], e[3],
@@ -212,7 +232,7 @@ function Build:belt(start, dir, length)
         e[4], e[5] or "", self.surface.get_tile(e[2], e[3]).name, table.concat(here, " ")))
     end
   end
-  return true
+  return placed
 end
 
 -- The pole nearest to a tile, within `radius`.
@@ -264,25 +284,76 @@ function Build:poles(a, b)
   wire(prev, self:pole_near(b))
 end
 
---- A sink at the end of a belt that runs towards `dir`. Two more belt tiles
--- from `at`, each with a fast inserter into a chest at its side, and a pole.
--- That takes about 4.6 items a second. The next stage removes the sink with
--- unsink and carries the belt on from `at`.
-function Build:sink(key, at, dir)
-  if not at then return end
+--- Connect the pole at or near a tile to the nearest pole of another
+-- electric network, with a line of poles. A new block or sink starts on a
+-- network of its own, and this joins it to the base.
+function Build:link(tile)
+  local own = self:pole_near(tile)
+  if not own then return end
+  local best, best_d
+  for _, e in ipairs(self.surface.find_entities_filtered({ type = "electric-pole",
+    position = own.position, radius = 120, force = self.force })) do
+    if e.electric_network_id ~= own.electric_network_id then
+      local d = (e.position.x - own.position.x) ^ 2 + (e.position.y - own.position.y) ^ 2
+      if not best_d or d < best_d then best, best_d = e, d end
+    end
+  end
+  if best then
+    self:poles({ math.floor(own.position.x), math.floor(own.position.y) },
+      { math.floor(best.position.x), math.floor(best.position.y) })
+  end
+end
+
+-- The parts of a sink at `at`, as a layout relative to `at`.
+local function sink_layout(dir)
   local s = STEP[dir]
   local side = ({ north = "east", south = "east", east = "south", west = "south" })[dir]
   local o = STEP[side]
   local back = ({ east = "west", south = "north" })[side]
-  local parts = {}
+  local l = {}
   for k = 0, 1 do
-    local x, y = at[1] + s[1] * k, at[2] + s[2] * k
-    parts[#parts + 1] = self:put("transport-belt", x, y, dir)
-    parts[#parts + 1] = self:put("fast-inserter", x + o[1], y + o[2], side, { from = back })
-    parts[#parts + 1] = self:put("iron-chest", x + 2 * o[1], y + 2 * o[2])
+    local x, y = s[1] * k, s[2] * k
+    l[#l + 1] = { "transport-belt", x, y, dir }
+    l[#l + 1] = { "fast-inserter", x + o[1], y + o[2], side, { from = back } }
+    l[#l + 1] = { "iron-chest", x + 2 * o[1], y + 2 * o[2] }
   end
-  parts[#parts + 1] = self:put("medium-electric-pole", at[1] - o[1], at[2] - o[2])
-  self.anchor[key] = { at = at, dir = dir, parts = parts }
+  l[#l + 1] = { "medium-electric-pole", -o[1], -o[2] }
+  return l, { -o[1], -o[2] }
+end
+
+--- A sink at the end of a belt that runs towards `dir`. It has two more belt
+-- tiles, each with a fast inserter into a chest at its side, and a pole.
+-- That takes about 4.6 items a second. The sink goes in whole or not at
+-- all. If it does not fit at `at`, it moves along the belt by up to 20
+-- tiles, and a belt joins it. The next stage removes it with unsink and
+-- carries the belt on from `at`.
+function Build:sink(key, at, dir)
+  if not at then return end
+  local check = self:checker()
+  -- The belt's own direction first. At a coast or a band, it can turn.
+  local turns = ({ south = { "south", "east", "west" }, north = { "north", "east", "west" },
+    east = { "east", "south", "north" }, west = { "west", "south", "north" } })[dir]
+  for _, d in ipairs(turns) do
+    local layout, pole_rel = sink_layout(d)
+    local s = STEP[d]
+    for off = 0, 20 do
+      local spot = { at[1] + s[1] * off, at[2] + s[2] * off }
+      if Place.fit(layout, spot, check)
+        and (off == 0 or Place.route(at, d, off, check, TIERS)) then
+        -- The belt that joins the sink is part of it, so that unsink
+        -- removes it too and the next stage finds the tiles free.
+        local joint = off > 0 and self:belt(at, d, off) or {}
+        local parts = self:place(layout, spot) or {}
+        for _, e in pairs(joint) do parts[#parts + 1] = e end
+        self.anchor[key] = { at = at, dir = d, parts = parts }
+        self:link({ spot[1] + pole_rel[1], spot[2] + pole_rel[2] })
+        return
+      end
+    end
+  end
+  log(string.format("showcase: no sink fits after %d,%d", at[1], at[2]))
+  -- The next stage still carries the belt on from here.
+  self.anchor[key] = { at = at, dir = dir, parts = {} }
 end
 
 --- Remove a sink, and return the tile where the belt can go on.
@@ -327,13 +398,17 @@ function Build:ore(name, near, radius)
   local step = math.max(1, math.floor(#found / 100))
   for i = 1, #found, step do
     local e = found[i]
-    local n = self.surface.count_entities_filtered({
+    -- Skip a spot where a mine works already.
+    local taken = self.surface.count_entities_filtered({
+      type = "mining-drill", position = e.position, radius = 6 }) > 0
+    local n = taken and -1 or self.surface.count_entities_filtered({
       name = name, position = e.position, radius = 5 })
     local d = (e.position.x - near[1]) ^ 2 + (e.position.y - near[2]) ^ 2
     if not best_n or n > best_n or (n == best_n and d < best_d) then
       best, best_n, best_d = e, n, d
     end
   end
+  if best_n < 1 then return nil end
   return { math.floor(best.position.x), math.floor(best.position.y) }
 end
 

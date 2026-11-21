@@ -52,6 +52,42 @@ describe("showcase placement", function()
     assert.is_nil(Place.find_bent(layout, { 0, 0 }, "south", 10, 10, function() return false end))
   end)
 
+  it("goes west on a straight line only where the block leaves the route free", function()
+    local layout = { { "stone-furnace", 0, 0 } }
+    local function covers(origin)
+      return function(x, y) return y == origin[2] and x >= origin[1] and x <= origin[1] + 6 end
+    end
+    local tiers = { { "underground-belt", 4 } }
+    local free = function() return true end
+    assert.is_nil(Place.find_along(layout, { 0, 0 }, "west", 4, 6, free, tiers, covers))
+    assert.are.same({ -4, 0 },
+      Place.find_along(layout, { 0, 0 }, "west", 4, 6, free, tiers, function(o)
+        return function(x, y) return x == o[1] and y == o[2] end
+      end))
+  end)
+
+  it("bends west only where the block does not cover its own route", function()
+    -- The block reaches 6 tiles east of its origin.
+    local function covers(origin)
+      return function(x, y) return y == origin[2] and x >= origin[1] and x <= origin[1] + 6 end
+    end
+    local layout = { { "stone-furnace", 0, 0 } }
+    -- The only free spot for the furnace is west of the line, at (-4, 5).
+    local function can_place(name, x, y)
+      if name == "stone-furnace" then return x == -4 and y == 5 end
+      return true
+    end
+    local tiers = { { "underground-belt", 4 } }
+    assert.is_nil(Place.find_bent(layout, { 0, 0 }, "south", 10, 10, can_place, tiers, covers))
+    local function short(origin)
+      return function(x, y) return x == origin[1] and y == origin[2] end
+    end
+    local origin, _, side = Place.find_bent(layout, { 0, 0 }, "south", 10, 10, can_place, tiers,
+      short)
+    assert.are.same({ -4, 5 }, origin)
+    assert.are.equal("west", side)
+  end)
+
   it("routes a belt under a band with the cheapest underground", function()
     local band = { ["5,0"] = true, ["6,0"] = true, ["7,0"] = true }
     local route = Place.route({ 0, 0 }, "east", 12, grid(band),

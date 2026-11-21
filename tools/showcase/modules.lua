@@ -111,9 +111,11 @@ function M.machines(rows, name, extra)
   for i = 0, rows - 1 do
     local y = step * i
     for k = 0, step - 1 do l[#l + 1] = { "transport-belt", 0, y + k, "south" } end
-    l[#l + 1] = { "inserter", 1, y, "east", { from = "west" } }
+    -- Fast inserters on both sides. A basic inserter moves about 0.8 items
+    -- a second, too few to keep a recycler busy or to empty it.
+    l[#l + 1] = { "fast-inserter", 1, y, "east", { from = "west" } }
     l[#l + 1] = { name, 2, y, nil, extra }
-    l[#l + 1] = { "inserter", 2 + w, y, "east", { from = "west" } }
+    l[#l + 1] = { "fast-inserter", 2 + w, y, "east", { from = "west" } }
     l[#l + 1] = { "iron-chest", 3 + w, y }
     -- Two tiles from the inserters, inside the supply area of the pole.
     l[#l + 1] = { "medium-electric-pole", 1, y + 2 }

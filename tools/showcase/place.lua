@@ -53,13 +53,18 @@ end
 -- distance. A belt can then run straight from `start` to that origin.
 --
 -- With `tiers`, an origin counts only if the belt to it has a route.
-function Place.find_along(layout, start, dir, from, to, can_place, tiers)
+-- `covers` works as for find_bent: the belt must not cross the block.
+function Place.find_along(layout, start, dir, from, to, can_place, tiers, covers)
   local d = DIRECTIONS[dir]
   for k = from, to do
     local origin = { start[1] + d[1] * k, start[2] + d[2] * k }
-    if Place.fit(layout, origin, can_place)
-      and (not tiers or Place.route(start, dir, k, can_place, tiers)) then
-      return origin, k
+    if Place.fit(layout, origin, can_place) then
+      local under = covers and covers(origin)
+      local check = can_place
+      if under then
+        check = function(name, x, y, dd) return can_place(name, x, y, dd) and not under(x, y) end
+      end
+      if not tiers or Place.route(start, dir, k, check, tiers) then return origin, k end
     end
   end
   return nil
@@ -73,18 +78,32 @@ local SIDES = {
 --- Like find_along, but the belt may bend once: `k` tiles from `start`
 -- towards `dir`, then `j` tiles to one side, to the origin. Returns the
 -- origin, k, the side and j, or nil.
-function Place.find_bent(layout, start, dir, max_k, max_j, can_place, tiers)
+--
+-- The builder places the block before its belt, so the belt must not cross
+-- it.
+--
+-- `covers(origin)` returns a function(x, y) that is true for the tiles that
+-- the block covers at that origin.
+function Place.find_bent(layout, start, dir, max_k, max_j, can_place, tiers, covers)
   local d = DIRECTIONS[dir]
   for k = 2, max_k do
     local px, py = start[1] + d[1] * k, start[2] + d[2] * k
-    local first = not tiers or Place.route(start, dir, k, can_place, tiers)
-    for _, side in ipairs(first and SIDES[dir] or {}) do
+    for _, side in ipairs(SIDES[dir]) do
       local s = DIRECTIONS[side]
       for j = 2, max_j do
         local origin = { px + s[1] * j, py + s[2] * j }
-        if Place.fit(layout, origin, can_place)
-          and (not tiers or Place.route({ px, py }, side, j, can_place, tiers)) then
-          return origin, k, side, j
+        if Place.fit(layout, origin, can_place) then
+          local under = covers and covers(origin)
+          local check = can_place
+          if under then
+            check = function(name, x, y, dd)
+              return can_place(name, x, y, dd) and not under(x, y)
+            end
+          end
+          if not tiers or (Place.route(start, dir, k, check, tiers)
+            and Place.route({ px, py }, side, j, check, tiers)) then
+            return origin, k, side, j
+          end
         end
       end
     end

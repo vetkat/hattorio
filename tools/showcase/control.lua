@@ -61,7 +61,7 @@ local function plan_planet(name)
     local planet = game.planets[name]
     local surface = planet and (planet.surface or planet.create_surface())
     if not surface then say("ERROR missing surface " .. name) return end
-    surface.always_day = true
+    surface.always_day = layout.always_day ~= false
     surface.peaceful_mode = true
     surface.request_to_generate_chunks({ 0, 0 }, 10)
     surface.force_generate_chunk_requests()
@@ -93,10 +93,20 @@ local function plan_planet(name)
       table.sort(ins)
       log("showcase: inserters " .. name .. " " .. stage .. " " .. table.concat(ins, " "))
       for _, e in ipairs(b.built) do
-        if e.valid and e.type == "underground-belt" then
-          log(string.format("showcase: underground %s %d,%d %s dir=%d items=%d", e.name,
-            e.position.x, e.position.y, e.belt_to_ground_type, e.direction,
-            e.get_transport_line(1).get_item_count() + e.get_transport_line(2).get_item_count()))
+        if e.valid and e.type == "inserter"
+          and e.status == defines.entity_status.waiting_for_source_items then
+          local pt, dt = e.pickup_target, e.drop_target
+          log(string.format("showcase: idle inserter %s at %.1f,%.1f pickup %.1f,%.1f %s to %s",
+            e.name, e.position.x, e.position.y, e.pickup_position.x, e.pickup_position.y,
+            pt and pt.name or "nothing", dt and dt.name or "nothing"))
+        end
+      end
+      for _, e in ipairs(b.built) do
+        if e.valid and e.status == defines.entity_status.no_ingredients then
+          game.take_screenshot({ surface = b.surface, position = e.position, zoom = 3,
+            resolution = { 900, 900 }, show_gui = false, daytime = 0,
+            path = string.format("showcase/debug/%s-%d-starved.png", name, stage) })
+          break
         end
       end
       if total > 0 and n / total < MIN_WORKING then
