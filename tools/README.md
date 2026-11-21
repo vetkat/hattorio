@@ -54,6 +54,10 @@ FACTORIO_API_KEY=... python3 -m tools.portal_images FIRST.jpg [MORE.jpg ...]
 
 `portal_images.py` adds the images to the gallery of the mod page. The
 first file leads the gallery, then the images that the gallery has
-already, then the other new files. The key needs the *ModPortal: Edit
-Mods* permission. Each run uploads the files again, so run it once for
-each set of new images.
+already, then the other new files. With `--after`, the new files come
+after the images that are there. The key needs the *ModPortal: Edit Mods*
+permission. Each run uploads the files again, so run it once for each set
+of new images.
+
+The script follows the wiki page of the images API, but it did not yet run
+on the portal. So try one image first, and then the rest with `--after`.

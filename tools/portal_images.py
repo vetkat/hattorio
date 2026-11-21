@@ -1,18 +1,21 @@
 """Add images to the gallery of the mod page on the mod portal.
 
     FACTORIO_API_KEY=... python3 -m tools.portal_images FIRST.jpg [MORE.jpg ...]
+    FACTORIO_API_KEY=... python3 -m tools.portal_images --after MORE.jpg ...
 
 The script uploads each file, then sets the order of the gallery. The first
 file leads the gallery. The images that the gallery has already come next,
-in their order. The other new files come last, in the order given. The
-showcase puts the wide shot of Nauvis first.
+in their order. The other new files come last, in the order given. With
+--after, the images that the gallery has already stay first, and all new
+files come after them.
 
 The key needs the "ModPortal: Edit Mods" permission. The key goes only in
-the Authorization header, never in a URL or in the output. The Factorio
-wiki describes the API at https://wiki.factorio.com/Mod_images_API.
+the Authorization header, never in a URL or in the output. The steps follow
+https://wiki.factorio.com/Mod_images_API (checked on 2026-11-21).
 
-This script cannot undo an upload. Run it once for each set of new
-images: a second run adds the same pictures again.
+Run the first real upload with one image, to check the steps on the
+portal, and then the rest with --after. This script cannot undo an upload,
+and a second run of the same files adds the same pictures again.
 """
 
 import json
@@ -91,6 +94,9 @@ def _check(answer, step):
 
 
 def main(paths):
+    after = bool(paths) and paths[0] == "--after"
+    if after:
+        paths = paths[1:]
     key = os.environ.get("FACTORIO_API_KEY")
     if not key:
         sys.exit("FACTORIO_API_KEY is not set")
@@ -102,7 +108,12 @@ def main(paths):
     with open("info.json") as f:
         mod = json.load(f)["name"]
     with urllib.request.urlopen(FULL % mod) as answer:
-        current = [image["id"] for image in json.load(answer).get("images", [])]
+        images = json.load(answer).get("images") or []
+    # The wiki page of the images API does not describe this list. Stop
+    # before any upload if it does not hold ids as the edit answer does.
+    if any(not isinstance(image, dict) or "id" not in image for image in images):
+        sys.exit("the mod API lists images without an id; nothing was uploaded")
+    current = [image["id"] for image in images]
     new = []
     for path in paths:
         slot = _check(_post(API + "add", {"mod": mod}, key), "images/add")
@@ -111,10 +122,10 @@ def main(paths):
         new.append(image["id"])
         # The id lets you set the order by hand if a later step fails.
         print("uploaded %s as %s" % (path, image["id"]))
-    order = gallery_order(current, new, new[0])
+    order = gallery_order(current, new, current[0] if after and current else new[0])
     _check(_post(API + "edit", {"mod": mod, "images": ",".join(order)}, key),
            "images/edit")
-    print("the gallery has %d images, %s first" % (len(order), paths[0]))
+    print("the gallery has %d images, %s first" % (len(order), order[0]))
 
 
 if __name__ == "__main__":

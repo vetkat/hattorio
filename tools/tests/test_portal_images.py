@@ -52,3 +52,7 @@ def test_a_request_with_the_key_does_not_follow_a_redirect():
     source.server_close()
     assert seen == []
     assert answer["error"] == "HTTP 302"
+
+
+def test_new_images_can_follow_the_current_ones():
+    assert pi.gallery_order(["a"], ["b", "c"], "a") == ["a", "b", "c"]
