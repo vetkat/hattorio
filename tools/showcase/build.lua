@@ -254,6 +254,35 @@ local function wire(a, b)
   return ca.connect_to(cb, false)
 end
 
+--- Pipes from tile `a` to tile `b`, along one leg in x and one in y. The
+-- builder tries both orders. Pipes go only where the game allows, so they never cross
+-- a band. Returns true if a whole path was laid.
+function Build:pipe_path(a, b)
+  local function path(x_first)
+    local tiles, x, y = {}, a[1], a[2]
+    local function go(tx, ty)
+      while x ~= tx or y ~= ty do
+        tiles[#tiles + 1] = { x, y }
+        if x ~= tx then x = x + (tx > x and 1 or -1) else y = y + (ty > y and 1 or -1) end
+      end
+    end
+    if x_first then go(b[1], a[2]) go(b[1], b[2]) else go(a[1], b[2]) go(b[1], b[2]) end
+    tiles[#tiles + 1] = { b[1], b[2] }
+    return tiles
+  end
+  for _, x_first in ipairs({ true, false }) do
+    local tiles, ok = path(x_first), true
+    for _, p in ipairs(tiles) do
+      if not self:can_place("pipe", p[1], p[2]) then ok = false break end
+    end
+    if ok then
+      for _, p in ipairs(tiles) do self:put("pipe", p[1], p[2]) end
+      return true
+    end
+  end
+  return false
+end
+
 --- Medium poles from one point to another, about every 7 tiles, each wired
 -- to the one before. A pole that the game refuses moves sideways by up to 3
 -- tiles. The line also connects to the poles that stand at both ends.
@@ -311,19 +340,20 @@ local function sink_layout(dir)
   local o = STEP[side]
   local back = ({ east = "west", south = "north" })[side]
   local l = {}
-  for k = 0, 1 do
+  -- Four steel chests hold the output of a line for all five stages.
+  for k = 0, 3 do
     local x, y = s[1] * k, s[2] * k
     l[#l + 1] = { "transport-belt", x, y, dir }
     l[#l + 1] = { "fast-inserter", x + o[1], y + o[2], side, { from = back } }
-    l[#l + 1] = { "iron-chest", x + 2 * o[1], y + 2 * o[2] }
+    l[#l + 1] = { "steel-chest", x + 2 * o[1], y + 2 * o[2] }
   end
   l[#l + 1] = { "medium-electric-pole", -o[1], -o[2] }
   return l, { -o[1], -o[2] }
 end
 
---- A sink at the end of a belt that runs towards `dir`. It has two more belt
--- tiles, each with a fast inserter into a chest at its side, and a pole.
--- That takes about 4.6 items a second. The sink goes in whole or not at
+--- A sink at the end of a belt that runs towards `dir`. It has four more
+-- belt tiles, each with a fast inserter into a chest at its side, and a pole.
+-- That takes about 9 items a second. The sink goes in whole or not at
 -- all. If it does not fit at `at`, it moves along the belt by up to 20
 -- tiles, and a belt joins it. The next stage removes it with unsink and
 -- carries the belt on from `at`.

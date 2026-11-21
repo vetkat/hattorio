@@ -20,6 +20,9 @@ local MIN_WORKING = 0.6
 local steps = {}
 local wait = 0
 
+local STATUS = {}
+for k, v in pairs(defines.entity_status) do STATUS[v] = k end
+
 local function say(text) log("SHOWCASE " .. text) end
 
 -- No character in the shots. A player in single player joins after the
@@ -102,7 +105,20 @@ local function plan_planet(name)
         end
       end
       for _, e in ipairs(b.built) do
-        if e.valid and e.status == defines.entity_status.no_ingredients then
+        if e.valid and e.name == "foundry" then
+          local fluids = {}
+          for fluid, amount in pairs(e.get_fluid_contents()) do
+            fluids[#fluids + 1] = fluid .. "=" .. math.floor(amount)
+          end
+          local recipe = e.get_recipe()
+          log(string.format("showcase: foundry %.1f,%.1f %s %s %s", e.position.x, e.position.y,
+            STATUS[e.status] or e.status, recipe and recipe.name or "none",
+            table.concat(fluids, " ")))
+        end
+      end
+      for _, e in ipairs(b.built) do
+        if e.valid and (e.status == defines.entity_status.no_ingredients
+          or e.status == defines.entity_status.fluid_ingredient_shortage) then
           game.take_screenshot({ surface = b.surface, position = e.position, zoom = 3,
             resolution = { 900, 900 }, show_gui = false, daytime = 0,
             path = string.format("showcase/debug/%s-%d-starved.png", name, stage) })
