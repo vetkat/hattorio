@@ -27,6 +27,58 @@ function Water.dark_tiles(gen_of)
   return dark
 end
 
+--- The dark tile whose look a texture ocean borrows, or nil.
+--
+-- A copy that a texture draws, such as the shallow oil of Fulgora, gets
+-- darker by a tint. The tint stops at the edge of each tile, so the band
+-- shows as square steps. Such a copy borrows the look of a shader ocean
+-- instead: a dark tile with the same fluid that a shader draws. Of those, it
+-- takes the lowest layer, and then the first name. `tiles` maps a name to a
+-- tile with `fluid`, `layer` and `effect`.
+function Water.look_donor(name, tiles, dark)
+  local tile = tiles[name]
+  if not tile or tile.effect then return nil end
+  local best, best_tile
+  for other, t in pairs(tiles) do
+    if dark[other] and t.effect and t.fluid == tile.fluid then
+      if not best_tile or t.layer < best_tile.layer
+        or (t.layer == best_tile.layer and other < best) then
+        best, best_tile = other, t
+      end
+    end
+  end
+  return best
+end
+
+local function copy_table(t)
+  if type(t) ~= "table" then return t end
+  local out = {}
+  for k, v in pairs(t) do out[k] = copy_table(v) end
+  return out
+end
+
+-- The shader variations that take their colour from images, not from the
+-- effect colour of the tile.
+local IMAGE_SHADERS = { oil = true }
+
+--- A darker copy of a shader that takes its colour from images, or nil for
+-- any other shader.
+--
+-- The oil shader of Fulgora is one. A darker effect colour does not change
+-- it. The copy turns off the highlights, the
+-- foam and the reflections instead. A shader that takes its colour from the
+-- tile, such as the ammonia ocean of Aquilo, needs no copy.
+function Water.dark_effect(fx)
+  if not (fx and fx.water and IMAGE_SHADERS[fx.water.shader_variation]) then return nil end
+  local out = copy_table(fx)
+  out.name = "hattorio-band-dark-" .. fx.name
+  out.water.specular_lightness = { 0.5, 0.5, 0.5 }
+  out.water.foam_color_multiplier = 0
+  out.water.dark_threshold = { 0, 0 }
+  out.water.reflection_threshold = { 0, 0 }
+  return out
+end
+
 --- True for the collision layers of a water tile. Out-of-map and the empty
 -- space under a space platform also collide with water_tile, but they are
 -- not water.
