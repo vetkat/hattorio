@@ -6,6 +6,10 @@ describes it. The maintainer decides what moves from Ideas to Next.
 
 ## Next
 
+- [x] Portal images at the width of the text (#28).
+- [x] The release workflow sends the long description to the mod portal.
+  The API key has the *ModPortal: Edit Mods* permission
+  ([toolchain decisions][releasing]).
 - [x] A prose check in CI, and a review of all the prose in the comments,
   the docs and the wiki ([toolchain decisions][prose]).
 - [ ] A multiplayer test with two connected clients. The argument for
@@ -41,6 +45,7 @@ The next idea needs a second tiling next to the hat:
   this can only be an option next to the hat. An underground belt must still
   cross every band ([design section 4][rules]).
 
+[releasing]: docs/design/toolchain-decisions.md#releases
 [prose]: docs/design/toolchain-decisions.md#prose-check
 [scope]: docs/design/hattorio-design.md#15-out-of-scope
 [root]: docs/design/hattorio-design.md#root-placement
