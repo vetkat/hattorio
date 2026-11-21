@@ -44,7 +44,8 @@ describe("water band", function()
       ["oil-ocean-deep"] = { fluid = "heavy-oil", layer = 2, effect = "oil-deep" },
       ["oil-ocean-deep-2"] = { fluid = "heavy-oil", layer = 3, effect = "oil-deep" },
       ["ammoniacal-ocean"] = { fluid = "ammoniacal-solution", layer = 2, effect = "water" },
-      ["brash-ice"] = { fluid = "ammoniacal-solution", layer = 3 },
+      ["brash-ice"] = { fluid = "ammoniacal-solution", layer = 3, effect = "brash-ice-2" },
+      ["texture-ice"] = { fluid = "ammoniacal-solution", layer = 3 },
       ["lone-texture"] = { fluid = "lava", layer = 5 },
     }
     local dark = {}
@@ -52,12 +53,23 @@ describe("water band", function()
 
     it("lends a texture ocean the look of the lowest shader ocean with its fluid", function()
       assert.are.equal("oil-ocean-deep", Water.look_donor("oil-ocean-shallow", tiles, dark))
-      assert.are.equal("ammoniacal-ocean", Water.look_donor("brash-ice", tiles, dark))
+      assert.are.equal("ammoniacal-ocean", Water.look_donor("texture-ice", tiles, dark))
     end)
 
     it("lends nothing to a shader ocean, or where no ocean shares the fluid", function()
       assert.is_nil(Water.look_donor("oil-ocean-deep", tiles, dark))
       assert.is_nil(Water.look_donor("lone-texture", tiles, dark))
+    end)
+
+    it("takes a donor only from a lower layer, so that the shore draws onto it", function()
+      local high = { low = { fluid = "oil", layer = 2 }, deep = { fluid = "oil", layer = 5,
+        effect = "oil-deep" } }
+      assert.is_nil(Water.look_donor("low", high, { low = true, deep = true }))
+    end)
+
+    it("lends nothing to a tile with no fluid", function()
+      local dry = { a = { layer = 4 }, b = { layer = 2, effect = "water" } }
+      assert.is_nil(Water.look_donor("a", dry, { a = true, b = true }))
     end)
 
     it("takes a donor only from the dark tiles", function()

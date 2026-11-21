@@ -32,15 +32,17 @@ end
 -- A copy that a texture draws, such as the shallow oil of Fulgora, gets
 -- darker by a tint. The tint stops at the edge of each tile, so the band
 -- shows as square steps. Such a copy borrows the look of a shader ocean
--- instead: a dark tile with the same fluid that a shader draws. Of those, it
--- takes the lowest layer, and then the first name. `tiles` maps a name to a
+-- instead. The donor is a dark tile with the same fluid that a shader
+-- draws. It is in a lower layer, so that the original draws its shore onto
+-- the copy. Of those, the copy takes the lowest layer, and then the first
+-- name. `tiles` maps a name to a
 -- tile with `fluid`, `layer` and `effect`.
 function Water.look_donor(name, tiles, dark)
   local tile = tiles[name]
-  if not tile or tile.effect then return nil end
+  if not tile or tile.effect or not tile.fluid then return nil end
   local best, best_tile
   for other, t in pairs(tiles) do
-    if dark[other] and t.effect and t.fluid == tile.fluid then
+    if dark[other] and t.effect and t.fluid == tile.fluid and t.layer < tile.layer then
       if not best_tile or t.layer < best_tile.layer
         or (t.layer == best_tile.layer and other < best) then
         best, best_tile = other, t

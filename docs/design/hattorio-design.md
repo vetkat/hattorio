@@ -352,13 +352,15 @@ the descent changes it.
   layer. So landfill, foundation and ice
   platform cannot go there, and no set-tile stamp turns it into land. A
   tile without a copy, such as out-of-map, stays as it is.
-- **The look of the copy depends on the planet.** On Aquilo and Fulgora
-  the band shows as a dark line that blends into the ocean. On the other
-  planets the copy looks the same as the water.
+- **The look of the copy depends on the water tile.** On the ocean tiles
+  of Aquilo and Fulgora, the band shows as a dark line that blends into the
+  ocean. Their copies have a map colour at 35%. The copy of any other
+  water tile looks the same as the water.
 - **A dark copy of a shader ocean.** A shader draws most ocean tiles. Their
-  copy merges with the water and gets darker effect colours. The oil shader
+  copy merges with the water and gets effect colours at 35%. The oil shader
   of Fulgora takes its colour from images, so its copy gets a darker copy
-  of the shader.
+  of the shader. That copy turns off the highlights, the foam and the
+  reflections.
 - **A dark copy of a texture ocean.** A texture draws the shallow oil of
   Fulgora. Its copy takes the look of the dark deep oil and lies in a lower
   layer. So the shallow oil draws its shore onto the band, as land does. A
@@ -634,10 +636,13 @@ of scope. They need a second tiling next to the hat (section 17).
   pump there. On Aquilo and Fulgora, where most building is on the ocean,
   the copy is darker (section 8). Chunks from before 1.1.1 keep plain water
   at band positions.
-- **A texture ocean from another mod can show square steps.** On Aquilo and
-  Fulgora, the copy of a water tile that a texture draws takes the look of
-  a shader ocean with the same fluid. If no such ocean exists, the copy is
-  tinted, and the tint stops at the edge of each tile.
+- **A texture ocean from another mod can look wrong.** On Aquilo and
+  Fulgora, the copy of a water tile that a texture draws takes the whole
+  look of a shader ocean of these planets. That ocean has the same fluid
+  and a lower layer. So the band over a modded texture ocean looks like
+  the vanilla ocean, not like a darker version of the modded tile. If no
+  such ocean exists, the copy gets a tint, and the tint stops at the edge
+  of each tile.
 - **Spawn is on the centre of the H metatile** (section 5).
 
 ## 17. Alternatives
