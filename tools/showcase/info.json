@@ -1,0 +1,9 @@
+{
+  "name": "hattorio-showcase",
+  "version": "0.0.1",
+  "title": "Hattorio showcase",
+  "author": "vetkat",
+  "factorio_version": "2.1",
+  "description": "Builds the showcase bases and records their screenshots. A tool of the Hattorio repository. It does not ship.",
+  "dependencies": ["hattorio", "space-age"]
+}

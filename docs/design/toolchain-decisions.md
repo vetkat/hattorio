@@ -274,6 +274,16 @@ Each merged PR from `factorio-version.yml` is also a commit on `main`, and
 that resets the count too. But such a PR comes only with a new stable
 release, so the keepalive job stays.
 
+## Showcase
+
+`tools/showcase.sh` makes the screenshots of the mod page, and clips for a
+video. It builds a base on each planet with the mod in `tools/showcase/`,
+and records it in the Steam copy of the game. It is a tool for the
+maintainer, not a check. CI does not run it, and nothing from
+`tools/showcase/` ships in the mod zip. `tools/README.md` says how to run
+it, and `docs/superpowers/specs/2026-11-20-showcase-design.md` says why it
+works as it does.
+
 ## Versions
 
 Hattorio uses [semantic versioning](https://semver.org/spec/v2.0.0.html).
