@@ -128,6 +128,27 @@ describe("showcase routes stay inside their length", function()
   end)
 end)
 
+describe("showcase routes after a turn", function()
+  local tiers = { { "underground-belt", 4 } }
+
+  -- An underground entrance takes items from the side on one lane only. So a
+  -- belt that turns on the first tile of a route must not go under there.
+  it("refuses an entrance on the first tile of a turned route", function()
+    local band = { ["1,0"] = true, ["2,0"] = true }
+    assert.is_nil(Place.route({ 0, 0 }, "east", 8, grid(band), tiers, true))
+    assert.are.equal("input", Place.route({ 0, 0 }, "east", 8, grid(band), tiers)[1][5])
+  end)
+
+  it("does not bend where the belt would go under at the corner", function()
+    local layout = { { "stone-furnace", 0, 0 } }
+    -- A band runs north to south at x = 1 and 2, and nothing fits west.
+    local function can_place(_, x, y)
+      return x >= 0 and x ~= 1 and x ~= 2 and not (x == 0 and y < 0)
+    end
+    assert.is_nil(Place.find_bent(layout, { 0, 0 }, "south", 10, 10, can_place, tiers))
+  end)
+end)
+
 describe("showcase camera", function()
   it("pans from start to end in the given number of frames", function()
     local path = Camera.pan({ 0, 0 }, { 100, 50 }, 600)

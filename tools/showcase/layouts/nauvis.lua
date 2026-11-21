@@ -25,7 +25,7 @@ local function ore_line(b, ore, near, key)
   if power then b:poles(abs(power, sat.pole), abs(mine, at.pole)) end
   b:report(key, mine, power, abs(mine, { 1, 1 }), power and abs(power, sat.pole))
   layout, at = M.smelting(8)
-  local smelt = b:place_along(layout, abs(mine, { 3, 9 }), "south")
+  local smelt = b:place_along(layout, abs(mine, { 3, 9 }), "south", nil, nil, "south")
   if not smelt then return mine end
   b:poles(abs(mine, { -1, 1 }), abs(smelt, at.pole))
   b:sink(key, abs(smelt, at.out), "south")
@@ -49,9 +49,9 @@ end
 
 -- 2. Furnaces in the next cell. The ore belt goes under the band.
 stages[2] = function(b)
-  local start, dir = b:unsink("ore")
+  local start, dir, came = b:unsink("ore")
   local layout, at = M.smelting(8)
-  local smelt = b:place_along(layout, start, dir)
+  local smelt = b:place_along(layout, start, dir, nil, nil, came)
   b:poles(b.anchor.power, abs(smelt, at.pole))
   b:sink("plates", abs(smelt, at.out), "south")
   b.anchor.smelt = smelt
@@ -62,9 +62,9 @@ end
 
 -- 3. Gear assemblers, and more power.
 stages[3] = function(b)
-  local start, dir = b:unsink("plates")
+  local start, dir, came = b:unsink("plates")
   local layout, at = M.assemblers(2, "iron-gear-wheel")
-  local asm = b:place_along(layout, start, dir)
+  local asm = b:place_along(layout, start, dir, nil, nil, came)
   b:poles(abs(b.anchor.smelt, { 1, 1 }), abs(asm, at.pole))
   b:sink("rest", abs(asm, { 0, 8 }), "south")
   layout, at = M.solar(6)

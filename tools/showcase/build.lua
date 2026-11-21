@@ -4,8 +4,8 @@
 -- A layout is a list of {name, x, y, direction, extra}:
 --   * x and y: the top left tile of the building, relative to an origin
 --   * direction: "north", "east", "south" or "west"
---   * extra: settings such as recipe, fuel and items, and for an inserter
---     `from`, the side it takes items from
+--   * extra: settings such as recipe, fuel, items and fluid, and for an
+--     inserter `from`, the side it takes items from
 
 local Place = require("place")
 
@@ -119,6 +119,7 @@ local function setup(entity, extra)
   if extra.from then face(entity, extra.from) end
   if extra.fuel then entity.insert({ name = extra.fuel, count = extra.fuel_count or 50 }) end
   for _, stack in ipairs(extra.items or {}) do entity.insert(stack) end
+  if extra.fluid then entity.insert_fluid(extra.fluid) end
 end
 
 --- Place one building. Returns the entity, or nil if the game refuses.
@@ -184,30 +185,34 @@ end
 -- from `start` to it. Returns the origin.
 --- If nothing fits on the line, the belt bends once to the side. Returns
 -- the origin, or nil.
-function Build:place_along(layout, start, dir, from, to)
+function Build:place_along(layout, start, dir, from, to, came)
   if not start then return nil end
   local check = self:checker()
   local covers = function(o) return Build.covers(layout, o) end
-  local origin, k = Place.find_along(layout, start, dir, from or 4, to or 60, check, TIERS, covers)
+  local turned = came ~= nil and came ~= dir
+  local origin, k = Place.find_along(layout, start, dir, from or 4, to or 60, check, TIERS, covers,
+    turned)
   if origin then
     self:place(layout, origin)
-    self:belt(start, dir, k)
+    self:belt(start, dir, k, turned)
     return origin
   end
   local side, j
-  origin, k, side, j = Place.find_bent(layout, start, dir, to or 60, 40, check, TIERS, covers)
+  origin, k, side, j = Place.find_bent(layout, start, dir, to or 60, 40, check, TIERS, covers,
+    turned)
   if not origin then return nil end
   self:place(layout, origin)
   local d = STEP[dir]
-  self:belt(start, dir, k)
-  self:belt({ start[1] + d[1] * k, start[2] + d[2] * k }, side, j)
+  self:belt(start, dir, k, turned)
+  self:belt({ start[1] + d[1] * k, start[2] + d[2] * k }, side, j, true)
   return origin
 end
 
 
---- A straight belt of `length` tiles, under any band on the way.
-function Build:belt(start, dir, length)
-  local route = Place.route(start, dir, length, self:checker(), TIERS)
+--- A straight belt of `length` tiles, under any band on the way. `turned`
+-- works as for Place.route.
+function Build:belt(start, dir, length, turned)
+  local route = Place.route(start, dir, length, self:checker(), TIERS, turned)
   if not route then
     log(string.format("showcase: no belt route from %d,%d %s %d", start[1], start[2], dir, length))
     return false
@@ -369,13 +374,13 @@ function Build:sink(key, at, dir)
     for off = 0, 20 do
       local spot = { at[1] + s[1] * off, at[2] + s[2] * off }
       if Place.fit(layout, spot, check)
-        and (off == 0 or Place.route(at, d, off, check, TIERS)) then
+        and (off == 0 or Place.route(at, d, off, check, TIERS, d ~= dir)) then
         -- The belt that joins the sink is part of it, so that unsink
         -- removes it too and the next stage finds the tiles free.
-        local joint = off > 0 and self:belt(at, d, off) or {}
+        local joint = off > 0 and self:belt(at, d, off, d ~= dir) or {}
         local parts = self:place(layout, spot) or {}
         for _, e in pairs(joint) do parts[#parts + 1] = e end
-        self.anchor[key] = { at = at, dir = d, parts = parts }
+        self.anchor[key] = { at = at, dir = d, came = dir, parts = parts }
         self:link({ spot[1] + pole_rel[1], spot[2] + pole_rel[2] })
         return
       end
@@ -383,17 +388,18 @@ function Build:sink(key, at, dir)
   end
   log(string.format("showcase: no sink fits after %d,%d", at[1], at[2]))
   -- The next stage still carries the belt on from here.
-  self.anchor[key] = { at = at, dir = dir, parts = {} }
+  self.anchor[key] = { at = at, dir = dir, came = dir, parts = {} }
 end
 
---- Remove a sink, and return the tile where the belt can go on.
+--- Remove a sink. Returns the tile where the belt can go on, the direction
+-- that the sink took from there, and the direction the belt arrives from.
 function Build:unsink(key)
   local sink = self.anchor[key]
-  if not sink then return nil, nil end
+  if not sink then return nil, nil, nil end
   for _, e in pairs(sink.parts) do
     if e and e.valid then e.destroy() end
   end
-  return sink.at, sink.dir
+  return sink.at, sink.dir, sink.came
 end
 
 --- A straight east-west track from x1 to x2 on row y, with a locomotive on

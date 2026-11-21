@@ -53,8 +53,9 @@ end
 -- distance. A belt can then run straight from `start` to that origin.
 --
 -- With `tiers`, an origin counts only if the belt to it has a route.
--- `covers` works as for find_bent: the belt must not cross the block.
-function Place.find_along(layout, start, dir, from, to, can_place, tiers, covers)
+-- `covers` works as for find_bent: the belt must not cross the block, and
+-- `turned` as for route.
+function Place.find_along(layout, start, dir, from, to, can_place, tiers, covers, turned)
   local d = DIRECTIONS[dir]
   for k = from, to do
     local origin = { start[1] + d[1] * k, start[2] + d[2] * k }
@@ -64,7 +65,7 @@ function Place.find_along(layout, start, dir, from, to, can_place, tiers, covers
       if under then
         check = function(name, x, y, dd) return can_place(name, x, y, dd) and not under(x, y) end
       end
-      if not tiers or Place.route(start, dir, k, check, tiers) then return origin, k end
+      if not tiers or Place.route(start, dir, k, check, tiers, turned) then return origin, k end
     end
   end
   return nil
@@ -84,7 +85,7 @@ local SIDES = {
 --
 -- `covers(origin)` returns a function(x, y) that is true for the tiles that
 -- the block covers at that origin.
-function Place.find_bent(layout, start, dir, max_k, max_j, can_place, tiers, covers)
+function Place.find_bent(layout, start, dir, max_k, max_j, can_place, tiers, covers, turned)
   local d = DIRECTIONS[dir]
   for k = 2, max_k do
     local px, py = start[1] + d[1] * k, start[2] + d[2] * k
@@ -100,8 +101,8 @@ function Place.find_bent(layout, start, dir, max_k, max_j, can_place, tiers, cov
               return can_place(name, x, y, dd) and not under(x, y)
             end
           end
-          if not tiers or (Place.route(start, dir, k, check, tiers)
-            and Place.route({ px, py }, side, j, check, tiers)) then
+          if not tiers or (Place.route(start, dir, k, check, tiers, turned)
+            and Place.route({ px, py }, side, j, check, tiers, true)) then
             return origin, k, side, j
           end
         end
@@ -118,7 +119,11 @@ end
 -- after the gap. `tiers` is a list of {name, reach}, cheapest first. Reach
 -- is the widest gap in tiles. Returns a list of {name, x, y, dir, kind}, or
 -- nil if no tier spans a gap.
-function Place.route(start, dir, length, can_place, tiers)
+--
+-- `turned` is true when the belt arrives at `start` from another direction.
+-- An underground entrance takes items from the side on one lane only, so
+-- then the first tile cannot be an entrance.
+function Place.route(start, dir, length, can_place, tiers, turned)
   local d = DIRECTIONS[dir]
   local out = {}
   local i = 0
@@ -140,7 +145,7 @@ function Place.route(start, dir, length, can_place, tiers)
         if gap <= t[2] then tier = t[1] break end
       end
       local last = out[#out]
-      if not last then return nil end
+      if not last or (turned and #out == 1) then return nil end
       out[#out] = { tier, last[2], last[3], dir, "input" }
       out[#out + 1] = { tier, x + d[1] * gap, y + d[2] * gap, dir, "output" }
       i = i + gap + 1

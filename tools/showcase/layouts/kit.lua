@@ -127,7 +127,8 @@ local function chain(b, line, start, key)
   -- South first. At a coast or a band, the belt can turn east or west.
   local origin
   for _, dir in ipairs({ "south", "east", "west" }) do
-    origin = b:place_along(layout, start, dir)
+    -- Mines face south, so the belt arrives from the north.
+    origin = b:place_along(layout, start, dir, nil, nil, "south")
     if origin then break end
   end
   if not origin then
@@ -156,6 +157,7 @@ local function unlock(force, name)
   for _, pre in pairs(tech.prerequisites) do unlock(force, pre.name) end
   tech.researched = true
 end
+Kit.unlock = unlock
 
 function Kit.stages(cfg)
   local s = {}
@@ -180,7 +182,7 @@ function Kit.stages(cfg)
       b:unsink("first-end")
       local yard
       for _, dir in ipairs({ "south", "east", "west" }) do
-        yard = b:place_along({ { "transport-belt", 0, 0, "south" } }, start, dir, 6, 40)
+        yard = b:place_along({ { "transport-belt", 0, 0, "south" } }, start, dir, 6, 40, "south")
         if yard then break end
       end
       b:sink("first-end", abs(yard, { 0, 1 }), "south")

@@ -125,6 +125,15 @@ local function plan_planet(name)
           break
         end
       end
+      for _, e in ipairs(b.built) do
+        if e.valid and e.type == "mining-drill"
+          and e.status == defines.entity_status.waiting_for_space_in_destination then
+          game.take_screenshot({ surface = b.surface, position = e.position, zoom = 1,
+            resolution = { 1400, 1400 }, show_gui = false, daytime = 0,
+            path = string.format("showcase/debug/%s-%d-blocked.png", name, stage) })
+          break
+        end
+      end
       if total > 0 and n / total < MIN_WORKING then
         say(string.format("ERROR %s stage %d: %d of %d machines work", name, stage, n, total))
       end
