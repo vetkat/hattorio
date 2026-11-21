@@ -6,10 +6,9 @@ describes it. The maintainer decides what moves from Ideas to Next.
 
 ## Next
 
-- [ ] Portal images at the width of the text: the branch `docs/image-width`
-  waits for review.
-- [ ] The release workflow sends the long description to the mod portal.
-  The API key needs the *ModPortal: Edit Mods* permission
+- [x] Portal images at the width of the text (#28).
+- [x] The release workflow sends the long description to the mod portal.
+  The API key has the *ModPortal: Edit Mods* permission
   ([toolchain decisions][releasing]).
 - [x] A prose check in CI, and a review of all the prose in the comments,
   the docs and the wiki ([toolchain decisions][prose]).
