@@ -111,3 +111,15 @@ test("the band copies of the Aquilo and Fulgora oceans are darker", function()
   end
   assert(checked >= 3, "only " .. checked .. " dark copies")
 end)
+
+tags("space-age")
+test("the band copy of the shallow oil lies under the shallow oil", function()
+  -- Then the shallow oil draws its soft shore onto the band, as land does.
+  -- A copy in the layer of the shallow oil showed the band as square steps.
+  for _, original in ipairs({ "oil-ocean-shallow", "oil-ocean-shallow-2" }) do
+    local copy = prototypes.tile[Water.copy_name(original)]
+    assert(copy, "no band copy for " .. original)
+    assert(copy.layer < prototypes.tile[original].layer,
+      copy.name .. " is in layer " .. copy.layer .. ", not under " .. original)
+  end
+end)

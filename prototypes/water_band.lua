@@ -9,8 +9,8 @@
 -- So each water tile gets a copy with the band layer. The painter places the
 -- copy at band positions over water. The floor-tile condition and the
 -- set-tile mask already contain the band layer, so they refuse the copy as
--- they refuse a band tile. The copy looks the same as the water: the owner
--- chose a lake that shows no band.
+-- they refuse a band tile. On most planets the copy looks the same as the
+-- water: the owner chose a lake that shows no band.
 --
 -- mod/water_band.lua says which tiles are water, and names the copies.
 
@@ -46,6 +46,39 @@ local function darker(colour)
   return out
 end
 
+-- The band over the ocean of Aquilo and Fulgora shows as a dark line that
+-- blends into the ocean. A shader ocean merges with its copy and gets darker
+-- colours, and a darker shader where Water.dark_effect gives one. A texture
+-- ocean borrows the look of a shader ocean (Water.look_donor). With neither,
+-- a tint is the only way to darken a copy.
+local function darken(copy, name)
+  copy.map_color = darker(copy.map_color)
+  local donor = Water.look_donor(name, data.raw.tile, dark)
+  if not donor and not copy.effect then
+    copy.tint = { r = DARKNESS, g = DARKNESS, b = DARKNESS, a = 1 }
+    return
+  end
+  if donor then
+    local src = data.raw.tile[donor]
+    -- Only the fields that draw the tile. The others, such as the collision
+    -- mask, the fluid and the name, stay those of the copy.
+    for _, key in ipairs({ "variants", "transitions", "transitions_between_transitions",
+      "layer", "layer_group", "effect", "effect_color", "effect_color_secondary" }) do
+      copy[key] = table.deepcopy(src[key])
+    end
+    -- In the lower layer of the donor, the original draws its shore onto
+    -- the copy. A merge would hide that shore.
+    copy.transition_merges_with_tile = nil
+  end
+  copy.effect_color = darker(copy.effect_color)
+  copy.effect_color_secondary = darker(copy.effect_color_secondary)
+  local fx = Water.dark_effect(data.raw["tile-effect"][copy.effect])
+  if fx then
+    if not data.raw["tile-effect"][fx.name] then data:extend({ fx }) end
+    copy.effect = fx.name
+  end
+end
+
 local function lists_with(name)
   local found = {}
   for _, list_name in ipairs(TRANSITION_LISTS) do
@@ -75,14 +108,7 @@ for name, tile in pairs(data.raw.tile) do
     copy.localised_description = tile.localised_description or { "tile-description." .. name }
     copy.factoriopedia_alternative = name
     if dark[name] then
-      -- The effect colours darken a tile that a shader draws, such as the
-      -- ammonia ocean. The tint darkens a tile that a texture draws, such as
-      -- the oil ocean. Screenshots of both planets show the band as a dark
-      -- line over the ocean.
-      copy.effect_color = darker(copy.effect_color)
-      copy.effect_color_secondary = darker(copy.effect_color_secondary)
-      copy.map_color = darker(copy.map_color)
-      copy.tint = { r = DARKNESS, g = DARKNESS, b = DARKNESS, a = 1 }
+      darken(copy, name)
     end
     -- Not mineable. Mining would bring back the plain water under it.
     copy.minable = nil

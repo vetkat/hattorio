@@ -11,6 +11,12 @@ This is the only changelog that people edit. The build makes Factorio's
 
 ## [Unreleased]
 
+### Fixed
+
+- On Fulgora, the band over the shallow oil showed as square steps, and the
+  band over the deep oil did not show. It now shows as a dark line that
+  blends into the ocean, as on Aquilo.
+
 ## [1.1.1] - 2026-11-20
 
 ### Fixed
