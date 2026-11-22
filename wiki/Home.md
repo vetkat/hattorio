@@ -8,7 +8,7 @@ is a hat, and no two cells have quite the same shape.
 
 ![The tiling](https://raw.githubusercontent.com/vetkat/hattorio/main/docs/preview/tiling.png)
 
-Release 1.1.1 is on [the mod portal](https://mods.factorio.com/mod/hattorio).
+Release 1.1.2 is on [the mod portal](https://mods.factorio.com/mod/hattorio).
 
 > **Warning:** multiplayer is not verified. Play single player for now.
 
