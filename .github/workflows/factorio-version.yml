@@ -32,7 +32,7 @@ jobs:
       - id: pin
         run: python3 -m tools.factorio_version bump >> "$GITHUB_OUTPUT"
       # A PR from github.token starts no CI, so the PR uses an App token.
-      - uses: actions/create-github-app-token@v2
+      - uses: actions/create-github-app-token@v3
         id: app
         if: steps.pin.outputs.version
         with:
