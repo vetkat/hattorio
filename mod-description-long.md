@@ -79,6 +79,21 @@ cost much less than belts.
 normal progression. This is intended. The constraint is strongest in the
 belt era and gets weaker as you research.
 
+## Screenshots
+
+A script built these bases in the game, with Hattorio at its default
+settings.
+
+![A base on Nauvis](https://raw.githubusercontent.com/vetkat/hattorio/main/docs/preview/showcase/nauvis-5.jpg)
+
+![A base on Vulcanus](https://raw.githubusercontent.com/vetkat/hattorio/main/docs/preview/showcase/vulcanus-5.jpg)
+
+![A base on Fulgora](https://raw.githubusercontent.com/vetkat/hattorio/main/docs/preview/showcase/fulgora-5.jpg)
+
+![A base on Gleba](https://raw.githubusercontent.com/vetkat/hattorio/main/docs/preview/showcase/gleba-5.jpg)
+
+![A base on Aquilo](https://raw.githubusercontent.com/vetkat/hattorio/main/docs/preview/showcase/aquilo-5.jpg)
+
 ## Settings
 
 You set the cell size and the band width per planet when you create the
