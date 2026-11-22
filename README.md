@@ -8,7 +8,7 @@ repeat, so your blueprints cannot repeat either.
 
 ## Status
 
-Release 1.1.1 is on [the mod portal](https://mods.factorio.com/mod/hattorio)
+Release 1.1.2 is on [the mod portal](https://mods.factorio.com/mod/hattorio)
 and on the [GitHub releases page](https://github.com/vetkat/hattorio/releases).
 It needs Factorio 2.1. Space Age is optional. The [roadmap](ROADMAP.md) lists
 what comes next.
