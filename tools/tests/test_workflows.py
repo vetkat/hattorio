@@ -128,7 +128,9 @@ def test_the_bump_pr_uses_an_app_token_and_stores_no_credentials():
     bump = job(read("factorio-version.yml"), "bump")
     # A PR from github.token starts no CI.
     assert "actions/create-github-app-token@" in bump
-    assert "${{ vars.HATTORIO_BOT_ID }}" in bump
+    # v3 of the action deprecates app-id.
+    assert "client-id: ${{ vars.HATTORIO_BOT_CLIENT_ID }}" in bump
+    assert "app-id:" not in bump
     assert "${{ secrets.HATTORIO_BOT_KEY }}" in bump
     assert "GH_TOKEN: ${{ steps.app.outputs.token }}" in bump
     assert "persist-credentials: false" in bump

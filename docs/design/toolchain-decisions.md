@@ -237,9 +237,9 @@ wants `factorio_version` in `info.json` to name it. That change needs a
 release PR.
 
 A PR opened with `github.token` starts no workflows. So the workflow opens
-the PR with a token from a GitHub App. The App ID is the repository
-variable `HATTORIO_BOT_ID`, and its private key is the secret
-`HATTORIO_BOT_KEY`. The App needs read and write access to contents and pull
+the PR with a token from a GitHub App. The Client ID of the App is the
+repository variable `HATTORIO_BOT_CLIENT_ID`, and its private key is the
+secret `HATTORIO_BOT_KEY`. The App needs read and write access to contents and pull
 requests. Auto-merge must be on in the repository settings, and the branch
 protection of `main` must require `all-checks`. Without that rule,
 auto-merge merges the PR before CI ends.
