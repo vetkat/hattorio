@@ -1,18 +1,63 @@
-"""The gallery order that tools/portal_images.py sets on the mod portal."""
+"""The gallery that tools/portal_images.py sets on the mod portal."""
+
+import pytest
 
 from tools import portal_images as pi
 
 
-def test_the_first_image_leads_and_the_current_ones_stay():
-    assert pi.gallery_order(["a", "b"], ["c", "d"], "c") == ["c", "a", "b", "d"]
+def fake_portal(monkeypatch, tmp_path, names):
+    """Make one file per name, and a portal that gives each file its name as id.
+
+    The fake refuses a read of the public mod API. The portal caches that
+    answer, and an edit with a stale list deletes images.
+    """
+    monkeypatch.setenv("FACTORIO_API_KEY", "secret")
+    monkeypatch.setattr("builtins.input", lambda prompt: "yes")
+    edits = []
+
+    def post(url, fields, key=None, files=None):
+        if url == pi.API + "add":
+            edits.append("add")
+            return {"upload_url": "https://upload"}
+        if url == "https://upload":
+            return {"id": files["image"].rsplit("/", 1)[-1][:-4]}
+        assert url == pi.API + "edit"
+        edits.append(fields["images"])
+        return {"success": True}
+
+    def no_read(*args, **kwargs):
+        raise AssertionError("the public mod API was read")
+
+    monkeypatch.setattr(pi, "_post", post)
+    monkeypatch.setattr(pi.urllib.request, "urlopen", no_read)
+    paths = []
+    for name in names:
+        path = tmp_path / ("%s.jpg" % name)
+        path.write_bytes(b"jpg")
+        paths.append(str(path))
+    return paths, edits
 
 
-def test_an_image_that_is_already_there_is_not_doubled():
-    assert pi.gallery_order(["a", "c"], ["c", "d"], "d") == ["d", "a", "c"]
+def test_the_gallery_becomes_the_given_files_in_their_order(monkeypatch, tmp_path):
+    paths, edits = fake_portal(monkeypatch, tmp_path, ["b", "a", "c"])
+    pi.main(paths)
+    assert edits[-1] == "b,a,c"
 
 
-def test_a_new_image_that_comes_twice_is_listed_once():
-    assert pi.gallery_order([], ["c", "c", "d"], "c") == ["c", "d"]
+def test_a_file_given_twice_is_listed_once(monkeypatch, tmp_path):
+    paths, edits = fake_portal(monkeypatch, tmp_path, ["a", "b"])
+    pi.main(paths + paths[:1])
+    assert edits[-1] == "a,b"
+
+
+def test_after_is_refused_before_any_upload(monkeypatch, tmp_path):
+    paths, edits = fake_portal(monkeypatch, tmp_path, ["a"])
+    with pytest.raises(SystemExit, match="--after"):
+        pi.main(["--after"] + paths)
+    assert edits == []
+
+
+
 
 
 def test_a_request_with_the_key_does_not_follow_a_redirect():
@@ -54,5 +99,13 @@ def test_a_request_with_the_key_does_not_follow_a_redirect():
     assert answer["error"] == "HTTP 302"
 
 
-def test_new_images_can_follow_the_current_ones():
-    assert pi.gallery_order(["a"], ["b", "c"], "a") == ["a", "b", "c"]
+
+def test_any_answer_but_yes_stops_before_any_upload(monkeypatch, tmp_path, capsys):
+    paths, edits = fake_portal(monkeypatch, tmp_path, ["a", "b"])
+    monkeypatch.setattr("builtins.input", lambda prompt: "y")
+    with pytest.raises(SystemExit, match="nothing was uploaded"):
+        pi.main(paths)
+    assert edits == []
+    shown = capsys.readouterr().out
+    assert "deletes" in shown
+    assert all(path in shown for path in paths)

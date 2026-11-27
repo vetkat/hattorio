@@ -52,12 +52,15 @@ also stops after 5 minutes without progress, and after an hour in all.
 FACTORIO_API_KEY=... python3 -m tools.portal_images FIRST.jpg [MORE.jpg ...]
 ```
 
-`portal_images.py` adds the images to the gallery of the mod page. The
-first file leads the gallery, then the images that the gallery has
-already, then the other new files. With `--after`, the new files come
-after the images that are there. The key needs the *ModPortal: Edit Mods*
-permission. Each run uploads the files again, so run it once for each set
-of new images.
+`portal_images.py` sets the gallery of the mod page to the files given, in
+that order. The first file leads the gallery. The portal deletes each image
+that is not in the list. So give all the files that the gallery must show,
+the old ones too. The script lists the files and waits for `yes` before
+it uploads anything. A second run with the same files gives the same
+gallery, because the portal makes the id of an image from its SHA1.
 
-The script follows the wiki page of the images API, but it did not yet run
-on the portal. So try one image first, and then the rest with `--after`.
+The key needs the *ModPortal: Edit Mods* permission.
+
+The script does not read the current gallery, because the public mod API
+caches its answer. In the first real upload on 2026-11-27, a stale empty
+list made the portal delete an image.
