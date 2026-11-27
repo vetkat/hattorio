@@ -5,7 +5,8 @@
 The script uploads each file, then sets the gallery to these files, in the
 order given. The first file leads the gallery. The portal deletes each
 image of the mod that is not in the list. So give all the files that the
-gallery must show, the old ones too, every time.
+gallery must show, the old ones too, every time. The script lists the
+files and waits for "yes" before it uploads anything.
 
 The portal makes the id of an image from its SHA1. An upload of a file that
 the gallery already has gives the same id, so a second run with the same
@@ -96,6 +97,12 @@ def main(paths):
             sys.exit("no file %s" % path)
     with open("info.json") as f:
         mod = json.load(f)["name"]
+    print("The gallery of %s becomes these %d files, in this order:" % (mod, len(paths)))
+    for path in paths:
+        print("  " + path)
+    print("The portal deletes every other image of the mod.")
+    if input("Type yes to go on: ").strip() != "yes":
+        sys.exit("nothing was uploaded")
     order = []
     for path in paths:
         slot = _check(_post(API + "add", {"mod": mod}, key), "images/add")

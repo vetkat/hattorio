@@ -12,10 +12,12 @@ def fake_portal(monkeypatch, tmp_path, names):
     answer, and an edit with a stale list deletes images.
     """
     monkeypatch.setenv("FACTORIO_API_KEY", "secret")
+    monkeypatch.setattr("builtins.input", lambda prompt: "yes")
     edits = []
 
     def post(url, fields, key=None, files=None):
         if url == pi.API + "add":
+            edits.append("add")
             return {"upload_url": "https://upload"}
         if url == "https://upload":
             return {"id": files["image"].rsplit("/", 1)[-1][:-4]}
@@ -39,13 +41,13 @@ def fake_portal(monkeypatch, tmp_path, names):
 def test_the_gallery_becomes_the_given_files_in_their_order(monkeypatch, tmp_path):
     paths, edits = fake_portal(monkeypatch, tmp_path, ["b", "a", "c"])
     pi.main(paths)
-    assert edits == ["b,a,c"]
+    assert edits[-1] == "b,a,c"
 
 
 def test_a_file_given_twice_is_listed_once(monkeypatch, tmp_path):
     paths, edits = fake_portal(monkeypatch, tmp_path, ["a", "b"])
     pi.main(paths + paths[:1])
-    assert edits == ["a,b"]
+    assert edits[-1] == "a,b"
 
 
 def test_after_is_refused_before_any_upload(monkeypatch, tmp_path):
@@ -96,3 +98,14 @@ def test_a_request_with_the_key_does_not_follow_a_redirect():
     assert seen == []
     assert answer["error"] == "HTTP 302"
 
+
+
+def test_any_answer_but_yes_stops_before_any_upload(monkeypatch, tmp_path, capsys):
+    paths, edits = fake_portal(monkeypatch, tmp_path, ["a", "b"])
+    monkeypatch.setattr("builtins.input", lambda prompt: "y")
+    with pytest.raises(SystemExit, match="nothing was uploaded"):
+        pi.main(paths)
+    assert edits == []
+    shown = capsys.readouterr().out
+    assert "deletes" in shown
+    assert all(path in shown for path in paths)

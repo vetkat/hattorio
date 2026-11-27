@@ -55,8 +55,9 @@ FACTORIO_API_KEY=... python3 -m tools.portal_images FIRST.jpg [MORE.jpg ...]
 `portal_images.py` sets the gallery of the mod page to the files given, in
 that order. The first file leads the gallery. The portal deletes each image
 that is not in the list. So give all the files that the gallery must show,
-the old ones too. A second run with the same files gives the same gallery,
-because the portal makes the id of an image from its SHA1.
+the old ones too. The script lists the files and waits for `yes` before
+it uploads anything. A second run with the same files gives the same
+gallery, because the portal makes the id of an image from its SHA1.
 
 The key needs the *ModPortal: Edit Mods* permission.
 
