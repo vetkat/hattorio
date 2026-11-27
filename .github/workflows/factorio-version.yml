@@ -93,6 +93,9 @@ jobs:
           elif [ "$current" = 0 ]; then
             gh pr edit "$pr" --title "$title" --body-file "$RUNNER_TEMP/body.md"
           fi
+          # A pin bump has no review angles. The label tells the pr check
+          # to skip them, so auto-merge does not wait.
+          gh pr edit "$pr" --add-label no-review
           gh pr merge "$pr" --auto --squash
           if [ "$red" = 1 ]; then
             echo "::error::CI failed on Factorio $VERSION in $pr. The mod needs a fix."
